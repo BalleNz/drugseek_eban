@@ -50,3 +50,4 @@ async def get_async_session():
             yield session
         except Exception:
             await session.rollback()
+            raise

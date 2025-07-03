@@ -11,7 +11,10 @@ All generations transits on postgres side.
 
 class TimestampsMixin(DeclarativeBase):
     """
-    TIMESTAMPS COLUMNS
+    Mixin for adding timestamp fields to ORM models.
+
+    This mixin provides standard `created_at` and `updated_at` columns for
+    automatically tracking the creation and last update times of database records.
     """
     __abstract__ = True
 
@@ -20,6 +23,9 @@ class TimestampsMixin(DeclarativeBase):
 
 
 class IDMixin(DeclarativeBase):
+    """
+    Mixin for adding ID field to ORM models.
+    """
     __abstract__ = True
 
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=func.gen_random_uuid())

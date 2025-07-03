@@ -31,7 +31,7 @@ class AssistantInterface(ABC):
         ...
 
 
-class Assistant(AssistantInterface):
+class Assistant():
     def __init__(self, DEEPSEEK_API_KEY: str):
         self.client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
         self.promptsClient = Prompts()
@@ -48,4 +48,4 @@ class Assistant(AssistantInterface):
         return response.choices[0].message.content
 
 
-print(Assistant(DEEPSEEK_API_KEY).get_dosage("Тестостерон ундеконат"))
+print(Assistant(DEEPSEEK_API_KEY).get_dosage("пенталгин"))

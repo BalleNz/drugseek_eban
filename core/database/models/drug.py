@@ -4,7 +4,7 @@ from typing import Optional
 from sqlalchemy import String, Float, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
-from database.models.base import TimestampsMixin, IDMixin
+from core.database.models.base import TimestampsMixin, IDMixin
 
 
 class Drug(IDMixin, TimestampsMixin):
@@ -15,11 +15,12 @@ class Drug(IDMixin, TimestampsMixin):
     dosages: Mapped[...] = ...
     pathways: Mapped[...] = ...
     combinations: Mapped[...] = ...
-    pharmacy_places: Mapped[...] = ...  #
+    drug_prices: Mapped[...] = ...  #
+    fun_fact: Mapped[str] = mapped_column(String(100))
 
 
 class DrugPrice(IDMixin, TimestampsMixin):
-    __tablename__ = "drugs_prices"
+    __tablename__ = "drug_prices"
 
     drug_brandname: Mapped[str] = mapped_column(String(100), unique=True)
     price: Mapped[float] = mapped_column(Float)
@@ -31,8 +32,15 @@ class DrugDosages(IDMixin, TimestampsMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     drug_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('drugs.id'))
-    route: Mapped[str] = mapped_column(String(20))  # peroral/parental/etc
-    method: Mapped[Optional[str]]  # Для уточнения (intravenous/intramuscular)
+
+    route: Mapped[str] = mapped_column(String(20))  # peroral / parental / ...
+    method: Mapped[Optional[str]]  # intravenous / intramuscular
+
     per_time: Mapped[Optional[str]]
     max_day: Mapped[Optional[str]]
+
+    # for peroral and intramuscular only
+    per_time_weight_based: Mapped[Optional[str]]
+    max_day_weight_based: Mapped[Optional[str]]
+
     notes: Mapped[Optional[str]]

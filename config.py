@@ -2,6 +2,7 @@ from dotenv import dotenv_values
 
 env = dotenv_values("../.env")
 
+
 class Config:
     DEBUG_MODE: bool = True
 
@@ -10,5 +11,6 @@ class Config:
 
     # BOT SETTINGS
     ...
+
 
 config = Config()

@@ -24,6 +24,11 @@ def create_async_db_engine_and_session(
         max_overflow=max_overflow,
         pool_timeout=pool_timeout,
         pool_recycle=pool_recycle,
+        connect_args={
+            "server_settings": {
+                "timezone": "UTC",  # Явно указываем UTC для каждого соединения
+            }
+        }
     )
     return engine, async_sessionmaker(engine, expire_on_commit=False)
 

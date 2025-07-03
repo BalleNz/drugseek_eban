@@ -32,7 +32,7 @@ class AssistantInterface(ABC):
 
 
 class Assistant(AssistantInterface):
-    def __init__(self, DEEPSEEK_API_KEY):
+    def __init__(self, DEEPSEEK_API_KEY: str):
         self.client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
         self.promptsClient = Prompts()
 
@@ -45,4 +45,7 @@ class Assistant(AssistantInterface):
             response_format={"type": "json_object"},
             temperature=0.3,
         )
-        return response.choices[0].message.content.model_dump()
+        return response.choices[0].message.content
+
+
+print(Assistant(DEEPSEEK_API_KEY).get_dosage("Тестостерон ундеконат"))

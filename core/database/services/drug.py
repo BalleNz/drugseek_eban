@@ -7,7 +7,7 @@ class DrugService:
     def __init__(self, repo: DrugRepository):
         self._repo = repo
 
-    def update_drug(self, drug) -> bool:
+    async def update_drug(self, drug) -> bool:
         """
         Обновляет данные о препарате или создаёт новый запрос.
 
@@ -18,5 +18,5 @@ class DrugService:
             - drug_prices: Список цен в разных аптеках
             - fun_fact: Интересный факт о препарате с нотками чёрного юмора
         """
-        ...
+        return await self._repo.drug_update()
 

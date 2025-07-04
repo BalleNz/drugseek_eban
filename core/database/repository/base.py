@@ -12,7 +12,7 @@ T = TypeVar("T", bound=IDMixin)
 
 class BaseRepository(Generic[T]):
     def __init__(self, model: Type[T], session: AsyncSession):
-        self._model = model
+        self._model = model  # table model
         self._session = session
 
     async def get(self, id: UUID) -> Optional[T]:

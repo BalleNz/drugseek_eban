@@ -6,5 +6,8 @@ from core.database.repository.base import BaseRepository
 
 class DrugRepository(BaseRepository):
     def __init__(self, session: AsyncSession):
-        super().__init__(Drug)
-        self._session = session
+        super().__init__(model=Drug, session=session)
+
+    async def drug_update(self):
+        ...
+

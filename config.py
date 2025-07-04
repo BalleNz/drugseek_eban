@@ -8,6 +8,7 @@ class Config:
 
     # DATABASE SETTINGS
     DATABASE_URL: str = env.get("DATABASE_URL", "")
+    DATABASE_URL_TEST: str = DATABASE_URL + "_test"
 
     # BOT SETTINGS
     ...

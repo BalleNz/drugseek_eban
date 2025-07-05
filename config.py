@@ -1,13 +1,15 @@
-from dotenv import dotenv_values
+from os import environ
 
-env = dotenv_values("../.env")
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class Config:
     DEBUG_MODE: bool = True
 
     # DATABASE SETTINGS
-    DATABASE_URL: str = env.get("DATABASE_URL", "")
+    DATABASE_URL: str = environ.get("DATABASE_URL", "")
     DATABASE_URL_TEST: str = DATABASE_URL + "_test"
 
     # BOT SETTINGS

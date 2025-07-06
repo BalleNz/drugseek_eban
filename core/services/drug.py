@@ -22,7 +22,7 @@ class DrugService:
             - price: Текущая цена в USD
             - dosage: Словарь дозировок
             - drug_prices: Список цен в разных аптеках
-            - fun_fact: Интересный факт о препарате с нотками чёрного юмора
+            - drug_descriptioh
         """
         await self.update_drug_dosages(drug.id)
         ...
@@ -40,9 +40,9 @@ class DrugService:
         except ValidationError as e:
             raise ValueError(f"Invalid assistant response: {e}")
 
-        # Обновляем fun_fact
-        if update_data.fun_fact:
-            drug.fun_fact = update_data.fun_fact
+        # Обновляем dosages_fun_fact
+        if update_data.dosages_fun_fact:
+            drug.dosages_fun_fact = update_data.dosages_fun_fact
 
         # Обновляем дозировки
         if update_data.dosages:

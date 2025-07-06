@@ -52,4 +52,4 @@ async def drug_repo(session: AsyncSession) -> DrugRepository:
 
 @pytest.fixture
 async def drug_model():
-    return Drug(name="Test Drug", fun_fact="Test fact")
+    return Drug(name="Test Drug", dosages_fun_fact="Test fact")

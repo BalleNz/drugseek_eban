@@ -28,7 +28,7 @@ class Drug(IDMixin, TimestampsMixin):
     pathways: Mapped[...] = ...
     combinations: Mapped[...] = ...
     drug_prices: Mapped[...] = ...  #
-    fun_fact: Mapped[str] = mapped_column(String(100))
+    dosages_fun_fact: Mapped[str] = mapped_column(String(100))
 
     # Отношение к DrugDosage
     dosages: Mapped[list["DrugDosages"]] = relationship(

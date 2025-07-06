@@ -12,7 +12,7 @@ class DosageParams(BaseModel):
 
 class AssistantDosageResponse(BaseModel):
     drug_name: str = Field(..., alias="drug_name")
-    fun_fact: Optional[str] = None
+    dosages_fun_fact: Optional[str] = None
     sources: list[str]
     dosages: Dict[str, Dict[str, DosageParams]]
 

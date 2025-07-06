@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database.engine import get_async_session
 from core.database.repository.drug import DrugRepository
-from core.database.services.drug import DrugService
+from core.services.drug import DrugService
 
 container = Container()
 

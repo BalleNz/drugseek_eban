@@ -3,7 +3,7 @@ HOW TO USE  DI INJECTION.
 """
 from aiogram.types import Message
 
-from core.database.services.drug import DrugService
+from core.services.drug import DrugService
 
 
 # @dp.message_handler(commands=["get_drug"])

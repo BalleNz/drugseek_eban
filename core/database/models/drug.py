@@ -9,6 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database.models.base import TimestampsMixin, IDMixin
 
+
 @dataclass
 class DosageView:
     route: str
@@ -23,11 +24,13 @@ class DosageView:
 class Drug(IDMixin, TimestampsMixin):
     __tablename__ = "drugs"
     name: Mapped[str] = mapped_column(String(100), unique=True, index=True)
+    description: Mapped[str] = mapped_column(TEXT)
+    classification: Mapped[str] = mapped_column(String(100))
 
-    # TODO:
     pathways: Mapped[...] = ...
     combinations: Mapped[...] = ...
     drug_prices: Mapped[...] = ...  #
+
     dosages_fun_fact: Mapped[str] = mapped_column(String(100))
 
     # Отношение к DrugDosage
@@ -75,19 +78,20 @@ class DrugDosages(IDMixin, TimestampsMixin):
         ForeignKey('drugs.id', ondelete='CASCADE'),
         nullable=False
     )
+    drug: Mapped["Drug"] = relationship(back_populates="dosages")
 
     route: Mapped[str] = mapped_column(String(20))  # peroral / parental / ...
     method: Mapped[Optional[str]]  # intravenous / intramuscular
 
-    per_time: Mapped[Optional[TEXT]]
-    max_day: Mapped[Optional[TEXT]]
+    per_time: Mapped[Optional[str]] = mapped_column(String(100))
+    max_day: Mapped[Optional[str]] = mapped_column(String(100))
 
     # for peroral and intramuscular only
-    per_time_weight_based: Mapped[Optional[TEXT]]
-    max_day_weight_based: Mapped[Optional[TEXT]]
+    per_time_weight_based: Mapped[Optional[str]] = mapped_column(String(100))
+    max_day_weight_based: Mapped[Optional[str]] = mapped_column(String(100))
 
-    notes: Mapped[Optional[TEXT]]
+    notes: Mapped[Optional[str]] = mapped_column(String(100))
 
     __table_args__ = (
-        UniqueConstraint('drug_id', 'receiving_class', 'receiving_type', name='uq_drug_dosage'),
+        UniqueConstraint('drug_id', 'route', 'method', name='uq_drug_dosage'),
     )

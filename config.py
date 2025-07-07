@@ -15,7 +15,7 @@ class Config:
     DEEPSEEK_API_KEY: str = environ.get("DEEPSEEK_API_KEY", "")
 
     # DATABASE SETTINGS
-    DATABASE_URL: str = environ.get("DATABASE_URL", "") + "_test"  # временно
+    DATABASE_URL: str = environ.get("DATABASE_URL", "")
     DATABASE_URL_TEST: str = DATABASE_URL + "_test"
 
     # BOT SETTINGS

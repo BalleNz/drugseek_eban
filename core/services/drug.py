@@ -1,3 +1,6 @@
+import logging
+import uuid
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -13,46 +16,65 @@ class DrugService:
     def __init__(self, repo: DrugRepository):
         self.repo = repo
 
-    async def update_drug(self, drug) -> Optional[bool]:
+    async def update_drug(self, drug_name: str) -> Optional[bool]:
         """
         Обновляет данные о препарате или создаёт новый запрос.
 
         Returns:
+            - drug_description: Описание препарата
             - pathways: Список путей метаболизма
-            - price: Текущая цена в USD
-            - dosage: Словарь дозировок
+            - dosage: Словарь дозировок (done)
             - drug_prices: Список цен в разных аптеках
-            - drug_descriptioh
+            - drug_combinations: Полезные и негативные комбинации с другими препаратами
         """
-        await self.update_drug_dosages(drug.id)
+        await self.update_drug_dosages(drug_name)
         ...
 
-    async def update_drug_dosages(self, drug_id: UUID) -> Optional[Drug]:
-        # Получаем препарат с дозировками
-        drug = await self.repo.get_with_dosages(drug_id)
-        if not drug:
-            return None
-
+    async def update_drug_dosages(self, drug_name: str) -> Optional[Drug]:
+        """Обновляет данные о дозировках препарата."""
         # Получаем и валидируем данные от ассистента
-        raw_data = assistant.get_dosage(drug.name)
-        try:
-            update_data = AssistantDosageResponse(**raw_data)
-        except ValidationError as e:
-            raise ValueError(f"Invalid assistant response: {e}")
+        assistant_response = assistant.get_dosage(drug_name)
+
+        # Получаем препарат с дозировками
+        drug = await self.repo.get_with_dosages_by_name(drug_name)
+        if not drug:
+            drug = Drug(
+                id=uuid.uuid4(),
+                name=assistant_response.drug_name,
+                description="",  # Можно добавить запрос описания у ассистента
+                classification="",  # Аналогично
+                dosages_fun_fact=assistant_response.dosages_fun_fact,
+                created_at=datetime.now(),
+                updated_at=datetime.now()
+            )
 
         # Обновляем dosages_fun_fact
-        if update_data.dosages_fun_fact:
-            drug.dosages_fun_fact = update_data.dosages_fun_fact
+        if assistant_response.dosages_fun_fact:
+            drug.dosages_fun_fact = assistant_response.dosages_fun_fact
+        else:
+            logging.warning("ASSISTANT RESPONSE HAS NOT DOSAGES FUN FACT")
+
+        if assistant_response.description:
+            drug.description = assistant_response.description
+        else:
+            logging.warning("ASSISTANT RESPONSE HAS NOT DOSAGES FUN FACT")
+
+        if assistant_response.classification:
+            drug.classification = assistant_response.classification
+        else:
+            logging.warning("ASSISTANT RESPONSE HAS NOT DOSAGES FUN FACT")
 
         # Обновляем дозировки
-        if update_data.dosages:
-            self._update_drug_dosages(drug, update_data.dosages)
+        if assistant_response.dosages:
+            self._update_drug_dosages(drug, assistant_response.dosages)
+        else:
+            logging.error("ASSISTANT RESPONSE IS NONE")
 
         # Сохраняем изменения
         await self.repo.save(drug)
         return drug
 
-    def _update_drug_dosages(self, drug: Drug, new_dosages_data: dict):
+    def _update_drug_dosages(self, drug: Drug, new_dosages_data: dict) -> None:
         """Основная логика обновления дозировок"""
         # Создаем словарь существующих дозировок
         existing_map = {(d.route, d.method): d for d in drug.dosages}

@@ -7,6 +7,7 @@ from config import config
 from core.database.models.base import IDMixin
 from core.database.models.drug import Drug  # Пример модели
 from core.database.repository.drug import DrugRepository
+from core.services.drug import DrugService
 
 
 @pytest.fixture(scope="session")
@@ -51,5 +52,5 @@ async def drug_repo(session: AsyncSession) -> DrugRepository:
 
 
 @pytest.fixture
-async def drug_model():
-    return Drug(name="Test Drug", dosages_fun_fact="Test fact")
+async def drug_service(drug_repo: DrugRepository):
+    return DrugService(drug_repo)

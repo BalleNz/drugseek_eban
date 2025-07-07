@@ -11,5 +11,6 @@ async def test_create_drug(drug_repo: DrugRepository, drug_model: Drug):
     assert model.dosages_fun_fact == "Test fact"
 
 @pytest.mark.asyncio
-async def test_update_drug_neuro(drug_repo, drug_model):
-    await drug_repo.drug_update("железо")
+async def test_update_drug_neuro(drug_service):
+    await drug_service.update_drug_dosages("Парацетамол")
+    print()

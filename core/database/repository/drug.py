@@ -1,8 +1,7 @@
 import logging
-import uuid
 from typing import Optional
 
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -16,10 +15,32 @@ class DrugRepository(BaseRepository):
     def __init__(self, session: AsyncSession):
         super().__init__(model=Drug, session=session)
 
+    async def get_with_pathways_by_name(self, drug_name: str) -> Optional[Drug]:
+        stmt = (
+            select(Drug)
+            .where(
+                or_(
+                    Drug.name_ru == drug_name, Drug.name == drug_name
+                )
+            )
+            .options(selectinload(Drug.pathways))
+        )
+
+        result = await self._session.execute(stmt)
+
+        # Извлекаем все результаты
+        drug = result.scalars().one_or_none()
+
+        return drug
+
     async def get_with_dosages_by_name(self, drug_name: str) -> Optional[Drug]:
         stmt = (
             select(Drug)
-            .where(Drug.name == drug_name)
+            .where(
+                or_(
+                    Drug.name_ru == drug_name, Drug.name == drug_name
+                )
+            )
             .options(selectinload(Drug.dosages))
         )
 

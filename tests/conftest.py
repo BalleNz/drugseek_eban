@@ -1,3 +1,4 @@
+import uuid
 from typing import AsyncGenerator
 
 import pytest
@@ -54,3 +55,16 @@ async def drug_repo(session: AsyncSession) -> DrugRepository:
 @pytest.fixture
 async def drug_service(drug_repo: DrugRepository):
     return DrugService(drug_repo)
+
+@pytest.fixture
+async def drug_model():
+    return Drug(
+        id=uuid.uuid4(),
+        name="аналЛьгин",
+        name_ru="anal",
+        classification="classification",
+        description="classification",
+        drug_dosages_sources="..",
+        drug_pathways_sources="..",
+        dosages_fun_fact="hui"
+    )

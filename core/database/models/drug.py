@@ -24,10 +24,13 @@ class DosageView:
 class Drug(IDMixin, TimestampsMixin):
     __tablename__ = "drugs"
     name: Mapped[str] = mapped_column(String(100), unique=True, index=True)
+    name_ru: Mapped[str] = mapped_column(String(100), unique=True, index=True)
     description: Mapped[str] = mapped_column(TEXT)
     classification: Mapped[str] = mapped_column(String(100))
 
-    pathways: Mapped[...] = ...
+    dosages_sources: Mapped[str] = mapped_column(TEXT)
+    pathways_sources: Mapped[Optional[str]] = mapped_column(TEXT)
+
     combinations: Mapped[...] = ...
     drug_prices: Mapped[...] = ...  #
 
@@ -35,6 +38,12 @@ class Drug(IDMixin, TimestampsMixin):
 
     # Отношение к DrugDosage
     dosages: Mapped[list["DrugDosages"]] = relationship(
+        back_populates="drug",
+        cascade="all, delete-orphan",
+        lazy="selectin"
+    )
+
+    pathways: Mapped[list["DrugPathways"]] = relationship(
         back_populates="drug",
         cascade="all, delete-orphan",
         lazy="selectin"
@@ -60,6 +69,34 @@ class Drug(IDMixin, TimestampsMixin):
         return result
 
 
+class DrugPathways(IDMixin):
+    __tablename__ = "drug_pathways"
+
+    drug_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey('drugs.id', ondelete='CASCADE'),
+        nullable=False
+    )
+    drug: Mapped["Drug"] = relationship(back_populates="pathways")
+
+    # Основные поля для хранения данных о путях активации
+    receptor: Mapped[str] = mapped_column(String(100), nullable=False)  # Название рецептора (например, "α2A-адренорецептор")
+    binding_affinity: Mapped[Optional[str]] = mapped_column(String(50))  # Ki/IC50/EC50 (например, "Ki = 2.1 нМ")
+    affinity_description: Mapped[Optional[str]] = mapped_column(String(100))  # Описание силы связывания (например, "очень сильное связывание")
+    activation_type: Mapped[str] = mapped_column(String(50), nullable=False)  # Тип активации (например, "antagonist")
+    pathway: Mapped[Optional[str]] = mapped_column(String(100))  # Сигнальный путь (например, "Gi/o protein cascade")
+    effect: Mapped[Optional[str]] = mapped_column(String(100))  # Физиологический эффект (например, "повышение норадреналина")
+
+    # Дополнительные технические поля
+    source: Mapped[Optional[str]] = mapped_column(String(100))  # Источник данных (например, "DrugBank")
+    notes: Mapped[Optional[str]] = mapped_column(TEXT)  # Дополнительные примечания
+
+    __table_args__ = (
+        UniqueConstraint('drug_id', 'receptor', 'activation_type', name='uq_drug_pathway'),
+    )
+
+
+
 class DrugPrice(IDMixin, TimestampsMixin):
     __tablename__ = "drug_prices"
 
@@ -68,7 +105,7 @@ class DrugPrice(IDMixin, TimestampsMixin):
     shop_url: Mapped[str] = mapped_column(String(100))
 
 
-class DrugDosages(IDMixin, TimestampsMixin):
+class DrugDosages(IDMixin):
     __tablename__ = 'drug_dosages'
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -80,8 +117,8 @@ class DrugDosages(IDMixin, TimestampsMixin):
     )
     drug: Mapped["Drug"] = relationship(back_populates="dosages")
 
-    route: Mapped[str] = mapped_column(String(20))  # peroral / parental / ...
-    method: Mapped[Optional[str]]  # intravenous / intramuscular
+    route: Mapped[Optional[str]] = mapped_column(String(30))  # peroral / parental / ...
+    method: Mapped[Optional[str]] = mapped_column(String(30))  # intravenous / intramuscular
 
     per_time: Mapped[Optional[str]] = mapped_column(String(100))
     max_day: Mapped[Optional[str]] = mapped_column(String(100))

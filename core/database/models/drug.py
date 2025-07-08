@@ -28,13 +28,18 @@ class Drug(IDMixin, TimestampsMixin):
     description: Mapped[str] = mapped_column(TEXT)
     classification: Mapped[str] = mapped_column(String(100))
 
-    dosages_sources: Mapped[str] = mapped_column(TEXT)
     pathways_sources: Mapped[Optional[str]] = mapped_column(TEXT)
+    dosages_sources: Mapped[str] = mapped_column(TEXT)
 
     combinations: Mapped[...] = ...
     drug_prices: Mapped[...] = ...  #
 
-    dosages_fun_fact: Mapped[str] = mapped_column(String(100))
+    dosages_fun_fact: Mapped[str] = mapped_column(TEXT)
+
+    # after pathways generation
+    primary_action: Mapped[Optional[str]] = mapped_column(String(100))
+    secondary_actions: Mapped[Optional[str]] = mapped_column(String(100)) # TODO
+    clinical_effects: Mapped[Optional[str]] = mapped_column(TEXT)
 
     # Отношение к DrugDosage
     dosages: Mapped[list["DrugDosages"]] = relationship(
@@ -89,7 +94,7 @@ class DrugPathways(IDMixin):
 
     # Дополнительные технические поля
     source: Mapped[Optional[str]] = mapped_column(String(100))  # Источник данных (например, "DrugBank")
-    notes: Mapped[Optional[str]] = mapped_column(TEXT)  # Дополнительные примечания
+    note: Mapped[Optional[str]] = mapped_column(TEXT)  # Дополнительные примечания
 
     __table_args__ = (
         UniqueConstraint('drug_id', 'receptor', 'activation_type', name='uq_drug_pathway'),
@@ -107,8 +112,6 @@ class DrugPrice(IDMixin, TimestampsMixin):
 
 class DrugDosages(IDMixin):
     __tablename__ = 'drug_dosages'
-
-    id: Mapped[int] = mapped_column(primary_key=True)
 
     drug_id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True),

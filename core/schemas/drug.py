@@ -1,9 +1,10 @@
+from datetime import datetime
 from enum import Enum
-
-from pydantic import BaseModel, Field
 from typing import Optional, Dict, List
 from uuid import UUID
-from datetime import datetime
+
+from pydantic import BaseModel, Field
+
 
 class ActivationType(str, Enum):
     AGONIST = "agonist"
@@ -18,19 +19,19 @@ class ActivationType(str, Enum):
 
 class DosageParams(BaseModel):
     """Параметры дозировки для ответа ассистента"""
-    per_time: Optional[str] = None
-    max_day: Optional[str] = None
-    per_time_weight_based: Optional[str] = None
-    max_day_weight_based: Optional[str] = None
-    notes: Optional[str] = None
+    per_time: Optional[str] = Field(default=None)
+    max_day: Optional[str] = Field(default=None)
+    per_time_weight_based: Optional[str] = Field(default=None)
+    max_day_weight_based: Optional[str] = Field(default=None)
+    notes: Optional[str] = Field(default=None)
 
 
 class AssistantDosageDescriptionResponse(BaseModel):
     """Формализованный ответ ассистента по дозировкам и описанию"""
     drug_name: str = Field(...)
     drug_name_ru: str = Field(...)
-    dosages_fun_fact: Optional[str] = None
-    sources: str
+    dosages_fun_fact: Optional[str] = Field(default=None)
+    sources: str = Field(...)
     dosages: Dict[str, Dict[str, Optional[DosageParams]]]
 
     description: str
@@ -42,45 +43,46 @@ class AssistantDosageDescriptionResponse(BaseModel):
 
 class DrugDosage(BaseModel):
     """Схема дозировки препарата из таблицы drug_dosages."""
-    id: int
-    drug_id: UUID
-    route: str
-    method: Optional[str] = None
-    per_time: Optional[str] = None
-    max_day: Optional[str] = None
-    per_time_weight_based: Optional[str] = None
-    max_day_weight_based: Optional[str] = None
-    notes: Optional[str] = None
-    created_at: datetime
-    updated_at: datetime
+    id: int = Field(...)
+    drug_id: UUID = Field(...)
+    route: str = Field(...)
+    method: Optional[str] = Field(default=None)
+    per_time: Optional[str] = Field(default=None)
+    max_day: Optional[str] = Field(default=None)
+    per_time_weight_based: Optional[str] = Field(default=None)
+    max_day_weight_based: Optional[str] = Field(default=None)
+    notes: Optional[str] = Field(default=None)
+    created_at: datetime = Field(...)
+    updated_at: datetime = Field(...)
 
     class Config:
         from_attributes = True
 
 class DrugPathway(BaseModel):
     """Схема одной записи из таблицы drug_pathways"""
-    receptor: str
+    receptor: str = Field(...)
     binding_affinity: Optional[str] = None
-    affinity_description: str
+    affinity_description: str = Field(...)
     activation_type: ActivationType
-    pathway: str
+    pathway: str = Field(...)
     effect: str = Field(...)
 
-    primary_action: str
+    primary_action: str = Field(...)
     secondary_actions: List[str] = Field(...)
     clinical_effects: List[str] = Field(...)
 
-    sources: List[str] = Field(...)
+    source: str = Field(...)
+    note: str = Field(...)
 
 
 class DrugPrice(BaseModel):
     """Схема цены препарата"""
-    id: int
-    drug_brandname: str
-    price: float
-    shop_url: str
-    created_at: datetime
-    updated_at: datetime
+    id: int = Field(...)
+    drug_brandname: str = Field(...)
+    price: float = Field(...)
+    shop_url: str = Field(...)
+    created_at: datetime = Field(...)
+    updated_at: datetime = Field(...)
 
     class Config:
         from_attributes = True
@@ -88,14 +90,14 @@ class DrugPrice(BaseModel):
 
 class Drug(BaseModel):
     """Полная схема препарата"""
-    id: UUID
-    name: str
-    name_ru: str
-    description: str
-    classification: str
-    dosages_fun_fact: str
-    created_at: datetime
-    updated_at: datetime
+    id: UUID = Field(...)
+    name: str = Field(...)
+    name_ru: str = Field(...)
+    description: str = Field(...)
+    classification: str = Field(...)
+    dosages_fun_fact: str = Field(...)
+    created_at: datetime = Field(...)
+    updated_at: datetime = Field(...)
     dosages: List[DrugDosage] = []
     pathways: List[DrugPathway] = []
     drug_prices: List[DrugPrice] = []
@@ -123,27 +125,30 @@ class Drug(BaseModel):
 
 
 class Pathway(BaseModel):
-    receptor: str
+    receptor: str = Field(...)
     binding_affinity: Optional[str] = None
-    affinity_description: str
+    affinity_description: str = Field(...)
     activation_type: ActivationType
-    pathway: str
+    pathway: str = Field(...)
     effect: str = Field(...)
+
+    source: str = Field(...)
+    note: str = Field(...)
 
     class Config:
         from_attributes = True
 
 
 class MechanismSummary(BaseModel):
-    primary_action: str
-    secondary_actions: List[str] = Field(...)
-    clinical_effects: List[str] = Field(...)
+    primary_action: str = Field(...)
+    secondary_actions: str = Field(...)
+    clinical_effects: str = Field(...)
+    sources: List[str] = Field(...)
 
 
 class AssistantResponseDrugPathway(BaseModel):
     pathways: List[Pathway]
     mechanism_summary: MechanismSummary
-    sources: List[str] = Field(...)
 
     class Config:
         use_enum_values = True

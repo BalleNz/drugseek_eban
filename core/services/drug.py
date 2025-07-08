@@ -111,9 +111,14 @@ class DrugService:
             # Получаем данные от ассистента
             assistant_response = assistant.get_pathways(drug.name_ru)
 
-            # Обновляем источники
-            if assistant_response.sources:
-                drug.pathways_sources = ", ".join(assistant_response.sources)
+            # Обновление Drug модели
+            if assistant_response.mechanism_summary:
+                drug.pathways_sources = ", ".join(assistant_response.mechanism_summary.sources)
+                drug.primary_action = assistant_response.mechanism_summary.primary_action
+                drug.secondary_actions = assistant_response.mechanism_summary.secondary_actions
+                drug.clinical_effects = assistant_response.mechanism_summary.clinical_effects
+            else:
+                logger.warning("ASSISTANT RESPONSE: Missing mechanism summary!")
 
             # Создаем новые DrugPathways объекты
             new_pathways = []
@@ -125,7 +130,9 @@ class DrugService:
                     affinity_description=pathway_data.affinity_description,
                     activation_type=pathway_data.activation_type,
                     pathway=pathway_data.pathway,
-                    effect=pathway_data.effect
+                    effect=pathway_data.effect,
+                    note=pathway_data.note,
+                    source=pathway_data.source
                 ))
 
             # Полная замена существующих путей активации

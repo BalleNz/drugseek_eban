@@ -21,6 +21,9 @@ async def test_update_drug_pathways_neuro(drug_service, drug_repo):
     assert drug_from_db
     assert drug_from_db.pathways[0].pathway
     assert drug_from_db.pathways[0].effect
+    assert drug_from_db.clinical_effects
+    assert drug_from_db.description
+    assert drug_from_db.primary_action
 
 
 

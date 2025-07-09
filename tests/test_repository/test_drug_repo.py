@@ -13,12 +13,18 @@ async def test_create_drug(drug_repo: DrugRepository, drug_model: Drug):
 
 @pytest.mark.asyncio
 async def test_update_drug_pathways_neuro(drug_service, drug_repo):
-    drug = await drug_service.update_drug_dosages_description("парацетамол")
+    drug = await drug_service.update_drug_dosages_description("Миболерон")
 
-    await drug_service.update_pathways(drug.name_ru)
+    # await drug_service.update_pathways(drug.name_ru)
 
     drug_from_db: Drug = await drug_repo.get(drug.id)
     assert drug_from_db
+    assert drug_from_db.dosages_fun_fact
+    assert drug_from_db.excretion
+    assert drug_from_db.metabolism
+    assert drug_from_db.absorption
+    assert drug_from_db.analogs
+
     assert drug_from_db.pathways[0].pathway
     assert drug_from_db.pathways[0].effect
     assert drug_from_db.clinical_effects

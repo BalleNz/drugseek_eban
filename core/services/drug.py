@@ -1,11 +1,11 @@
 import logging
 import uuid
-from datetime import datetime
 from typing import Optional
 
 from core.database.models.drug import Drug, DrugDosages, DrugPathways
 from core.database.repository.drug import DrugRepository
 from core.exceptions import DrugNotFound
+from exceptions import AssistantResponseError
 from neuro_assistant.assistant import assistant
 
 logger = logging.getLogger("bot.core.drug_service")
@@ -20,11 +20,10 @@ class DrugService:
         Обновляет все данные о препарате или создаёт новый запрос.
 
         Returns:
-            - drug_description, classification: Описание препарата и классификация
-            - pathways: Список путей метаболизма (...)
+            - pathways: Список путей метаболизма (done)
             - dosage: Словарь дозировок (done)
             - drug_prices: Список цен в разных аптеках
-            - drug_combinations: Полезные и негативные комбинации с другими препаратами
+            - drug_combinations: Полезные и негативные комбинации с другими препаратами (...)
         """
         await self.update_drug_dosages_description(drug_name)
         ...
@@ -37,6 +36,9 @@ class DrugService:
         # Получаем и валидируем данные от ассистента
         try:
             assistant_response = assistant.get_dosage(drug_name)
+            if not assistant_response.drug_name:
+                logger.error("Введено неправильно название препарата, ассистент не может найти оффициальное название.")
+                raise AssistantResponseError("Wrong input drug / Couldn't get official drugName from assistant.")
         except Exception as ex:
             raise ex
 
@@ -57,48 +59,35 @@ class DrugService:
                 classification=assistant_response.classification,
                 dosages_fun_fact=assistant_response.dosages_fun_fact,
                 dosages_sources=assistant_response.sources,
-                created_at=datetime.now(),
-                updated_at=datetime.now()
+                absorption=assistant_response.pharmacokinetics.absorption,
+                metabolism=assistant_response.pharmacokinetics.metabolism,
+                excretion=assistant_response.pharmacokinetics.excretion,
+                time_to_peak=assistant_response.pharmacokinetics.time_to_peak,
+                analogs=assistant_response.analogs
+                # created_at=datetime.now(),  # ? on server side
+                # updated_at=datetime.now(),
             )
 
-        # Обновляем дозировки
-        self._update_drug_dosages_description(drug, assistant_response.dosages)
+        # новый временный массив
+        dosages_data = []
+        for route, methods in assistant_response.dosages.items():
+            if methods:
+                for method, params in methods.items():
+                    if params:
+                        dosage = DrugDosages(
+                            drug_id=drug.id,
+                            route=route,
+                            method=method,
+                            **params.dict(exclude_none=True)
+                        )
+                        dosages_data.append(dosage)
+
+        # Обновляем список дозировок
+        drug.dosages = dosages_data
 
         # Сохраняем изменения
         await self.repo.save(drug)
         return drug
-
-    def _update_drug_dosages_description(self, drug: Drug, new_dosages_data: dict) -> None:
-        """Основная логика обновления дозировок"""
-        # Создаем словарь существующих дозировок
-        existing_map = {(d.route, d.method): d for d in drug.dosages}
-
-        # Обрабатываем новые дозировки
-        updated_dosages = []
-        for route, methods in new_dosages_data.items():
-            for method, params in methods.items():
-                if not params:
-                    continue
-                key = (route, method)
-
-                # Обновляем существующую или создаем новую
-                if key in existing_map:
-                    dosage = existing_map[key]
-                    for field, value in params.dict(exclude_none=True).items():
-                        if hasattr(dosage, field):
-                            setattr(dosage, field, value)
-                else:
-                    dosage = DrugDosages(
-                        drug_id=drug.id,
-                        route=route,
-                        method=method,
-                        **params.dict(exclude_none=True)
-                    )
-
-                updated_dosages.append(dosage)
-
-        # Обновляем список дозировок
-        drug.dosages = updated_dosages
 
     async def update_pathways(self, drug_name: str) -> Optional[Drug]:
         """Обновляет пути активации препарата на основе данных от ассистента"""
@@ -145,3 +134,6 @@ class DrugService:
         except Exception as ex:
             logger.error(f"Failed to update pathways for {drug_name}: {str(ex)}")
             raise ex
+
+    async def update_combinations(self, drug_name: str) -> Optional[Drug]:
+        ...

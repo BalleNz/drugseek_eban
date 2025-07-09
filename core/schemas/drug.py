@@ -15,6 +15,7 @@ class ActivationType(str, Enum):
     ACTIVATOR = "activator"
     MODULATOR = "modulator"
     BLOCKER = "blocker"
+    OTHER = "other"
 
 
 class DosageParams(BaseModel):
@@ -26,16 +27,27 @@ class DosageParams(BaseModel):
     notes: Optional[str] = Field(default=None)
 
 
+class Pharmacokinetics(BaseModel):
+    absorption: Optional[str] = Field(default=None, description="процент биодоступности")
+    metabolism: Optional[str] = Field(default=None, description="основные пути метаболизма")
+    excretion: Optional[str] = Field(default=None, description="ТОП 3 (примерно) путей выведения...")
+    time_to_peak: Optional[str] = Field(default=None, description="время до достижения Cmax")
+
+
 class AssistantDosageDescriptionResponse(BaseModel):
     """Формализованный ответ ассистента по дозировкам и описанию"""
     drug_name: str = Field(...)
     drug_name_ru: str = Field(...)
-    dosages_fun_fact: Optional[str] = Field(default=None)
-    sources: str = Field(...)
-    dosages: Dict[str, Dict[str, Optional[DosageParams]]]
 
-    description: str
-    classification: str
+    analogs: str = Field()
+    dosages_fun_fact: Optional[str] = Field(default=None)
+    description: str = Field(...)
+    classification: str = Field(...)
+    sources: str = Field(...)
+
+    pharmacokinetics: Pharmacokinetics
+
+    dosages: Dict[str, Optional[Dict[str, Optional[DosageParams]]]]
 
     class Config:
         allow_population_by_field_name = True
@@ -45,12 +57,19 @@ class DrugDosage(BaseModel):
     """Схема дозировки препарата из таблицы drug_dosages."""
     id: int = Field(...)
     drug_id: UUID = Field(...)
+
     route: str = Field(...)
     method: Optional[str] = Field(default=None)
+
     per_time: Optional[str] = Field(default=None)
     max_day: Optional[str] = Field(default=None)
     per_time_weight_based: Optional[str] = Field(default=None)
     max_day_weight_based: Optional[str] = Field(default=None)
+
+    onset: str = Field(None, description="время начала действия (например, 'немедленно')")
+    half_life: str = Field(None, description="период полувыведения")
+    duration: str = Field(None, description="продолжительность действия")
+
     notes: Optional[str] = Field(default=None)
     created_at: datetime = Field(...)
     updated_at: datetime = Field(...)
@@ -58,10 +77,11 @@ class DrugDosage(BaseModel):
     class Config:
         from_attributes = True
 
+
 class DrugPathway(BaseModel):
     """Схема одной записи из таблицы drug_pathways"""
     receptor: str = Field(...)
-    binding_affinity: Optional[str] = None
+    binding_affinity: Optional[str] = Field(default=None)
     affinity_description: str = Field(...)
     activation_type: ActivationType
     pathway: str = Field(...)
@@ -94,6 +114,7 @@ class Drug(BaseModel):
     name: str = Field(...)
     name_ru: str = Field(...)
     description: str = Field(...)
+    analogs: str = Field(default=None)
     classification: str = Field(...)
     dosages_fun_fact: str = Field(...)
     created_at: datetime = Field(...)

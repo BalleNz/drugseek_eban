@@ -27,19 +27,25 @@ class Drug(IDMixin, TimestampsMixin):
     name_ru: Mapped[str] = mapped_column(String(100), unique=True, index=True)
     description: Mapped[str] = mapped_column(TEXT)
     classification: Mapped[str] = mapped_column(String(100))
+    analogs: Mapped[Optional[str]] = mapped_column(TEXT)
 
-    pathways_sources: Mapped[Optional[str]] = mapped_column(TEXT)
-    dosages_sources: Mapped[str] = mapped_column(TEXT)
+    # dosages info
+    dosages_fun_fact: Mapped[str] = mapped_column(TEXT)
+    absorption: Mapped[Optional[str]] = mapped_column(String(100))
+    metabolism: Mapped[Optional[str]] = mapped_column(TEXT)
+    excretion: Mapped[Optional[str]] = mapped_column(TEXT)
+    time_to_peak: Mapped[Optional[str]] = mapped_column(String(100))
 
     combinations: Mapped[...] = ...
     drug_prices: Mapped[...] = ...  #
 
-    dosages_fun_fact: Mapped[str] = mapped_column(TEXT)
-
-    # after pathways generation
+    # pathways generation
     primary_action: Mapped[Optional[str]] = mapped_column(String(100))
     secondary_actions: Mapped[Optional[str]] = mapped_column(String(100)) # TODO
     clinical_effects: Mapped[Optional[str]] = mapped_column(TEXT)
+
+    pathways_sources: Mapped[Optional[str]] = mapped_column(TEXT)
+    dosages_sources: Mapped[str] = mapped_column(TEXT)
 
     # Отношение к DrugDosage
     dosages: Mapped[list["DrugDosages"]] = relationship(
@@ -101,7 +107,6 @@ class DrugPathways(IDMixin):
     )
 
 
-
 class DrugPrice(IDMixin, TimestampsMixin):
     __tablename__ = "drug_prices"
 
@@ -129,6 +134,11 @@ class DrugDosages(IDMixin):
     # for peroral and intramuscular only
     per_time_weight_based: Mapped[Optional[str]] = mapped_column(String(100))
     max_day_weight_based: Mapped[Optional[str]] = mapped_column(String(100))
+
+    onset: Mapped[Optional[str]] = mapped_column(String(100))
+    half_life: Mapped[Optional[str]] = mapped_column(String(100))
+    elimination: Mapped[Optional[str]] = mapped_column(TEXT)
+    duration: Mapped[Optional[str]] = mapped_column(String(100))
 
     notes: Mapped[Optional[str]] = mapped_column(String(100))
 

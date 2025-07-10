@@ -27,10 +27,22 @@ class DrugRepository(BaseRepository):
         )
 
         result = await self._session.execute(stmt)
-
-        # Извлекаем все результаты
         drug = result.scalars().one_or_none()
+        return drug
 
+    async def get_with_combinations_by_name(self, drug_name: str) -> Optional[Drug]:
+        stmt = (
+            select(Drug)
+            .where(
+                or_(
+                    Drug.name_ru == drug_name, Drug.name == drug_name
+                )
+            )
+            .options(selectinload(Drug.combinations))
+        )
+
+        result = await self._session.execute(stmt)
+        drug = result.scalars().one_or_none()
         return drug
 
     async def get_with_dosages_by_name(self, drug_name: str) -> Optional[Drug]:
@@ -45,10 +57,7 @@ class DrugRepository(BaseRepository):
         )
 
         result = await self._session.execute(stmt)
-
-        # Извлекаем все результаты
         drug = result.scalars().one_or_none()
-
         return drug
 
     async def save(self, drug: Drug) -> None:

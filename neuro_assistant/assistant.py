@@ -10,12 +10,20 @@ from config import config
 from core.exceptions import AssistantResponseError
 from core.schemas.drug import AssistantDosageDescriptionResponse, AssistantResponseDrugPathway
 from neuro_assistant.prompts import Prompts
+from schemas.drug import AssistantResponseCombinations
 
 env = dotenv_values("../.env")
 
 DEEPSEEK_API_KEY = env.get("DEEPSEEK_API_KEY")
 
 logger = logging.getLogger("bot.assistant")
+
+AssistantResponseModel = Union[
+    AssistantResponseDrugPathway,
+    AssistantDosageDescriptionResponse,
+    AssistantResponseCombinations,
+    ...
+]
 
 
 class AssistantInterface(ABC):
@@ -52,7 +60,7 @@ class Assistant():
             self,
             drug_name: str,
             prompt: str,
-            pydantic_model: Type[Union[AssistantResponseDrugPathway, AssistantDosageDescriptionResponse]]
+            pydantic_model: Type[AssistantResponseModel]
     ):
         try:
             response = self.client.chat.completions.create(
@@ -79,10 +87,16 @@ class Assistant():
             raise Exception
 
     def get_dosage(self, drug_name: str) -> AssistantDosageDescriptionResponse:
-        return self._get_response(drug_name=drug_name, prompt=self.promptsClient.GET_DESCRIPTION_DOSAGES, pydantic_model=AssistantDosageDescriptionResponse)
+        return self._get_response(drug_name=drug_name, prompt=self.promptsClient.GET_DESCRIPTION_DOSAGES,
+                                  pydantic_model=AssistantDosageDescriptionResponse)
 
     def get_pathways(self, drug_name: str) -> AssistantResponseDrugPathway:
-        return self._get_response(drug_name=drug_name, prompt=self.promptsClient.GET_PATHWAY, pydantic_model=AssistantResponseDrugPathway)
+        return self._get_response(drug_name=drug_name, prompt=self.promptsClient.GET_PATHWAY,
+                                  pydantic_model=AssistantResponseDrugPathway)
+
+    def get_combinations(self, drug_name: str) -> AssistantResponseCombinations:
+        return self._get_response(drug_name=drug_name, prompt=self.promptsClient.GET_COMBINATIONS,
+                                  pydantic_model=AssistantResponseCombinations)
 
 
 assistant = Assistant(config.DEEPSEEK_API_KEY)

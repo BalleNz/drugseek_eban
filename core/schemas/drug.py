@@ -18,6 +18,11 @@ class ActivationType(str, Enum):
     OTHER = "other"
 
 
+class CombinationType(str, Enum):
+    GOOD = 'good'
+    BAD = 'bad'
+
+
 class DosageParams(BaseModel):
     """Параметры дозировки для ответа ассистента"""
     per_time: Optional[str] = Field(default=None)
@@ -51,6 +56,19 @@ class AssistantDosageDescriptionResponse(BaseModel):
 
     class Config:
         allow_population_by_field_name = True
+
+
+class Combination(BaseModel):
+    combination_type: CombinationType
+    substance: str
+    effect: str
+    products: Optional[List[str]] = Field(default=None)  # only for good
+    risks: Optional[str] = Field(default=None) # only for bad
+    sources: List[str]
+
+
+class AssistantResponseCombinations(BaseModel):
+    combinations: list[Combination]
 
 
 class DrugDosage(BaseModel):
@@ -164,11 +182,11 @@ class MechanismSummary(BaseModel):
     primary_action: str = Field(...)
     secondary_actions: str = Field(...)
     clinical_effects: str = Field(...)
-    sources: List[str] = Field(...)
+    sources: list[str] = Field(...)
 
 
 class AssistantResponseDrugPathway(BaseModel):
-    pathways: List[Pathway]
+    pathways: list[Pathway]
     mechanism_summary: MechanismSummary
 
     class Config:

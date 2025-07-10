@@ -2,11 +2,12 @@ import logging
 import uuid
 from typing import Optional
 
-from core.database.models.drug import Drug, DrugDosages, DrugPathways
+from core.database.models.drug import Drug, DrugDosages, DrugPathways, DrugCombinations
 from core.database.repository.drug import DrugRepository
 from core.exceptions import DrugNotFound
 from exceptions import AssistantResponseError
 from neuro_assistant.assistant import assistant
+from schemas.drug import AssistantResponseCombinations
 
 logger = logging.getLogger("bot.core.drug_service")
 
@@ -99,10 +100,12 @@ class DrugService:
         try:
             # Получаем данные от ассистента
             assistant_response = assistant.get_pathways(drug.name_ru)
+            if not assistant_response:
+                raise AssistantResponseError()
 
             # Обновление Drug модели
             if assistant_response.mechanism_summary:
-                drug.pathways_sources = ", ".join(assistant_response.mechanism_summary.sources)
+                drug.pathways_sources = assistant_response.mechanism_summary.sources
                 drug.primary_action = assistant_response.mechanism_summary.primary_action
                 drug.secondary_actions = assistant_response.mechanism_summary.secondary_actions
                 drug.clinical_effects = assistant_response.mechanism_summary.clinical_effects
@@ -124,10 +127,8 @@ class DrugService:
                     source=pathway_data.source
                 ))
 
-            # Полная замена существующих путей активации
             drug.pathways = new_pathways
 
-            # Сохраняем изменения
             await self.repo.save(drug)
             return drug
 
@@ -136,4 +137,32 @@ class DrugService:
             raise ex
 
     async def update_combinations(self, drug_name: str) -> Optional[Drug]:
-        ...
+        drug: Drug = await self.repo.get_with_combinations_by_name(drug_name=drug_name)
+        if not drug:
+            raise DrugNotFound()
+
+        try:
+            assistant_response: AssistantResponseCombinations = assistant.get_combinations(drug_name=drug_name)
+            if not assistant_response:
+                raise AssistantResponseError()
+
+            new_combinations = []
+            for combination in assistant_response.combinations:
+                new_combinations.append(DrugCombinations(
+                    drug_id=drug.id,
+                    combination_type=combination.combination_type,
+                    substance=combination.substance,
+                    effect=combination.effect,
+                    risks=combination.risks,
+                    products=combination.products,
+                    sources=combination.sources
+                ))
+
+            drug.combinations = new_combinations
+
+            await self.repo.save(drug)
+            return drug
+
+        except Exception as ex:
+            logger.error(f"Failed to update combinations for {drug_name}: {str(ex)}")
+            raise ex

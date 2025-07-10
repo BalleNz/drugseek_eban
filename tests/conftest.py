@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sess
 
 from config import config
 from core.database.models.base import IDMixin
-from core.database.models.drug import Drug  # Пример модели
+from core.database.models.drug import Drug, DrugCombinations, DrugPathways, DrugDosages, DrugPrice  # обязательный импорт
 from core.database.repository.drug import DrugRepository
 from core.services.drug import DrugService
 
@@ -25,7 +25,6 @@ async def test_engine():
     )
 
     async with test_engine.connect() as conn:
-        # create tables from IDMixin
         async with conn.begin():
             await conn.run_sync(IDMixin.metadata.create_all)
 

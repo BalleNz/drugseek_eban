@@ -1,31 +1,18 @@
 import uuid
-from dataclasses import dataclass
 from typing import Optional
 
-from sqlalchemy import String, Float, ForeignKey, TEXT, UniqueConstraint, ARRAY
+from sqlalchemy import String, Float, ForeignKey, TEXT, UniqueConstraint, ARRAY, Index, func
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID  # Важно импортировать UUID для PostgreSQL
-from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database.models.base import TimestampsMixin, IDMixin
 
 
-@dataclass
-class DosageView:
-    route: str
-    method: Optional[str]
-    per_time: Optional[str]
-    max_day: Optional[str]
-    per_time_weight_based: Optional[str]
-    max_day_weight_based: Optional[str]
-    notes: Optional[str]
-
-
 class Drug(IDMixin, TimestampsMixin):
     __tablename__ = "drugs"
 
-    name: Mapped[str] = mapped_column(String(100), unique=True, index=True)
-    name_ru: Mapped[str] = mapped_column(String(100), unique=True, index=True)
+    name: Mapped[str] = mapped_column(String(100))  # действующее вещество
+    latin_name: Mapped[Optional[str]] = mapped_column(String(100))
     description: Mapped[str] = mapped_column(TEXT)
     classification: Mapped[str] = mapped_column(String(100))
     analogs: Mapped[Optional[str]] = mapped_column(TEXT)
@@ -48,45 +35,74 @@ class Drug(IDMixin, TimestampsMixin):
     dosages_sources: Mapped[list[str]] = mapped_column(ARRAY(String))
 
     # Отношение к DrugDosage
-    dosages: Mapped[list["DrugDosages"]] = relationship(
+    dosages: Mapped[list["DrugDosage"]] = relationship(
         back_populates="drug",
         cascade="all, delete-orphan",
         lazy="selectin"
     )
 
-    pathways: Mapped[list["DrugPathways"]] = relationship(
+    pathways: Mapped[list["DrugPathway"]] = relationship(
         back_populates="drug",
         cascade="all, delete-orphan",
         lazy="selectin"
     )
 
-    combinations: Mapped[list["DrugCombinations"]] = relationship(
+    combinations: Mapped[list["DrugCombination"]] = relationship(
         back_populates="drug",
         cascade="all, delete-orphan",
         lazy="selectin"
     )
 
-    @hybrid_property
-    def dosages_view(self) -> dict[str, dict[str, DosageView]]:
-        """Группирует дозировки по route и method в удобную структуру"""
-        result = {}
-        for dosage in self.dosages:
-            if dosage.route not in result:
-                result[dosage.route] = {}
+    synonyms: Mapped[list["DrugSynonym"]] = relationship(
+        back_populates="drug",
+        cascade="all, delete-orphan",
+        lazy="selectin"
+    )
 
-            result[dosage.route][dosage.method] = DosageView(
-                route=dosage.route,
-                method=dosage.method,
-                per_time=dosage.per_time,
-                max_day=dosage.max_day,
-                per_time_weight_based=dosage.per_time_weight_based,
-                max_day_weight_based=dosage.max_day_weight_based,
-                notes=dosage.notes
-            )
-        return result
+    __table_args__ = (
+        Index(
+            'trgm_drug_name_idx',
+            func.lower(name),  # Используем func.lower для индексации нижнего регистра
+            postgresql_using='gin',  # Указываем тип индекса GIN
+            postgresql_ops={func.lower(name): 'gin_trgm_ops'}  # Указываем операторный класс
+        ),
+        UniqueConstraint("drug_id", "name"),
+        Index("idx_drugs_name_lower", func.lower(name), postgresql_using="btree")
+    )
 
 
-class DrugCombinations(IDMixin):
+class DrugSynonym(IDMixin):
+    __tablename__ = "drug_synonyms"
+
+    drug_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("drugs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    synonym: Mapped[str] = mapped_column(
+        String(100, collation="ru_RU.utf8"),
+        unique=True,
+        comment="одно из названий препарата на русском"
+    )
+
+    __table_args__ = (
+        UniqueConstraint("drug_id", "synonym", name="uq_drug_synonym"),
+
+        # B-tree индекс для точного совпадения
+        Index("idx_drug_synonyms_lower", func.lower(synonym), postgresql_using="btree"),
+
+        # GIN индекс для нечеткого поиска (триграммы) регистронезависимого поиска
+        Index(
+            'trgm_drug_synonyms_lower_idx',
+            func.lower(synonym),
+            postgresql_using='gin',
+            postgresql_ops={func.lower(synonym): 'gin_trgm_ops'}
+        )
+    )
+
+
+class DrugCombination(IDMixin):
     __tablename__ = "drug_combinations"
 
     drug_id: Mapped[uuid.UUID] = mapped_column(
@@ -104,7 +120,7 @@ class DrugCombinations(IDMixin):
     sources: Mapped[list[str]] = mapped_column(ARRAY(String))
 
 
-class DrugPathways(IDMixin):
+class DrugPathway(IDMixin):
     __tablename__ = "drug_pathways"
 
     drug_id: Mapped[uuid.UUID] = mapped_column(
@@ -142,7 +158,7 @@ class DrugPrice(IDMixin, TimestampsMixin):
     shop_url: Mapped[str] = mapped_column(String(100))
 
 
-class DrugDosages(IDMixin):
+class DrugDosage(IDMixin):
     __tablename__ = 'drug_dosages'
 
     drug_id: Mapped[uuid.UUID] = mapped_column(

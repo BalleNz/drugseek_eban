@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sess
 
 from config import config
 from core.database.models.base import IDMixin
-from core.database.models.drug import Drug, DrugCombinations, DrugPathways, DrugDosages, DrugPrice  # обязательный импорт
+from core.database.models.drug import Drug  # обязательный импорт
 from core.database.repository.drug import DrugRepository
 from core.services.drug import DrugService
 
@@ -54,6 +54,7 @@ async def drug_repo(session: AsyncSession) -> DrugRepository:
 @pytest.fixture
 async def drug_service(drug_repo: DrugRepository):
     return DrugService(drug_repo)
+
 
 @pytest.fixture
 async def drug_model():

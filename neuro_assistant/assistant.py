@@ -12,7 +12,7 @@ from core.schemas.drug import AssistantDosageDescriptionResponse, AssistantRespo
 from neuro_assistant.prompts import Prompts
 from schemas.drug import AssistantResponseCombinations
 
-env = dotenv_values("../.env")
+env = dotenv_values(".env")
 
 DEEPSEEK_API_KEY = env.get("DEEPSEEK_API_KEY")
 

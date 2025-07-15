@@ -7,6 +7,8 @@ from core.services.drug import DrugService
 
 container = Container()
 
+# FUTURE: МБ УБРАТЬ?
+
 
 def register_dependencies():
     """

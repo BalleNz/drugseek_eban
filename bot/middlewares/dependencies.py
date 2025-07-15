@@ -2,7 +2,7 @@ import inspect
 
 from aiogram import BaseMiddleware
 
-from core.dependencies import container
+from dependencies import container
 
 
 class DIMiddleware(BaseMiddleware):

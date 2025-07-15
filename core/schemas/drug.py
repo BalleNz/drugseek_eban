@@ -41,8 +41,9 @@ class Pharmacokinetics(BaseModel):
 
 class AssistantDosageDescriptionResponse(BaseModel):
     """Формализованный ответ ассистента по дозировкам и описанию"""
-    drug_name: str = Field(...)
-    drug_name_ru: str = Field(...)
+    drug_name: str = Field(..., description="одно возможное название для ДВ на ENG")
+    latin_name: str = Field(...)
+    drug_name_ru: list[str] = Field(..., description="все возможные названия для препарата на RU")
 
     analogs: str = Field()
     dosages_fun_fact: Optional[str] = Field(default=None)
@@ -130,7 +131,8 @@ class Drug(BaseModel):
     """Полная схема препарата"""
     id: UUID = Field(...)
     name: str = Field(...)
-    name_ru: str = Field(...)
+    latin_name: str = Field(default=None)
+    name_ru: list[str] = Field(...)
     description: str = Field(...)
     analogs: str = Field(default=None)
     classification: str = Field(...)
@@ -146,7 +148,12 @@ class Drug(BaseModel):
 
     @property
     def dosages_view(self) -> Dict[str, Dict[str, DosageParams]]:
-        """Группировка дозировок для API"""
+        """
+        Группировка дозировок для API.
+
+        Для вида:
+            - Drug.dosages_view["other"]["peroral"].max_day
+        """
         result = {}
         for dosage in self.dosages:
             route_group = result.setdefault(dosage.route, {})

@@ -1,8 +1,9 @@
 import logging
 import uuid
+from datetime import datetime
 from typing import Optional
 
-from core.database.models.drug import Drug, DrugDosages, DrugPathways, DrugCombinations
+from core.database.models.drug import Drug, DrugDosage, DrugPathway, DrugCombination
 from core.database.repository.drug import DrugRepository
 from core.exceptions import DrugNotFound
 from exceptions import AssistantResponseError
@@ -16,45 +17,68 @@ class DrugService:
     def __init__(self, repo: DrugRepository):
         self.repo = repo
 
-    async def new_drug(self, drug_name: str) -> Optional[bool]:
+    async def get_drug(self, user: ..., user_query: str) -> Optional[Drug]:
+        """
+        Возвращает препарат по запросу юзера.
+
+        Если есть токены:
+            - поиск препаратов через ИИ —> возвращает ДВ на англ.
+
+        Если токенов нет:
+            - поиск препаратов по имени в таблице синонимов на русском.
+        """
+
+        # TODO: защита от бреда пользователя + ограничение на размер сообщения
+
+        drug: Drug = await self.repo.get_drug_by_user_query(user_query=user_query)
+        if drug:
+            return drug
+        return None  # Далее будет обработка на стороне клиента
+
+    async def update_drug(self, drug_id: uuid.UUID) -> Optional[Drug]:
         """
         Обновляет все данные о препарате или создаёт новый запрос.
 
         Returns:
             - pathways: Список путей метаболизма (done)
             - dosage: Словарь дозировок (done)
-            - drug_prices: Список цен в разных аптеках
-            - drug_combinations: Полезные и негативные комбинации с другими препаратами (...)
+            - drug_prices: Список цен в разных аптеках (FUTURE: yandex search api)
+            - drug_combinations: Полезные и негативные комбинации с другими препаратами (done)
         """
-        await self.update_drug_dosages_description(drug_name)
-        ...
+        try:
+            drug: Optional[Drug] = await self.repo.get_with_all_relationships(drug_id=drug_id)
 
-    async def update_drug_dosages_description(self, drug_name: str) -> Optional[Drug]:
+            await self.update_dosages(drug=drug)  # create new drug model if not exists
+            await self.update_pathways(drug=drug)
+            drug = await self.update_combinations(drug=drug)
+
+            await self.repo.save(drug)
+            return drug
+        except Exception as ex:
+            await self.repo._session.rollback()
+
+            logger.error(f"EXCEPTION: {ex}")
+            return None
+
+    async def update_dosages(self, drug: Optional[Drug]) -> Optional[Drug]:
         """
-        Первый запрос.
         Обновляет данные о дозировках препарата.
         """
-        # Получаем и валидируем данные от ассистента
+
         try:
-            assistant_response = assistant.get_dosage(drug_name)
+            assistant_response = assistant.get_dosage(drug_name=drug.name)
             if not assistant_response.drug_name:
-                logger.error("Введено неправильно название препарата, ассистент не может найти оффициальное название.")
-                raise AssistantResponseError("Wrong input drug / Couldn't get official drugName from assistant.")
+                logger.error("ассистент не может найти оффициальное название.")
+                raise AssistantResponseError("Couldn't get official drugName from assistant.")
         except Exception as ex:
             raise ex
-
-        # Получаем препарат с дозировками
-        # подразумевается что пользователь ввел на русском или англ
-
-        # TODO: сделать отдельный промпт  чтобы правильно интерпретировал ввод пользователя + защита от бреда пользователя + ограничение на размер сообщения
-
-        drug = await self.repo.get_with_dosages_by_name(drug_name)
 
         if not drug:
             # ЗДЕСЬ СОЗДАЕТСЯ НОВЫЙ ЭКЗЕМПЛЯР DRUG
             drug = Drug(
                 id=uuid.uuid4(),
                 name=assistant_response.drug_name,
+                latin_name=assistant_response.latin_name,
                 name_ru=assistant_response.drug_name_ru,
                 description=assistant_response.description,
                 classification=assistant_response.classification,
@@ -65,8 +89,6 @@ class DrugService:
                 excretion=assistant_response.pharmacokinetics.excretion,
                 time_to_peak=assistant_response.pharmacokinetics.time_to_peak,
                 analogs=assistant_response.analogs
-                # created_at=datetime.now(),  # ? on server side
-                # updated_at=datetime.now(),
             )
 
         # новый временный массив
@@ -75,7 +97,7 @@ class DrugService:
             if methods:
                 for method, params in methods.items():
                     if params:
-                        dosage = DrugDosages(
+                        dosage = DrugDosage(
                             drug_id=drug.id,
                             route=route,
                             method=method,
@@ -85,21 +107,16 @@ class DrugService:
 
         # Обновляем список дозировок
         drug.dosages = dosages_data
+        drug.updated_at = datetime.now()
 
-        # Сохраняем изменения
-        await self.repo.save(drug)
         return drug
 
-    async def update_pathways(self, drug_name: str) -> Optional[Drug]:
+    async def update_pathways(self, drug: Drug) -> Optional[Drug]:
         """Обновляет пути активации препарата на основе данных от ассистента"""
-        # Получаем препарат с существующими путями активации
-        drug = await self.repo.get_with_pathways_by_name(drug_name)
-        if not drug:
-            raise DrugNotFound()
 
         try:
             # Получаем данные от ассистента
-            assistant_response = assistant.get_pathways(drug.name_ru)
+            assistant_response = assistant.get_pathways(drug.name)
             if not assistant_response:
                 raise AssistantResponseError()
 
@@ -111,11 +128,12 @@ class DrugService:
                 drug.clinical_effects = assistant_response.mechanism_summary.clinical_effects
             else:
                 logger.warning("ASSISTANT RESPONSE: Missing mechanism summary!")
+                raise AssistantResponseError
 
             # Создаем новые DrugPathways объекты
             new_pathways = []
             for pathway_data in assistant_response.pathways:
-                new_pathways.append(DrugPathways(
+                new_pathways.append(DrugPathway(
                     drug_id=drug.id,
                     receptor=pathway_data.receptor,
                     binding_affinity=pathway_data.binding_affinity,
@@ -128,27 +146,23 @@ class DrugService:
                 ))
 
             drug.pathways = new_pathways
-
-            await self.repo.save(drug)
             return drug
 
         except Exception as ex:
-            logger.error(f"Failed to update pathways for {drug_name}: {str(ex)}")
+            logger.error(f"Failed to update pathways for {drug.name}: {str(ex)}")
             raise ex
 
-    async def update_combinations(self, drug_name: str) -> Optional[Drug]:
-        drug: Drug = await self.repo.get_with_combinations_by_name(drug_name=drug_name)
-        if not drug:
-            raise DrugNotFound()
+    async def update_combinations(self, drug: Drug) -> Optional[Drug]:
+        """Update combinations relationship"""
 
         try:
-            assistant_response: AssistantResponseCombinations = assistant.get_combinations(drug_name=drug_name)
+            assistant_response: AssistantResponseCombinations = assistant.get_combinations(drug_name=drug.name)
             if not assistant_response:
                 raise AssistantResponseError()
 
             new_combinations = []
             for combination in assistant_response.combinations:
-                new_combinations.append(DrugCombinations(
+                new_combinations.append(DrugCombination(
                     drug_id=drug.id,
                     combination_type=combination.combination_type,
                     substance=combination.substance,
@@ -159,10 +173,8 @@ class DrugService:
                 ))
 
             drug.combinations = new_combinations
-
-            await self.repo.save(drug)
             return drug
 
         except Exception as ex:
-            logger.error(f"Failed to update combinations for {drug_name}: {str(ex)}")
+            logger.error(f"Failed to update combinations for {drug_id}: {str(ex)}")
             raise ex

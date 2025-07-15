@@ -1,0 +1,6 @@
+commands:
+1. /search <drug_name>
+
+CORE:
+1. # FUTURE: добавить в основную БД:  CREATE EXTENSION IF NOT EXISTS pg_trgm;
+2.

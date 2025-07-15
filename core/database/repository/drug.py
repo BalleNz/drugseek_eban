@@ -1,11 +1,12 @@
 import logging
+import uuid
 from typing import Optional
 
-from sqlalchemy import select, or_
+from sqlalchemy import select, text, exists, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, aliased
 
-from core.database.models.drug import Drug
+from core.database.models.drug import Drug, DrugSynonym
 from core.database.repository.base import BaseRepository
 
 logger = logging.getLogger("bot.core.repository.drug")
@@ -15,13 +16,39 @@ class DrugRepository(BaseRepository):
     def __init__(self, session: AsyncSession):
         super().__init__(model=Drug, session=session)
 
-    async def get_with_pathways_by_name(self, drug_name: str) -> Optional[Drug]:
+    async def get_drug_by_user_query(self, user_query: str) -> Optional[Drug]:
+
+        # TODO: pg_trgm
+
+        drug_id: uuid.UUID = await self._session.get(DrugSynonym.where(func.lower(DrugSynonym.synonym) == user_query.lower()))
+
+        result = await self._session.execute(stmt)
+        drug: Drug = result.scalar_one_or_none()
+        return drug
+
+    async def new_drug(self,) -> Drug:
+        ...
+
+    async def get_with_all_relationships(self, drug_id: uuid.UUID) -> Optional[Drug]:
+        """Returns Drug with all relation tables"""
+
         stmt = (
-            select(Drug)
-            .where(
-                or_(
-                    Drug.name_ru == drug_name, Drug.name == drug_name
-                )
+            select(Drug).where(
+                Drug.id == drug_id
+            )
+            .options(selectinload(Drug.pathways, Drug.combinations, Drug.dosages))
+        )
+
+        result = await self._session.execute(stmt)
+        drug = result.scalars().one_or_none()
+        return drug
+
+    async def get_with_pathways(self, drug_id: uuid.UUID) -> Optional[Drug]:
+        """Returns Drug with pathways relation table"""
+
+        stmt = (
+            select(Drug).where(
+                Drug.id == drug_id
             )
             .options(selectinload(Drug.pathways))
         )
@@ -30,13 +57,12 @@ class DrugRepository(BaseRepository):
         drug = result.scalars().one_or_none()
         return drug
 
-    async def get_with_combinations_by_name(self, drug_name: str) -> Optional[Drug]:
+    async def get_with_combinations(self, drug_id: uuid.UUID) -> Optional[Drug]:
+        """Returns Drug with combinations relation table"""
+
         stmt = (
-            select(Drug)
-            .where(
-                or_(
-                    Drug.name_ru == drug_name, Drug.name == drug_name
-                )
+            select(Drug).where(
+                Drug.id == drug_id
             )
             .options(selectinload(Drug.combinations))
         )
@@ -45,13 +71,12 @@ class DrugRepository(BaseRepository):
         drug = result.scalars().one_or_none()
         return drug
 
-    async def get_with_dosages_by_name(self, drug_name: str) -> Optional[Drug]:
+    async def get_with_dosages(self, drug_id: uuid.UUID) -> Optional[Drug]:
+        """Returns Drug with dosages relation table"""
+
         stmt = (
-            select(Drug)
-            .where(
-                or_(
-                    Drug.name_ru == drug_name, Drug.name == drug_name
-                )
+            select(Drug).where(
+                Drug.id == drug_id
             )
             .options(selectinload(Drug.dosages))
         )

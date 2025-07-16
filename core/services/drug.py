@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from core.database.models.drug import Drug, DrugDosage, DrugPathway, DrugCombination
+from core.database.models.drug import Drug, DrugDosage, DrugPathway, DrugCombination, DrugSynonym, DrugAnalog
 from core.database.repository.drug import DrugRepository
 from core.exceptions import DrugNotFound
 from exceptions import AssistantResponseError
@@ -21,17 +21,14 @@ class DrugService:
         """
         Возвращает препарат по запросу юзера.
 
-        Если есть токены:
-            - поиск препаратов через ИИ —> возвращает ДВ на англ.
-
-        Если токенов нет:
-            - поиск препаратов по имени в таблице синонимов на русском.
+        - поиск препаратов по имени в таблице синонимов на русском.
         """
 
-        # TODO: защита от бреда пользователя + ограничение на размер сообщения
+
 
         drug: Drug = await self.repo.get_drug_by_user_query(user_query=user_query)
         if drug:
+            # TODO: if drug.id in user.allowed_drugs: return drug; else return None
             return drug
         return None  # Далее будет обработка на стороне клиента
 
@@ -47,9 +44,11 @@ class DrugService:
         """
         try:
             drug: Optional[Drug] = await self.repo.get_with_all_relationships(drug_id=drug_id)
+            if not drug:
+                raise DrugNotFound
 
-            await self.update_dosages(drug=drug)  # create new drug model if not exists
-            await self.update_pathways(drug=drug)
+            drug = await self.update_dosages(drug=drug)
+            drug = await self.update_pathways(drug=drug)
             drug = await self.update_combinations(drug=drug)
 
             await self.repo.save(drug)
@@ -60,9 +59,25 @@ class DrugService:
             logger.error(f"EXCEPTION: {ex}")
             return None
 
+    async def create_drug(self, drug_name: str):
+        """
+
+        :param drug_name: on english
+        :return:
+        """
+        # TODO:
+        # 1. check drug_name (бред или нет) -> возврат дв на англ
+        # 2. create drug_name + update_drug
+        return Drug(
+            name=drug_name
+        )  # zaglushka
+
     async def update_dosages(self, drug: Optional[Drug]) -> Optional[Drug]:
         """
-        Обновляет данные о дозировках препарата.
+        Обновляет три таблицы:
+            - Обновляет данные о дозировках препарата.
+            - Обновляет синонимы.
+            - Обновляет аналоги препарата.
         """
 
         try:
@@ -73,23 +88,20 @@ class DrugService:
         except Exception as ex:
             raise ex
 
-        if not drug:
-            # ЗДЕСЬ СОЗДАЕТСЯ НОВЫЙ ЭКЗЕМПЛЯР DRUG
-            drug = Drug(
-                id=uuid.uuid4(),
-                name=assistant_response.drug_name,
-                latin_name=assistant_response.latin_name,
-                name_ru=assistant_response.drug_name_ru,
-                description=assistant_response.description,
-                classification=assistant_response.classification,
-                dosages_fun_fact=assistant_response.dosages_fun_fact,
-                dosages_sources=assistant_response.sources,
-                absorption=assistant_response.pharmacokinetics.absorption,
-                metabolism=assistant_response.pharmacokinetics.metabolism,
-                excretion=assistant_response.pharmacokinetics.excretion,
-                time_to_peak=assistant_response.pharmacokinetics.time_to_peak,
-                analogs=assistant_response.analogs
-            )
+        try:
+            drug.name = assistant_response.drug_name
+            drug.latin_name = assistant_response.latin_name
+            drug.description = assistant_response.description
+            drug.classification = assistant_response.classification
+            drug.dosages_fun_fact = assistant_response.dosages_fun_fact
+            drug.dosages_sources = assistant_response.sources
+
+            drug.dosages.absorption = assistant_response.pharmacokinetics.absorption
+            drug.dosages.metabolism = assistant_response.pharmacokinetics.metabolism
+            drug.dosages.excretion = assistant_response.pharmacokinetics.excretion
+            drug.dosages.time_to_peak = assistant_response.pharmacokinetics.time_to_peak
+        except Exception as ex:
+            raise AssistantResponseError(ex)
 
         # новый временный массив
         dosages_data = []
@@ -107,6 +119,14 @@ class DrugService:
 
         # Обновляем список дозировок
         drug.dosages = dosages_data
+
+        # Обновление остальных списков
+        drug.synonyms = [DrugSynonym(synonym=synonym) for synonym in assistant_response.drug_name_ru]
+        drug.analogs = [
+            DrugAnalog(analog_name=analog.analog_name, percent=analog.percent, difference=analog.difference)
+            for analog in assistant_response.analogs
+        ]
+
         drug.updated_at = datetime.now()
 
         return drug

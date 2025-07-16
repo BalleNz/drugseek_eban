@@ -13,12 +13,11 @@ class Drug(IDMixin, TimestampsMixin):
 
     name: Mapped[str] = mapped_column(String(100))  # действующее вещество
     latin_name: Mapped[Optional[str]] = mapped_column(String(100))
-    description: Mapped[str] = mapped_column(TEXT)
-    classification: Mapped[str] = mapped_column(String(100))
-    analogs: Mapped[Optional[str]] = mapped_column(TEXT)
+    description: Mapped[Optional[str]] = mapped_column(TEXT)
+    classification: Mapped[Optional[str]] = mapped_column(String(100))
 
     # dosages info
-    dosages_fun_fact: Mapped[str] = mapped_column(TEXT)
+    dosages_fun_fact: Mapped[Optional[str]] = mapped_column(TEXT)
     absorption: Mapped[Optional[str]] = mapped_column(String(100))
     metabolism: Mapped[Optional[str]] = mapped_column(TEXT)
     excretion: Mapped[Optional[str]] = mapped_column(TEXT)
@@ -32,7 +31,7 @@ class Drug(IDMixin, TimestampsMixin):
     clinical_effects: Mapped[Optional[str]] = mapped_column(TEXT)
 
     pathways_sources: Mapped[Optional[list[str]]] = mapped_column(ARRAY(String))
-    dosages_sources: Mapped[list[str]] = mapped_column(ARRAY(String))
+    dosages_sources: Mapped[Optional[list[str]]] = mapped_column(ARRAY(String))
 
     # Отношение к DrugDosage
     dosages: Mapped[list["DrugDosage"]] = relationship(
@@ -59,16 +58,35 @@ class Drug(IDMixin, TimestampsMixin):
         lazy="selectin"
     )
 
-    __table_args__ = (
-        Index(
-            'trgm_drug_name_idx',
-            func.lower(name),  # Используем func.lower для индексации нижнего регистра
-            postgresql_using='gin',  # Указываем тип индекса GIN
-            postgresql_ops={func.lower(name): 'gin_trgm_ops'}  # Указываем операторный класс
-        ),
-        UniqueConstraint("drug_id", "name"),
-        Index("idx_drugs_name_lower", func.lower(name), postgresql_using="btree")
+    analogs: Mapped[list["DrugAnalog"]] = relationship(
+        back_populates="drug",
+        cascade="all, delete-orphan",
+        lazy="selectin"
     )
+
+    __table_args__ = (
+        UniqueConstraint("id", "name"),
+    )
+
+
+class DrugAnalog(IDMixin):
+    __tablename__ = "drug_analogs"
+
+    drug_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("drugs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    drug: Mapped["Drug"] = relationship(back_populates="analogs")
+
+    analog_name: Mapped[str] = mapped_column(
+        String(100),
+        unique=True,
+        comment="аналог к основному drug"
+    )
+    percent: Mapped[float] = mapped_column(Float, comment="процент схожести")
+    difference: Mapped[str] = mapped_column(String(100), comment="отличие от основного препа")
 
 
 class DrugSynonym(IDMixin):
@@ -80,8 +98,10 @@ class DrugSynonym(IDMixin):
         nullable=False,
         index=True
     )
+    drug: Mapped["Drug"] = relationship(back_populates="synonyms")
+
     synonym: Mapped[str] = mapped_column(
-        String(100, collation="ru_RU.utf8"),
+        String(100),
         unique=True,
         comment="одно из названий препарата на русском"
     )
@@ -95,9 +115,9 @@ class DrugSynonym(IDMixin):
         # GIN индекс для нечеткого поиска (триграммы) регистронезависимого поиска
         Index(
             'trgm_drug_synonyms_lower_idx',
-            func.lower(synonym),
+            synonym,
             postgresql_using='gin',
-            postgresql_ops={func.lower(synonym): 'gin_trgm_ops'}
+            postgresql_ops={'synonym': 'gin_trgm_ops'}
         )
     )
 

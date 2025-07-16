@@ -39,17 +39,27 @@ class Pharmacokinetics(BaseModel):
     time_to_peak: Optional[str] = Field(default=None, description="время до достижения Cmax")
 
 
+class DrugSynonym(BaseModel):
+    synonym: str
+
+
+class DrugAnalog(BaseModel):
+    analog_name: str = Field(...)
+    percent: float = Field(...)
+    difference: str = Field(...)
+
+
 class AssistantDosageDescriptionResponse(BaseModel):
     """Формализованный ответ ассистента по дозировкам и описанию"""
     drug_name: str = Field(..., description="одно возможное название для ДВ на ENG")
     latin_name: str = Field(...)
-    drug_name_ru: list[str] = Field(..., description="все возможные названия для препарата на RU")
+    drug_name_ru: Optional[list[str]] = Field(None, description="все возможные названия для препарата на RU")
 
-    analogs: str = Field()
+    analogs: Optional[list[DrugAnalog]] = Field(None, description="аналоги препарата")
     dosages_fun_fact: Optional[str] = Field(default=None)
     description: str = Field(...)
     classification: str = Field(...)
-    sources: str = Field(...)
+    sources: list[str] = Field(...)
 
     pharmacokinetics: Pharmacokinetics
 
@@ -64,7 +74,7 @@ class Combination(BaseModel):
     substance: str
     effect: str
     products: Optional[List[str]] = Field(default=None)  # only for good
-    risks: Optional[str] = Field(default=None) # only for bad
+    risks: Optional[str] = Field(default=None)  # only for bad
     sources: List[str]
 
 

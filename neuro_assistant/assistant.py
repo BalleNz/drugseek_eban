@@ -56,7 +56,7 @@ class Assistant():
         self.client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
         self.promptsClient = Prompts()
 
-    def _get_response(
+    def get_response(
             self,
             user_query: str,
             prompt: str,
@@ -87,21 +87,21 @@ class Assistant():
             raise Exception
 
     def get_dosage(self, drug_name: str) -> AssistantDosageDescriptionResponse:
-        return self._get_response(user_query=drug_name, prompt=self.promptsClient.GET_DRUG_DESCRIPTION,
-                                  pydantic_model=AssistantDosageDescriptionResponse)
+        return self.get_response(user_query=drug_name, prompt=self.promptsClient.GET_DRUG_DESCRIPTION,
+                                 pydantic_model=AssistantDosageDescriptionResponse)
 
     def get_pathways(self, drug_name: str) -> AssistantResponseDrugPathway:
-        return self._get_response(user_query=drug_name, prompt=self.promptsClient.GET_DRUG_PATHWAYS,
-                                  pydantic_model=AssistantResponseDrugPathway)
+        return self.get_response(user_query=drug_name, prompt=self.promptsClient.GET_DRUG_PATHWAYS,
+                                 pydantic_model=AssistantResponseDrugPathway)
 
     def get_combinations(self, drug_name: str) -> AssistantResponseCombinations:
-        return self._get_response(user_query=drug_name, prompt=self.promptsClient.GET_DRUG_SYNERGISTS,
-                                  pydantic_model=AssistantResponseCombinations)
+        return self.get_response(user_query=drug_name, prompt=self.promptsClient.GET_DRUG_SYNERGISTS,
+                                 pydantic_model=AssistantResponseCombinations)
 
     def get_user_description(self, user_name: str, user_drug_names: list[str]):
         user_drug_names_text = ', '.join(user_drug_names)
-        return self._get_response(user_query=user_drug_names_text, prompt=self.promptsClient.GET_USER_DESCRIPTION,
-                                  pydantic_model=...)
+        return self.get_response(user_query=user_drug_names_text, prompt=self.promptsClient.GET_USER_DESCRIPTION,
+                                 pydantic_model=...)
 
 
 assistant = Assistant(config.DEEPSEEK_API_KEY)

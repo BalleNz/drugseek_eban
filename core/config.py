@@ -28,5 +28,10 @@ class Config(BaseSettings):
     WEBAPP_PORT: int = int(environ.get("WEBAPP_PORT", "8000"))
     WEBHOOK_URL: str = environ.get("WEBHOOK_URL")  # Полный URL для вебхуков (если используется)
 
+    # Redis (для хранения временных данных или кеша)
+    REDIS_URL: str = environ.get("REDIS_URL", "redis://localhost:6379/0")
+
+    #
+    
 
 config = Config()

@@ -59,12 +59,5 @@ async def drug_service(drug_repo: DrugRepository):
 @pytest.fixture
 async def drug_model():
     return Drug(
-        id=uuid.uuid4(),
         name="аналЛьгин",
-        name_ru="anal",
-        classification="classification",
-        description="classification",
-        drug_dosages_sources="..",
-        drug_pathways_sources="..",
-        dosages_fun_fact="hui"
     )

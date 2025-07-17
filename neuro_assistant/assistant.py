@@ -58,7 +58,7 @@ class Assistant():
 
     def _get_response(
             self,
-            drug_name: str,
+            user_query: str,
             prompt: str,
             pydantic_model: Type[AssistantResponseModel]
     ):
@@ -67,7 +67,7 @@ class Assistant():
                 model="deepseek-chat",
                 messages=[
                     {"role": "system", "content": f"{prompt}"},
-                    {"role": "user", "content": f"{drug_name}"}
+                    {"role": "user", "content": f"{user_query}"}
                 ],
                 response_format={"type": "json_object"},
                 temperature=0.3
@@ -87,16 +87,21 @@ class Assistant():
             raise Exception
 
     def get_dosage(self, drug_name: str) -> AssistantDosageDescriptionResponse:
-        return self._get_response(drug_name=drug_name, prompt=self.promptsClient.GET_DESCRIPTION_DOSAGES,
+        return self._get_response(user_query=drug_name, prompt=self.promptsClient.GET_DRUG_DESCRIPTION,
                                   pydantic_model=AssistantDosageDescriptionResponse)
 
     def get_pathways(self, drug_name: str) -> AssistantResponseDrugPathway:
-        return self._get_response(drug_name=drug_name, prompt=self.promptsClient.GET_PATHWAY,
+        return self._get_response(user_query=drug_name, prompt=self.promptsClient.GET_DRUG_PATHWAYS,
                                   pydantic_model=AssistantResponseDrugPathway)
 
     def get_combinations(self, drug_name: str) -> AssistantResponseCombinations:
-        return self._get_response(drug_name=drug_name, prompt=self.promptsClient.GET_COMBINATIONS,
+        return self._get_response(user_query=drug_name, prompt=self.promptsClient.GET_DRUG_SYNERGISTS,
                                   pydantic_model=AssistantResponseCombinations)
+
+    def get_user_description(self, user_name: str, user_drug_names: list[str]):
+        user_drug_names_text = ', '.join(user_drug_names)
+        return self._get_response(user_query=user_drug_names_text, prompt=self.promptsClient.GET_USER_DESCRIPTION,
+                                  pydantic_model=...)
 
 
 assistant = Assistant(config.DEEPSEEK_API_KEY)

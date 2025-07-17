@@ -144,7 +144,6 @@ class Drug(BaseModel):
     latin_name: str = Field(default=None)
     name_ru: list[str] = Field(...)
     description: str = Field(...)
-    analogs: str = Field(default=None)
     classification: str = Field(...)
     dosages_fun_fact: str = Field(...)
     created_at: datetime = Field(...)
@@ -152,6 +151,7 @@ class Drug(BaseModel):
     dosages: List[DrugDosage] = []
     pathways: List[DrugPathway] = []
     drug_prices: List[DrugPrice] = []
+    analogs: list[DrugAnalog] = Field(default=None)
 
     pathways_sources: List[str] = Field(...)
     dosages_sources: List[str] = Field(...)

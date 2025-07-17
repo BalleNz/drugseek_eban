@@ -1,7 +1,7 @@
 import uuid
 from typing import Optional
 
-from sqlalchemy import String, Float, ForeignKey, TEXT, UniqueConstraint, ARRAY, Index, func
+from sqlalchemy import String, Float, ForeignKey, Text, UniqueConstraint, ARRAY, Index, func
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID  # Важно импортировать UUID для PostgreSQL
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -13,14 +13,14 @@ class Drug(IDMixin, TimestampsMixin):
 
     name: Mapped[str] = mapped_column(String(100))  # действующее вещество
     latin_name: Mapped[Optional[str]] = mapped_column(String(100))
-    description: Mapped[Optional[str]] = mapped_column(TEXT)
+    description: Mapped[Optional[str]] = mapped_column(Text)
     classification: Mapped[Optional[str]] = mapped_column(String(100))
 
     # dosages info
-    dosages_fun_fact: Mapped[Optional[str]] = mapped_column(TEXT)
+    dosages_fun_fact: Mapped[Optional[str]] = mapped_column(Text)
     absorption: Mapped[Optional[str]] = mapped_column(String(100))
-    metabolism: Mapped[Optional[str]] = mapped_column(TEXT)
-    excretion: Mapped[Optional[str]] = mapped_column(TEXT)
+    metabolism: Mapped[Optional[str]] = mapped_column(Text)
+    excretion: Mapped[Optional[str]] = mapped_column(Text)
     time_to_peak: Mapped[Optional[str]] = mapped_column(String(100))
 
     drug_prices: Mapped[...] = ...  #
@@ -28,7 +28,7 @@ class Drug(IDMixin, TimestampsMixin):
     # pathways generation
     primary_action: Mapped[Optional[str]] = mapped_column(String(100))
     secondary_actions: Mapped[Optional[str]] = mapped_column(String(100))  # TODO
-    clinical_effects: Mapped[Optional[str]] = mapped_column(TEXT)
+    clinical_effects: Mapped[Optional[str]] = mapped_column(Text)
 
     pathways_sources: Mapped[Optional[list[str]]] = mapped_column(ARRAY(String))
     dosages_sources: Mapped[Optional[list[str]]] = mapped_column(ARRAY(String))
@@ -134,8 +134,8 @@ class DrugCombination(IDMixin):
 
     combination_type: Mapped[str] = mapped_column(String(10))  # 'good' или 'bad'
     substance: Mapped[str] = mapped_column(String(100))  # ДВ / ДВ или Класс для плохих комбинаций
-    effect: Mapped[str] = mapped_column(TEXT)
-    risks: Mapped[Optional[str]] = mapped_column(TEXT)  # Только для bad
+    effect: Mapped[str] = mapped_column(Text)
+    risks: Mapped[Optional[str]] = mapped_column(Text)  # Только для bad
     products: Mapped[Optional[list[str]]] = mapped_column(ARRAY(String))  # название препаратов с этим ДВ
     sources: Mapped[list[str]] = mapped_column(ARRAY(String))
 
@@ -163,7 +163,7 @@ class DrugPathway(IDMixin):
 
     # Дополнительные технические поля
     source: Mapped[Optional[str]] = mapped_column(String(100))  # Источник данных (например, "DrugBank")
-    note: Mapped[Optional[str]] = mapped_column(TEXT)  # Дополнительные примечания
+    note: Mapped[Optional[str]] = mapped_column(Text)  # Дополнительные примечания
 
     __table_args__ = (
         UniqueConstraint('drug_id', 'receptor', 'activation_type', name='uq_drug_pathway'),
@@ -200,7 +200,7 @@ class DrugDosage(IDMixin):
 
     onset: Mapped[Optional[str]] = mapped_column(String(100))
     half_life: Mapped[Optional[str]] = mapped_column(String(100))
-    elimination: Mapped[Optional[str]] = mapped_column(TEXT)
+    elimination: Mapped[Optional[str]] = mapped_column(Text)
     duration: Mapped[Optional[str]] = mapped_column(String(100))
 
     notes: Mapped[Optional[str]] = mapped_column(String(100))

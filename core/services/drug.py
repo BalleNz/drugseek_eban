@@ -3,9 +3,12 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
+from fastapi import Depends
+
 from core.database.models.drug import Drug, DrugDosage, DrugPathway, DrugCombination, DrugSynonym, DrugAnalog
 from core.database.repository.drug import DrugRepository
 from core.exceptions import DrugNotFound
+from database.repository.drug import get_drug_repository
 from exceptions import AssistantResponseError
 from neuro_assistant.assistant import assistant
 from schemas.drug import AssistantResponseCombinations
@@ -196,5 +199,9 @@ class DrugService:
             return drug
 
         except Exception as ex:
-            logger.error(f"Failed to update combinations for {drug_id}: {str(ex)}")
+            logger.error(f"Failed to update combinations for {drug.name}, {drug.id}: {str(ex)}")
             raise ex
+
+
+def get_drug_service(repo: DrugRepository = Depends(get_drug_repository)):
+    return DrugService(repo=repo)

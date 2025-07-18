@@ -112,9 +112,9 @@ class DrugSynonym(IDMixin):
         # B-tree индекс для точного совпадения
         Index("idx_drug_synonyms_lower", func.lower(synonym), postgresql_using="btree"),
 
-        # GIN индекс для нечеткого поиска (триграммы) регистронезависимого поиска
+        # GIN индекс для нечеткого поиска (триграммы) регистронезависимого поиска (по умолчанию в trgm)
         Index(
-            'trgm_drug_synonyms_lower_idx',
+            'trgm_drug_synonyms',
             synonym,
             postgresql_using='gin',
             postgresql_ops={'synonym': 'gin_trgm_ops'}

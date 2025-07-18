@@ -9,6 +9,10 @@ from sqlalchemy.orm import selectinload, aliased
 from core.database.models.drug import Drug, DrugSynonym
 from core.database.repository.base import BaseRepository
 
+from fastapi import Depends
+
+from database.engine import get_async_session
+
 logger = logging.getLogger("bot.core.repository.drug")
 
 
@@ -61,7 +65,7 @@ class DrugRepository(BaseRepository):
         drug_id = result.scalar_one_or_none()
         return await self.get(drug_id) if drug_id else None
 
-    async def new_drug(self,) -> Drug:
+    async def new_drug(self, ) -> Drug:
         ...
 
     async def get_with_all_relationships(self, drug_id: uuid.UUID) -> Optional[Drug]:
@@ -126,3 +130,7 @@ class DrugRepository(BaseRepository):
         await self._session.refresh(drug)
 
         return drug
+
+
+def get_drug_repository(session: AsyncSession = Depends(get_async_session)) -> DrugRepository:
+    return DrugRepository(session=session)

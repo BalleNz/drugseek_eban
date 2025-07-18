@@ -1,11 +1,22 @@
 import uuid
 from datetime import datetime
+
+from sqlalchemy import String, ForeignKey, Text, Boolean, Index, Table, Column
 from sqlalchemy import func, DateTime
+from sqlalchemy import insert
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID  # Важно импортировать UUID для PostgreSQL
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.models.base import IDMixin, TimestampsMixin
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, ForeignKey, Text, Boolean
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID  # Важно импортировать UUID для PostgreSQL
+from database.models.drug import Drug
+
+users_allowed_drugs = Table(
+    "users_allowed_drugs",
+    IDMixin.metadata,
+    Column("user_id", PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("drug_id", PG_UUID(as_uuid=True), ForeignKey("drugs.id", ondelete="CASCADE"), primary_key=True)
+)
 
 
 class User(IDMixin, TimestampsMixin):
@@ -26,28 +37,30 @@ class User(IDMixin, TimestampsMixin):
         comment="Каждые 10 запросов о пользователе обновляется его описание. Аля 'какой ты биофакер/химик/фармацевт?'"
     )
 
-    allowed_drugs: Mapped[list["UserDrugs"]] = relationship(
-        back_populates="user"
+    allowed_drugs: Mapped[list["Drug"]] = relationship(
+        secondary="users_allowed_drugs",  # имя таблицы связи
+        lazy="selectin"
     )
 
-
-class UserDrugs(IDMixin):
-    __tablename__ = "users_allowed_drugs"
-
-    drug_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        ForeignKey("drugs.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
+    __table_args__ = (
+        Index('uq_users_telegram_id', 'telegram_id', unique=True),
+        Index('uq_users_username', 'username', unique=True),
     )
 
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
-    )
-    user: Mapped[User] = relationship(back_populates="allowed_drugs")
+    async def add_allowed_drug_by_id(
+            self,
+            drug_id: uuid.UUID,
+            session: AsyncSession
+    ) -> "User":
+        """Добавляет препарат в разрешенные по его ID без загрузки объекта"""
+        stmt = insert(users_allowed_drugs).values(
+            user_id=self.id,
+            drug_id=drug_id
+        ).on_conflict_do_nothing()
+
+        await session.execute(stmt)
+        await session.commit()
+        return self
 
 
 class UserRequestLog(IDMixin):

@@ -31,7 +31,5 @@ class Config(BaseSettings):
     # Redis (для хранения временных данных или кеша)
     REDIS_URL: str = environ.get("REDIS_URL", "redis://localhost:6379/0")
 
-    #
-    
 
 config = Config()

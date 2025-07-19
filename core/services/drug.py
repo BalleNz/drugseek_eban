@@ -11,7 +11,7 @@ from core.exceptions import DrugNotFound
 from database.repository.drug import get_drug_repository
 from exceptions import AssistantResponseError
 from neuro_assistant.assistant import assistant
-from schemas.drug import AssistantResponseCombinations
+from schemas.drug_schemas import AssistantResponseCombinations, DrugSchema
 
 logger = logging.getLogger("bot.core.drug_service")
 
@@ -20,20 +20,17 @@ class DrugService:
     def __init__(self, repo: DrugRepository):
         self.repo = repo
 
-    async def get_drug(self, user: ..., user_query: str) -> Optional[Drug]:
+    async def find_drug_by_query(self, user: ..., user_query: str) -> Optional[DrugSchema]:
         """
         Возвращает препарат по запросу юзера.
 
         - поиск препаратов по имени в таблице синонимов на русском.
+        :returns: drug | None if drug not found
         """
-
-
-
-        drug: Drug = await self.repo.get_drug_by_user_query(user_query=user_query)
+        drug: Drug = await self.repo.find_drug_by_query(user_query=user_query)
         if drug:
-            # TODO: if drug.id in user.allowed_drugs: return drug; else return None
-            return drug
-        return None  # Далее будет обработка на стороне клиента
+            return DrugSchema.model_validate(drug)
+        return None
 
     async def update_drug(self, drug_id: uuid.UUID) -> Optional[Drug]:
         """
@@ -93,6 +90,7 @@ class DrugService:
 
         try:
             drug.name = assistant_response.drug_name
+            drug.name_ru = assistant_response.drug_name_ru
             drug.latin_name = assistant_response.latin_name
             drug.description = assistant_response.description
             drug.classification = assistant_response.classification
@@ -124,7 +122,7 @@ class DrugService:
         drug.dosages = dosages_data
 
         # Обновление остальных списков
-        drug.synonyms = [DrugSynonym(synonym=synonym) for synonym in assistant_response.drug_name_ru]
+        drug.synonyms = [DrugSynonym(synonym=synonym) for synonym in assistant_response.synonyms]
         drug.analogs = [
             DrugAnalog(analog_name=analog.analog_name, percent=analog.percent, difference=analog.difference)
             for analog in assistant_response.analogs

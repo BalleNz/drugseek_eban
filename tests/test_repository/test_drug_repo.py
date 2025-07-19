@@ -28,32 +28,12 @@ async def test_search_by_name(drug_repo: DrugRepository, drug_service: DrugServi
     drug.synonyms.append(DrugSynonym(drug_id=drug.id, synonym="Парацетамол"))
     drug = await drug_repo.save(drug)
 
-    fuzzy_stmt = text(
-        "SELECT "
-        "ds.drug_id,"
-        "similarity(lower(ds.synonym), lower(:search_term)) AS score " 
-        "FROM "
-        "drug_synonyms AS ds "
-        "WHERE "
-        "similarity(lower(ds.synonym), lower(:search_term)) > 0.1 "
-        "ORDER BY " 
-        "score DESC;"
-    )
-
-    fuzzy_result = await drug_repo._session.execute(fuzzy_stmt, {"search_term": "парацтемло"})
-    results = fuzzy_result.all()  # Получаем все результаты
-
-    if not results:
-        assert False, "Не найдено совпадений"
-    found_drug_id, score = results[0]
+    founded_drug = await drug_repo.find_drug_by_query(search_query)
 
     # Проверяем что нашли правильный синоним
-    assert found_drug_id is not None
-    assert found_drug_id == drug.id
-    founded_drug: Drug = await drug_repo.get(found_drug_id)
+    assert founded_drug is not None
     assert founded_drug.id == drug.id
-
-    assert score  # Пороговое значение для хорошего совпадения
+    assert founded_drug.name == drug.name
 
 
 @pytest.mark.asyncio

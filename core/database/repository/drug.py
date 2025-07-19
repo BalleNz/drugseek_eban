@@ -2,15 +2,13 @@ import logging
 import uuid
 from typing import Optional
 
-from sqlalchemy import select, text, exists, func
+from fastapi import Depends
+from sqlalchemy import select, text, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload, aliased
+from sqlalchemy.orm import selectinload
 
 from core.database.models.drug import Drug, DrugSynonym
 from core.database.repository.base import BaseRepository
-
-from fastapi import Depends
-
 from database.engine import get_async_session
 
 logger = logging.getLogger("bot.core.repository.drug")
@@ -20,50 +18,36 @@ class DrugRepository(BaseRepository):
     def __init__(self, session: AsyncSession):
         super().__init__(model=Drug, session=session)
 
-    async def get_drug_by_user_query(self, user_query: str) -> Optional[Drug]:
+    async def find_drug_by_query(self, user_query: str) -> Optional[Drug]:
         """
-        Using pg_trgm
+        Поиск препарата по триграммному сходству с синонимами (один запрос).
+        Возвращает Drug с максимальным similarity или None.
         """
-
-        fuzzy_stmt = text(
-            "SELECT "
-            "ds.drug"
-            "FROM "
-            "drug_synonyms AS ds "
-            "WHERE "
-            "similarity(lower(ds.synonym), lower(:search_term)) > 0.1 "
-            "ORDER BY "
-            "score DESC;"
+        stmt = (
+            select(Drug)
+            .join(Drug.synonyms)
+            .where(
+                func.similarity(
+                    func.lower(DrugSynonym.synonym),
+                    func.lower(user_query)
+                ) > 0.1
+            )
+            .order_by(
+                func.similarity(
+                    func.lower(DrugSynonym.synonym),
+                    func.lower(user_query)
+                ).desc()
+            )
+            .limit(1)
+            .options(
+                selectinload(Drug.analogs),
+                selectinload(Drug.pathways),
+                selectinload(Drug.synonyms)
+            )
         )
-        result = await self._session.execute(fuzzy_stmt, {"search_term": user_query})
-        drug: Drug = result.scalar_one_or_none()[0]
-        return drug
 
-    # примерный код. TODO: заменить на верхний
-    async def get_drug_by_user_query_test(self, user_query: str, allowed_drug_ids: list[uuid.UUID]) -> Optional[Drug]:
-        """
-        Returns Drug if exists in drug table and allowed on user account.
-
-        :param user_query: запрос пользователя
-        :param allowed_drug_ids: drug_ids from user.allowed_drugs
-        :return: Drug | None
-        """
-        stmt = text("""
-                SELECT ds.drug_id
-                FROM drug_synonyms AS ds
-                WHERE 
-                    similarity(lower(ds.synonym), lower(:search_term)) > 0.1
-                    AND EXISTS (
-                        SELECT 1 
-                        FROM unnest(:allowed_drug_ids) AS allowed(id)
-                        WHERE allowed.id = ds.drug_id
-                    )
-                ORDER BY similarity(lower(ds.synonym), lower(:search_term)) DESC
-                LIMIT 1;
-            """)
-        result = await self._session.execute(stmt, {"search_term": user_query, "allowed_drug_ids": allowed_drug_ids})
-        drug_id = result.scalar_one_or_none()
-        return await self.get(drug_id) if drug_id else None
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none()
 
     async def new_drug(self, ) -> Drug:
         ...

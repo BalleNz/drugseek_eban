@@ -53,7 +53,9 @@ class AssistantDosageDescriptionResponse(BaseModel):
     """Формализованный ответ ассистента по дозировкам и описанию"""
     drug_name: str = Field(..., description="одно возможное название для ДВ на ENG")
     latin_name: str = Field(...)
-    drug_name_ru: Optional[list[str]] = Field(None, description="все возможные названия для препарата на RU")
+    drug_name_ru: str = Field(...)
+
+    synonyms: Optional[list[str]] = Field(None, description="все возможные названия для препарата на RU")
 
     analogs: Optional[list[DrugAnalog]] = Field(None, description="аналоги препарата")
     dosages_fun_fact: Optional[str] = Field(default=None)
@@ -137,7 +139,7 @@ class DrugPrice(BaseModel):
         from_attributes = True
 
 
-class Drug(BaseModel):
+class DrugSchema(BaseModel):
     """Полная схема препарата"""
     id: UUID = Field(...)
     name: str = Field(...)
@@ -148,9 +150,11 @@ class Drug(BaseModel):
     dosages_fun_fact: str = Field(...)
     created_at: datetime = Field(...)
     updated_at: datetime = Field(...)
+
     dosages: List[DrugDosage] = []
     pathways: List[DrugPathway] = []
     drug_prices: List[DrugPrice] = []
+
     analogs: list[DrugAnalog] = Field(default=None)
 
     pathways_sources: List[str] = Field(...)

@@ -4,6 +4,7 @@ from fastapi import Depends
 
 from database.models.user import User
 from database.repository.user import UserRepository, get_user_repository
+from schemas.drug_schemas import DrugSchema
 
 
 class UserService:

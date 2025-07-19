@@ -8,9 +8,9 @@ from pydantic import ValidationError
 
 from config import config
 from core.exceptions import AssistantResponseError
-from core.schemas.drug import AssistantDosageDescriptionResponse, AssistantResponseDrugPathway
+from core.schemas.drug_schemas import AssistantDosageDescriptionResponse, AssistantResponseDrugPathway
 from neuro_assistant.prompts import Prompts
-from schemas.drug import AssistantResponseCombinations
+from schemas.drug_schemas import AssistantResponseCombinations
 
 env = dotenv_values(".env")
 

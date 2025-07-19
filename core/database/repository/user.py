@@ -18,6 +18,6 @@ class UserRepository(BaseRepository):
 
 def get_user_repository(session: AsyncSession = Depends(get_async_session)) -> UserRepository:
     """
-    :return: AsyncSession for onion service layer
+    :return: UserRepository obj with AsyncSession for onion service layer
     """
     return UserRepository(session=session)

@@ -11,7 +11,8 @@ from core.database.models.base import TimestampsMixin, IDMixin
 class Drug(IDMixin, TimestampsMixin):
     __tablename__ = "drugs"
 
-    name: Mapped[str] = mapped_column(String(100))  # действующее вещество
+    name: Mapped[str] = mapped_column(String(100))  # ДВ на англ
+    name_ru: Mapped[Optional[str]] = mapped_column(String(100))  # ДВ на русском
     latin_name: Mapped[Optional[str]] = mapped_column(String(100))
     description: Mapped[Optional[str]] = mapped_column(Text)
     classification: Mapped[Optional[str]] = mapped_column(String(100))
@@ -56,7 +57,7 @@ class Drug(IDMixin, TimestampsMixin):
         back_populates="drug",
         cascade="all, delete-orphan",
         lazy="selectin"
-    )
+    )  # CHECK: Возможно, следует сделать lazy = ... чтобы не загружось все сразу
 
     analogs: Mapped[list["DrugAnalog"]] = relationship(
         back_populates="drug",

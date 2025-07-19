@@ -16,24 +16,32 @@ drug_router = APIRouter(prefix="/drugs", tags=["Drugs"])
 # user_router.reduce_tokens, drug_router.new_drug, user_router.allow_drug
 
 
-@drug_router.post(path="/", response_model=DrugSchema)
+@drug_router.post(path="/{user_query}", response_model=DrugSchema)
 async def new_drug(
-        drug: DrugSchema,
+        user_query: Path(),
         user: User = ...,
         drug_service: DrugService = Depends(get_drug_service),
 ) -> Union[DrugSchema, HTTPException]:
-    try:
-        return await drug_service.create_drug(drug_name=drug.name)
-    except Exception as ex:
-        return HTTPException(401, detail=f"{ex}")
+    # TODO:
+    # 1. Neuro_response: {"status": "exist/not exist", "drug_name":"..."}
+    # 2. Отнять токен (если валидный статус)
+    # 3. Create drug
+    # 3. Allow drug
+    # 4. Return drug
+    ...
 
 
 @drug_router.get("/{user_query}")
-async def search_request(
+async def search_and_allow_request(
         user_query: Path(),
         user: User = ...,  # TODO: auth with O2auth schema via telegram
         drug_service: DrugService = Depends(get_drug_service)
 ):
+    # TODO:
+    # 1. Если найден ->
+    # 2. Отнять токен
+    # 3. Разрешить препарат
+    # 4. Вернуть препарат
 
     drug: DrugSchema = await drug_service.find_drug_by_query(
         user=user,

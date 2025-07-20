@@ -19,6 +19,8 @@ class Drug(IDMixin, TimestampsMixin):
 
     # dosages info
     dosages_fun_fact: Mapped[Optional[str]] = mapped_column(Text)
+
+    # pharmacokinetics
     absorption: Mapped[Optional[str]] = mapped_column(String(100))
     metabolism: Mapped[Optional[str]] = mapped_column(Text)
     excretion: Mapped[Optional[str]] = mapped_column(Text)

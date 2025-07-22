@@ -12,9 +12,6 @@ from services.user import UserService, get_user_service
 
 drug_router = APIRouter(prefix="/drugs", tags=["Drugs"])
 
-# для бота: если ручка get_drug вернет None, то нужно дернуть за
-# user_router.reduce_tokens, drug_router.new_drug, user_router.allow_drug
-
 
 @drug_router.post(path="/{user_query}", response_model=DrugSchema)
 async def new_drug(

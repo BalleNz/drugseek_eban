@@ -7,11 +7,12 @@ from fastapi import Depends
 
 from core.database.models.drug import Drug, DrugDosage, DrugPathway, DrugCombination, DrugSynonym, DrugAnalog
 from core.database.repository.drug import DrugRepository
-from core.exceptions import DrugNotFound
+from utils.exceptions import DrugNotFound
 from database.repository.drug import get_drug_repository
-from exceptions import AssistantResponseError
+from utils.exceptions import AssistantResponseError
 from neuro_assistant.assistant import assistant
-from schemas.drug_schemas import AssistantResponseCombinations, DrugSchema
+from schemas.drug_schemas import DrugSchema
+from schemas.assistant_responses import AssistantResponseCombinations
 
 logger = logging.getLogger("bot.core.drug_service")
 

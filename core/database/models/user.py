@@ -65,7 +65,7 @@ class User(IDMixin, TimestampsMixin):
             session: AsyncSession
     ) -> "User":
         """Добавляет препарат в разрешенные по его ID без загрузки объекта"""
-        stmt = insert(allowed_drugs).values(
+        stmt = insert(AllowedDrugs).values(
             user_id=self.id,
             drug_id=drug_id
         ).on_conflict_do_nothing()

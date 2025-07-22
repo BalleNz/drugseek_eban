@@ -5,6 +5,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from schemas.assistant_responses import DosageParams
+
 
 class ActivationType(str, Enum):
     AGONIST = "agonist"
@@ -21,15 +23,6 @@ class ActivationType(str, Enum):
 class CombinationType(str, Enum):
     GOOD = 'good'
     BAD = 'bad'
-
-
-class DosageParams(BaseModel):
-    """Параметры дозировки для ответа ассистента"""
-    per_time: Optional[str] = Field(default=None)
-    max_day: Optional[str] = Field(default=None)
-    per_time_weight_based: Optional[str] = Field(default=None)
-    max_day_weight_based: Optional[str] = Field(default=None)
-    notes: Optional[str] = Field(default=None)
 
 
 class Pharmacokinetics(BaseModel):
@@ -49,28 +42,6 @@ class DrugAnalog(BaseModel):
     difference: str = Field(...)
 
 
-class AssistantDosageDescriptionResponse(BaseModel):
-    """Формализованный ответ ассистента по дозировкам и описанию"""
-    drug_name: str = Field(..., description="одно возможное название для ДВ на ENG")
-    latin_name: str = Field(...)
-    drug_name_ru: str = Field(...)
-
-    synonyms: Optional[list[str]] = Field(None, description="все возможные названия для препарата на RU")
-
-    analogs: Optional[list[DrugAnalog]] = Field(None, description="аналоги препарата")
-    dosages_fun_fact: Optional[str] = Field(default=None)
-    description: str = Field(...)
-    classification: str = Field(...)
-    sources: list[str] = Field(...)
-
-    pharmacokinetics: Pharmacokinetics
-
-    dosages: Dict[str, Optional[Dict[str, Optional[DosageParams]]]]
-
-    class Config:
-        allow_population_by_field_name = True
-
-
 class Combination(BaseModel):
     combination_type: CombinationType
     substance: str
@@ -78,10 +49,6 @@ class Combination(BaseModel):
     products: Optional[List[str]] = Field(default=None)  # only for good
     risks: Optional[str] = Field(default=None)  # only for bad
     sources: List[str]
-
-
-class AssistantResponseCombinations(BaseModel):
-    combinations: list[Combination]
 
 
 class DrugDosage(BaseModel):
@@ -154,7 +121,7 @@ class DrugSchema(BaseModel):
     dosages: List[DrugDosage] = []
     pathways: List[DrugPathway] = []
     drug_prices: List[DrugPrice] = []
-
+    drug_synonyms: Optional[list[DrugSynonym]] = []  # в планах не подгружать лишний раз таблицу , пока будет пустая
     analogs: list[DrugAnalog] = Field(default=None)
 
     pathways_sources: List[str] = Field(...)
@@ -206,27 +173,3 @@ class MechanismSummary(BaseModel):
     sources: list[str] = Field(...)
 
 
-class AssistantResponseDrugPathway(BaseModel):
-    pathways: list[Pathway]
-    mechanism_summary: MechanismSummary
-
-    class Config:
-        use_enum_values = True
-        json_schema_extra = {
-            "example": {
-                "pathways": [{
-                    "receptor": "α2A-адренорецептор",
-                    "binding_affinity": "Ki = 2.1 нМ",
-                    "affinity_description": "очень сильное связывание",
-                    "activation_type": "antagonist",
-                    "pathway": "Gi/o protein cascade",
-                    "effect": "повышение норадреналина"
-                }],
-                "mechanism_summary": {
-                    "primary_action": "блокада α2-адренорецепторов",
-                    "secondary_actions": ["агонизм 5-HT1A", "антагонизм D2"],
-                    "clinical_effects": ["усиление либидо", "повышение АД", "тревожность"]
-                },
-                "sources": ["DrugBank", "PubChem", "IUPHAR"]
-            }
-        }

@@ -16,3 +16,10 @@ async def allow_drug_to_user(
         user_service: UserService = Depends(get_user_service),
 ):
     await user_service.allow_drug_to_user(user=user, drug_id=drug_id)
+
+
+@user_router.get(path="/", response_model=User)
+async def get_me(
+        user: User = ...
+):
+    return user

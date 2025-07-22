@@ -1,11 +1,9 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, List
+from typing import Optional, List
 from uuid import UUID
 
 from pydantic import BaseModel, Field
-
-from schemas.assistant_responses import DosageParams
 
 
 class ActivationType(str, Enum):
@@ -126,26 +124,6 @@ class DrugSchema(BaseModel):
 
     pathways_sources: List[str] = Field(...)
     dosages_sources: List[str] = Field(...)
-
-    @property
-    def dosages_view(self) -> Dict[str, Dict[str, DosageParams]]:
-        """
-        Группировка дозировок для API.
-
-        Для вида:
-            - Drug.dosages_view["other"]["peroral"].max_day
-        """
-        result = {}
-        for dosage in self.dosages:
-            route_group = result.setdefault(dosage.route, {})
-            route_group[dosage.method] = DosageParams(
-                per_time=dosage.per_time,
-                max_day=dosage.max_day,
-                per_time_weight_based=dosage.per_time_weight_based,
-                max_day_weight_based=dosage.max_day_weight_based,
-                notes=dosage.notes
-            )
-        return result
 
     class Config:
         from_attributes = True

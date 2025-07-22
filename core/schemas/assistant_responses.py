@@ -1,7 +1,5 @@
-from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, List
-from uuid import UUID
+from typing import Optional, Dict
 
 from pydantic import BaseModel, Field
 
@@ -11,6 +9,15 @@ from schemas.drug_schemas import DrugAnalog, Pharmacokinetics, Combination, Path
 class STATUS(Enum):
     EXIST: str = "exist"
     NOT_EXIST: str = "not exist"
+
+
+class DosageParams(BaseModel):
+    """Параметры дозировки для ответа ассистента"""
+    per_time: Optional[str] = Field(default=None)
+    max_day: Optional[str] = Field(default=None)
+    per_time_weight_based: Optional[str] = Field(default=None)
+    max_day_weight_based: Optional[str] = Field(default=None)
+    notes: Optional[str] = Field(default=None)
 
 
 class AssistantResponseDrugValidation(BaseModel):
@@ -68,12 +75,3 @@ class AssistantResponseDrugPathway(BaseModel):
                 "sources": ["DrugBank", "PubChem", "IUPHAR"]
             }
         }
-
-
-class DosageParams(BaseModel):
-    """Параметры дозировки для ответа ассистента"""
-    per_time: Optional[str] = Field(default=None)
-    max_day: Optional[str] = Field(default=None)
-    per_time_weight_based: Optional[str] = Field(default=None)
-    max_day_weight_based: Optional[str] = Field(default=None)
-    notes: Optional[str] = Field(default=None)

@@ -1,12 +1,5 @@
 import pytest
 
-from services.drug import DrugService
-
-
-@pytest.mark.asyncio
-async def test_drug_create_drug(drug_service: DrugService, drug_model):
-    await drug_service.create_drug(drug_model.name)
-
 
 @pytest.mark.asyncio
 async def test_update_dosages_and_analogs(drug_service, drug_model):

@@ -7,7 +7,7 @@ from services.drug import DrugService
 
 
 @pytest.mark.asyncio
-async def test_search_by_name(drug_repo: DrugRepository, drug_service: DrugService):
+async def test_find_drug_by_query(drug_repo: DrugRepository, drug_service: DrugService):
     """
     Тестирование записи препарата в БД, а после — поиска с использованием pg_trgm.
 
@@ -37,7 +37,13 @@ async def test_search_by_name(drug_repo: DrugRepository, drug_service: DrugServi
 
 
 @pytest.mark.asyncio
-async def test_get_relationships(drug_repo: DrugRepository):
+async def test_get_with_all_relationships(drug_repo: DrugRepository):
+    """
+    Тестирование записи препарата и его смежных таблиц.
+
+    check:
+        - drug relationships
+    """
     drug: Drug = await drug_repo.create(
         Drug(
             name="Acetaminophen",

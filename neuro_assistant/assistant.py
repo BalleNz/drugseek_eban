@@ -7,10 +7,10 @@ from openai import OpenAI, APIError
 from pydantic import ValidationError
 
 from config import config
-from core.exceptions import AssistantResponseError
-from core.schemas.drug_schemas import AssistantDosageDescriptionResponse, AssistantResponseDrugPathway
+from utils.exceptions import AssistantResponseError
+from schemas.assistant_responses import AssistantDosageDescriptionResponse, AssistantResponseCombinations, \
+    AssistantResponseDrugPathway, AssistantResponseDrugValidation
 from neuro_assistant.prompts import Prompts
-from schemas.drug_schemas import AssistantResponseCombinations
 
 env = dotenv_values(".env")
 
@@ -102,6 +102,10 @@ class Assistant():
         user_drug_names_text = ', '.join(user_drug_names)
         return self.get_response(user_query=user_drug_names_text, prompt=self.promptsClient.GET_USER_DESCRIPTION,
                                  pydantic_model=...)
+
+    def get_user_query_validation(self, user_query: str):
+        return self.get_response(user_query=user_query, prompt=self.promptsClient.DRUG_SEARCH_VALIDATION,
+                                 pydantic_model=AssistantResponseDrugValidation)
 
 
 assistant = Assistant(config.DEEPSEEK_API_KEY)

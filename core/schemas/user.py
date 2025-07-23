@@ -5,9 +5,9 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
-class UsersAllowedDrugs(BaseModel):
+class UserAllowedDrugs(BaseModel):
     user_id: UUID = Field(...)
-    drug_id: UUID = Field()
+    drug_id: UUID = Field(...)
 
 
 class UserSchema(BaseModel):
@@ -21,7 +21,8 @@ class UserSchema(BaseModel):
     used_requests: int = Field(..., description="count of used requests")
 
     description: str = Field(None, description="описание пользователя")
-    allowed_drugs: list[UsersAllowedDrugs]
+    allowed_drugs: list[UserAllowedDrugs]
+
 
 class UserTelegramDataSchema(BaseModel):
     telegram_id: str = Field(..., description="Телеграм айди")  # telegram id

@@ -23,7 +23,7 @@ class Drug(IDMixin, TimestampsMixin):
     # pharmacokinetics
     absorption: Mapped[Optional[str]] = mapped_column(String(100))
     metabolism: Mapped[Optional[str]] = mapped_column(Text)
-    excretion: Mapped[Optional[str]] = mapped_column(Text)
+    elimination: Mapped[Optional[str]] = mapped_column(Text)
     time_to_peak: Mapped[Optional[str]] = mapped_column(String(100))
 
     drug_prices: Mapped[...] = ...  #
@@ -191,20 +191,33 @@ class DrugDosage(IDMixin):
     )
     drug: Mapped["Drug"] = relationship(back_populates="dosages")
 
-    route: Mapped[Optional[str]] = mapped_column(String(30))  # peroral / parental / ...
-    method: Mapped[Optional[str]] = mapped_column(String(30))  # intravenous / intramuscular
+    route: Mapped[Optional[str]] = mapped_column(
+        String(30),
+        comment="parental/topical/other"
+    )
+    method: Mapped[Optional[str]] = mapped_column(
+        String(30),
+        comment="intravenous/intramuscular/eye_drops/skin/nasal/peroral/inhalation/rectal/vaginal"
+    )
 
     per_time: Mapped[Optional[str]] = mapped_column(String(100))
     max_day: Mapped[Optional[str]] = mapped_column(String(100))
 
-    # for peroral and intramuscular only
-    per_time_weight_based: Mapped[Optional[str]] = mapped_column(String(100))
-    max_day_weight_based: Mapped[Optional[str]] = mapped_column(String(100))
+    per_time_weight_based: Mapped[Optional[str]] = mapped_column(
+        String(100),
+        comment="for peroral and intramuscular only"
+    )
+    max_day_weight_based: Mapped[Optional[str]] = mapped_column(
+        String(100),
+        comment="for peroral and intramuscular only"
+    )
 
-    onset: Mapped[Optional[str]] = mapped_column(String(100))
-    half_life: Mapped[Optional[str]] = mapped_column(String(100))
-    elimination: Mapped[Optional[str]] = mapped_column(Text)
-    duration: Mapped[Optional[str]] = mapped_column(String(100))
+    onset: Mapped[Optional[str]] = mapped_column(
+        String(100),
+        comment="<Время начала действия (например, 'немедленно'). Только для intramuscular/intravenous/peroral>"
+    )
+    half_life: Mapped[Optional[str]] = mapped_column(String(100), comment="период полувыведения")
+    duration: Mapped[Optional[str]] = mapped_column(String(100), comment="продолжительность действия")
 
     notes: Mapped[Optional[str]] = mapped_column(String(100))
 

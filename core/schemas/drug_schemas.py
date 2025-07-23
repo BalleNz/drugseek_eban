@@ -26,7 +26,7 @@ class CombinationType(str, Enum):
 class Pharmacokinetics(BaseModel):
     absorption: Optional[str] = Field(default=None, description="процент биодоступности")
     metabolism: Optional[str] = Field(default=None, description="основные пути метаболизма")
-    excretion: Optional[str] = Field(default=None, description="ТОП 3 (примерно) путей выведения...")
+    elimination: Optional[str] = Field(default=None, description="ТОП 3 (примерно) путей выведения...")
     time_to_peak: Optional[str] = Field(default=None, description="время до достижения Cmax")
 
 

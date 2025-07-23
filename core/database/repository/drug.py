@@ -49,9 +49,6 @@ class DrugRepository(BaseRepository):
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def new_drug(self, ) -> Drug:
-        ...
-
     async def get_with_all_relationships(self, drug_id: uuid.UUID) -> Optional[Drug]:
         """Returns Drug with all relation tables"""
 
@@ -59,7 +56,12 @@ class DrugRepository(BaseRepository):
             select(Drug).where(
                 Drug.id == drug_id
             )
-            .options(selectinload(Drug.pathways, Drug.combinations, Drug.dosages, DrugSynonym))
+            .options(
+                selectinload(Drug.pathways),
+                selectinload(Drug.combinations),
+                selectinload(Drug.dosages),
+                selectinload(Drug.synonyms)
+            )
         )
 
         result = await self._session.execute(stmt)

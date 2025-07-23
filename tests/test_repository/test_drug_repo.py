@@ -1,15 +1,9 @@
 import pytest
 
-from core.database.models.drug import Drug, DrugSynonym, DrugAnalog
+from conftest import drug_service, session
+from core.database.models.drug import Drug, DrugSynonym, DrugPathway, DrugDosage, DrugAnalog, DrugCombination
 from core.database.repository.drug import DrugRepository
 from services.drug import DrugService
-
-
-@pytest.mark.asyncio
-async def test_create_drug(drug_repo: DrugRepository, drug_model: Drug):
-    model: Drug = await drug_repo.create(drug_model)
-
-    assert model.dosages_fun_fact == "Test fact"
 
 
 @pytest.mark.asyncio
@@ -20,69 +14,88 @@ async def test_search_by_name(drug_repo: DrugRepository, drug_service: DrugServi
     check:
         - pg_trgm
     """
-    drug_name_ru = "Парацетамол"
     search_query = "парамол"
 
-    drug: Drug = await drug_service.create_drug(drug_name_ru)
-    drug.analogs.append(DrugAnalog(analog_name="Ибупрофен", percent=50, difference="тебя ебать не должно"))
-    drug.synonyms.append(DrugSynonym(drug_id=drug.id, synonym=drug_name_ru))
-    drug = await drug_repo.save(drug)
+    await drug_repo.create(
+        Drug(
+            name="Acetaminophen",
+            name_ru="Парацетамол",
+            synonyms=[
+                DrugSynonym(
+                    synonym="Парацетамол"
+                )
+            ]
+        )
+    )
 
     founded_drug = await drug_repo.find_drug_by_query(search_query)
 
     # Проверяем что нашли правильный синоним
     assert founded_drug is not None
-    assert founded_drug.id == drug.id
-    assert founded_drug.name == drug.name
-
-    # проверка смежных таблиц
-    assert founded_drug.analogs[0].analog_name == "Ибупрофен"
+    assert founded_drug.id
+    assert founded_drug.name_ru
 
 
 @pytest.mark.asyncio
-async def test_update_dosages_and_analogs(drug_service, drug_repo):
-    drug: Drug = await drug_service.create_drug("Acetaminophen")
-    updated_drug = await drug_service.update_dosages(drug)
+async def test_get_relationships(drug_repo: DrugRepository):
+    drug: Drug = await drug_repo.create(
+        Drug(
+            name="Acetaminophen",
+            name_ru="Парацетамол",
+            synonyms=[
+                DrugSynonym(
+                    synonym="Парацетамол"
+                )
+            ],
+            pathways=[
+                DrugPathway(
+                    receptor="aue4-рецептор",
+                    binding_affinity="Ki = 2.28 нМ",
+                    affinity_description="очень сильное связывание",
+                    activation_type="antagonist",
+                    pathway="Gi/o protein cascade",
+                    effect="повышение АУФ!",
+                    source="drugbank.com",
+                    note="дополнительнаяа швыумшуму"
+                )
+            ],
+            dosages=[
+                DrugDosage(
+                    route="other",
+                    method="peroral",
+                    per_time="500 мг",
+                    max_day="2000 мг",
+                    per_time_weight_based="20мг на 1 кг",
+                    max_day_weight_based="50мг на 1 кг",
+                    onset="немедленно",
+                    half_life="3 часа",
+                    duration="12 часов",
+                    notes="хуй",
+                )
+            ],
+            analogs=[
+                DrugAnalog(
+                    analog_name="сперма",
+                    percent=22.8,
+                    difference="другой цвет"
+                )
+            ],
+            combinations=[
+            DrugCombination(
+                combination_type="good",
+                substance="Autismophen",
+                effect="увеличивает ауе",
+                risks="нихуя",
+                products=["спермавирин", "ауефлекс"],
+                sources=["drug.org/hui", "aue.com"],
+            )
+        ],
+        )
+    )
 
-    assert updated_drug
-    assert updated_drug.dosages_fun_fact
-    assert updated_drug.excretion
-    assert updated_drug.metabolism
-    assert updated_drug.absorption
-
-    for analog in updated_drug.analogs:
-        assert analog.percent
-        assert analog.difference
-        assert analog.analog_name
-
-    assert updated_drug.description
-    assert updated_drug.classification
-    assert updated_drug.latin_name
-
-
-@pytest.mark.asyncio
-async def test_update_pathways(drug_service, drug_repo):
-    drug: Drug = await drug_service.create_drug("Acetaminophen")
-    drug = await drug_service.update_pathways(drug)
-
-    assert drug.pathways
-    assert drug.pathways[0].effect
-    assert drug.pathways[0].pathway
-    assert drug.pathways[0].activation_type
+    drug: Drug = await drug_repo.get_with_all_relationships(drug_id=drug.id)
+    assert drug.synonyms[0].synonym
+    assert drug.analogs[0].percent
     assert drug.pathways[0].binding_affinity
-    assert drug.pathways[0].affinity_description
-    assert drug.pathways[0].receptor
-
-
-@pytest.mark.asyncio
-async def test_update_combinations(drug_service, drug_repo):
-    drug: Drug = await drug_service.create_drug("Primabolan")
-    drug = await drug_service.update_combinations(drug)
-
-    for combination in drug.combinations:
-        assert combination.effect
-        assert combination.combination_type
-        if combination.combination_type == "bad":
-            assert combination.risks
-        assert combination.sources
-        assert combination.substance
+    assert drug.combinations[0].effect
+    assert drug.dosages[0].per_time

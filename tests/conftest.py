@@ -1,14 +1,10 @@
-import uuid
 from typing import AsyncGenerator
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
 from config import config
-from core.database.models.base import IDMixin
-from core.database.models.drug import Drug, DrugSynonym  # обязательный импорт
-from core.database.repository.drug import DrugRepository
-from core.services.drug import DrugService
+from database.models.base import Base
 
 
 @pytest.fixture(scope="session")
@@ -26,13 +22,13 @@ async def test_engine():
 
     async with test_engine.connect() as conn:
         async with conn.begin():
-            await conn.run_sync(IDMixin.metadata.create_all)
+            await conn.run_sync(Base.metadata.create_all)
 
         yield test_engine
 
         # delete tables after session
         async with conn.begin():
-            await conn.run_sync(IDMixin.metadata.drop_all)
+            await conn.run_sync(Base.metadata.drop_all)
 
     # close test_engine
     await test_engine.dispose(close=True)
@@ -46,6 +42,14 @@ async def session(test_engine) -> AsyncGenerator[AsyncSession, None]:
         await test_session.close()
 
 
+from database.models.drug import DrugSynonym, Drug
+
+from database.repository.drug import DrugRepository
+from database.repository.user import UserRepository
+from services.drug import DrugService
+from services.user import UserService
+
+
 @pytest.fixture
 async def drug_repo(session: AsyncSession) -> DrugRepository:
     return DrugRepository(session=session)
@@ -57,13 +61,23 @@ async def drug_service(drug_repo: DrugRepository):
 
 
 @pytest.fixture
+async def user_repo(session: AsyncSession) -> UserRepository:
+    return UserRepository(session=session)
+
+
+@pytest.fixture
+async def user_service(user_repo: UserRepository) -> UserService:
+    return UserService(user_repo)
+
+
+@pytest.fixture
 async def drug_model():
     return Drug(
-            name="Acetaminophen",
-            name_ru="Парацетамол",
-            synonyms=[
-                DrugSynonym(
-                    synonym="Парацетамол"
-                )
-            ]
-        )
+        name="Acetaminophen",
+        name_ru="Парацетамол",
+        synonyms=[
+            DrugSynonym(
+                synonym="Парацетамол"
+            )
+        ]
+    )

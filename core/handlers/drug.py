@@ -2,22 +2,22 @@ from typing import Union, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.params import Path
+from fastapi.params import Path, Body
 
 from assistant import assistant
 from database.models.user import User
 from schemas.assistant_responses import AssistantResponseDrugValidation, STATUS
 from schemas.drug_schemas import DrugSchema
-from schemas.response import DrugResponse
+from schemas.api_responses import DrugResponse
 from services.drug import DrugService, get_drug_service
 from services.user import UserService, get_user_service
 
 drug_router = APIRouter(prefix="/drugs", tags=["Drugs"])
 
 
-@drug_router.post(path="/{user_query}", response_model=DrugSchema)
+@drug_router.post(path="/", response_model=DrugSchema)
 async def new_drug(
-        user_query: Path(),
+        user_query: Body(),
         user: User = ...,
         drug_service: DrugService = Depends(get_drug_service),
         user_service: UserService = Depends(get_user_service)
@@ -34,7 +34,7 @@ async def new_drug(
 
     if assistant_response.status == STATUS.EXIST:
         if user.allowed_requests:
-            await drug_service.create_drug(assistant_response.drug_name)
+            drug: DrugSchema = await drug_service.create_drug(assistant_response.drug_name)
             await user_service.reduce_token(user)
             await user_service.allow_drug_to_user(user=user, drug_id=...)
     ...
@@ -67,3 +67,9 @@ async def search_and_allow_request(
         drug=drug,
         is_allowed=is_allowed,
     )
+
+@drug_router.post(path="/{drug_id}")
+async def update_existing_drug(
+
+):
+    ...

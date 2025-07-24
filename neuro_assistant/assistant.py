@@ -22,7 +22,7 @@ AssistantResponseModel = Union[
     AssistantResponseDrugPathway,
     AssistantDosageDescriptionResponse,
     AssistantResponseCombinations,
-    ...
+    None,
 ]
 
 
@@ -77,7 +77,9 @@ class Assistant():
                 raise AssistantResponseError("ERROR: No data from assistant.")
 
             try:
-                return pydantic_model.model_validate_json(response.choices[0].message.content)
+                if pydantic_model:
+                    return pydantic_model.model_validate_json(response.choices[0].message.content)
+                return response.choices[0].message.content
             except ValidationError as e:
                 raise ValueError(f"Invalid assistant response: {e}")
 
@@ -100,8 +102,9 @@ class Assistant():
 
     def get_user_description(self, user_name: str, user_drug_names: list[str]):
         user_drug_names_text = ', '.join(user_drug_names)
-        return self.get_response(user_query=user_drug_names_text, prompt=self.promptsClient.GET_USER_DESCRIPTION,
-                                 pydantic_model=...)
+        user_query = user_name + ' ' + user_drug_names_text
+        return self.get_response(user_query=user_query, prompt=self.promptsClient.GET_USER_DESCRIPTION,
+                                 pydantic_model=None)
 
     def get_user_query_validation(self, user_query: str):
         return self.get_response(user_query=user_query, prompt=self.promptsClient.DRUG_SEARCH_VALIDATION,

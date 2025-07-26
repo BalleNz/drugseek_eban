@@ -26,8 +26,6 @@ class Drug(IDMixin, TimestampsMixin):
     elimination: Mapped[Optional[str]] = mapped_column(Text)
     time_to_peak: Mapped[Optional[str]] = mapped_column(String(100))
 
-    drug_prices: Mapped[...] = ...  #
-
     # pathways generation
     primary_action: Mapped[Optional[str]] = mapped_column(String(100))
     secondary_actions: Mapped[Optional[str]] = mapped_column(String(100))  # TODO
@@ -67,6 +65,12 @@ class Drug(IDMixin, TimestampsMixin):
         lazy="selectin"
     )
 
+    prices: Mapped[list["DrugPrice"]] = relationship(
+        back_populates="drug",
+        cascade="all, delete-orphan",
+        lazy="selectin"
+    )
+
     __table_args__ = (
         UniqueConstraint("id", "name"),
     )
@@ -77,7 +81,7 @@ class DrugAnalog(IDMixin):
 
     drug_id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True),
-        ForeignKey("drugs.id", ondelete="CASCADE"),
+        ForeignKey("drugs.id", ondelete="CASCADE", name="fk_drug_analogs_drug_id"),
         nullable=False,
         index=True
     )
@@ -97,7 +101,7 @@ class DrugSynonym(IDMixin):
 
     drug_id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True),
-        ForeignKey("drugs.id", ondelete="CASCADE"),
+        ForeignKey("drugs.id", ondelete="CASCADE", name="fk_drug_synonyms_drug_id"),
         nullable=False,
         index=True
     )
@@ -130,7 +134,7 @@ class DrugCombination(IDMixin):
 
     drug_id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True),
-        ForeignKey("drugs.id", ondelete="CASCADE"),
+        ForeignKey("drugs.id", ondelete="CASCADE", name="fk_drug_combinations_drug_id"),
         nullable=False
     )
     drug: Mapped["Drug"] = relationship(back_populates="combinations")
@@ -148,7 +152,7 @@ class DrugPathway(IDMixin):
 
     drug_id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True),
-        ForeignKey('drugs.id', ondelete='CASCADE'),
+        ForeignKey('drugs.id', ondelete='CASCADE', name="fk_drug_pathways_drug_id"),
         nullable=False
     )
     drug: Mapped["Drug"] = relationship(back_populates="pathways")
@@ -176,6 +180,13 @@ class DrugPathway(IDMixin):
 class DrugPrice(IDMixin, TimestampsMixin):
     __tablename__ = "drug_prices"
 
+    drug_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey('drugs.id', ondelete='CASCADE', name="fk_drug_prices_drug_id"),
+        nullable=False
+    )
+    drug: Mapped["Drug"] = relationship(back_populates="prices", )
+
     drug_brandname: Mapped[str] = mapped_column(String(100), unique=True)
     price: Mapped[float] = mapped_column(Float)
     shop_url: Mapped[str] = mapped_column(String(100))
@@ -186,7 +197,7 @@ class DrugDosage(IDMixin):
 
     drug_id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True),
-        ForeignKey('drugs.id', ondelete='CASCADE'),
+        ForeignKey('drugs.id', ondelete='CASCADE', name="fk_drug_dosages_drug_id"),
         nullable=False
     )
     drug: Mapped["Drug"] = relationship(back_populates="dosages")

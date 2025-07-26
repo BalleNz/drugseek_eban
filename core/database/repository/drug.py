@@ -1,15 +1,19 @@
 import logging
 import uuid
-from typing import Optional
+from datetime import datetime
+from typing import Optional, Union
 
 from fastapi import Depends
-from sqlalchemy import select, text, func
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from core.database.models.drug import Drug, DrugSynonym
+from assistant import assistant
+from core.database.models.drug import Drug, DrugSynonym, DrugCombination, DrugPathway, DrugAnalog, DrugDosage
 from core.database.repository.base import BaseRepository
 from database.engine import get_async_session
+from schemas import AssistantResponseCombinations, DrugSchema
+from utils.exceptions import AssistantResponseError, DrugNotFound
 
 logger = logging.getLogger("bot.core.repository.drug")
 
@@ -18,10 +22,26 @@ class DrugRepository(BaseRepository):
     def __init__(self, session: AsyncSession):
         super().__init__(model=Drug, session=session)
 
-    async def find_drug_by_query(self, user_query: str) -> Optional[Drug]:
+    @staticmethod
+    def __convert_to_drug_schema(drug: Drug):
+        # Явное преобразование в словарь для вложенных объектов
+        drug_dict = {
+            **{k: v for k, v in drug.__dict__.items() if not k.startswith('_')},
+            "dosages": [dosage.__dict__ for dosage in drug.dosages],
+            "pathways": [pathway.__dict__ for pathway in drug.pathways],
+            "synonyms": [synonym.__dict__ for synonym in drug.synonyms],
+            "analogs": [analog.__dict__ for analog in drug.analogs],
+            "combinations": [combination.__dict__ for combination in drug.combinations],
+            "prices": [price.__dict__ for price in drug.prices],
+        }
+        return DrugSchema.model_validate(drug_dict)
+
+    async def find_drug_by_query(self, user_query: str) -> Optional[DrugSchema]:
         """
         Поиск препарата по триграммному сходству с синонимами (один запрос).
-        Возвращает Drug с максимальным similarity или None.
+        Возвращает DrugSchema с максимальной схожестью или None.
+
+        :param user_query: Запрос пользователя для поиска препарата используя триграммы.
         """
         stmt = (
             select(Drug)
@@ -41,16 +61,30 @@ class DrugRepository(BaseRepository):
             .limit(1)
             .options(
                 selectinload(Drug.analogs),
+                selectinload(Drug.dosages),
                 selectinload(Drug.pathways),
-                selectinload(Drug.synonyms)
+                selectinload(Drug.synonyms),
+                selectinload(Drug.combinations),
+                selectinload(Drug.prices)
             )
         )
 
         result = await self._session.execute(stmt)
-        return result.scalar_one_or_none()
+        drug: Drug = result.scalar_one_or_none()
 
-    async def get_with_all_relationships(self, drug_id: uuid.UUID) -> Optional[Drug]:
-        """Returns Drug with all relation tables"""
+        if not drug:
+            return None
+
+        return self.__convert_to_drug_schema(drug)
+
+
+    async def get_with_all_relationships(self, drug_id: uuid.UUID, need_model: bool) -> Union[Drug, DrugSchema, None]:
+        """
+        Возращает модель или схему препарата в зависимости от флага need_model.
+
+        :param drug_id: ID препарата в БД.
+        :param need_model: Флаг, если активен — функция возвращает модель, иначе — pydantic схему.
+        """
 
         stmt = (
             select(Drug).where(
@@ -66,49 +100,15 @@ class DrugRepository(BaseRepository):
 
         result = await self._session.execute(stmt)
         drug = result.scalars().one_or_none()
-        return drug
 
-    async def get_with_pathways(self, drug_id: uuid.UUID) -> Optional[Drug]:
-        """Returns Drug with pathways relation table"""
+        if not drug:
+            return None
 
-        stmt = (
-            select(Drug).where(
-                Drug.id == drug_id
-            )
-            .options(selectinload(Drug.pathways))
-        )
+        # Если нужна модель
+        if need_model:
+            return drug
 
-        result = await self._session.execute(stmt)
-        drug = result.scalars().one_or_none()
-        return drug
-
-    async def get_with_combinations(self, drug_id: uuid.UUID) -> Optional[Drug]:
-        """Returns Drug with combinations relation table"""
-
-        stmt = (
-            select(Drug).where(
-                Drug.id == drug_id
-            )
-            .options(selectinload(Drug.combinations))
-        )
-
-        result = await self._session.execute(stmt)
-        drug = result.scalars().one_or_none()
-        return drug
-
-    async def get_with_dosages(self, drug_id: uuid.UUID) -> Optional[Drug]:
-        """Returns Drug with dosages relation table"""
-
-        stmt = (
-            select(Drug).where(
-                Drug.id == drug_id
-            )
-            .options(selectinload(Drug.dosages))
-        )
-
-        result = await self._session.execute(stmt)
-        drug = result.scalars().one_or_none()
-        return drug
+        return self.__convert_to_drug_schema(drug)
 
     async def save(self, drug: Drug) -> Drug:
         self._session.add(drug)
@@ -116,6 +116,197 @@ class DrugRepository(BaseRepository):
         await self._session.refresh(drug)
 
         return drug
+
+    async def update_drug(self, drug_id: uuid.UUID) -> Optional[Drug]:
+        """
+        Обновляет все данные о существующем препарате.
+
+        Returns:
+            - pathways: Список путей метаболизма (done)
+            - dosage: Словарь дозировок (done)
+            - drug_prices: Список цен в разных аптеках (FUTURE: yandex search api)
+            - drug_combinations: Полезные и негативные комбинации с другими препаратами (done)
+        """
+        try:
+            drug: Optional[Drug] = await self.get_with_all_relationships(drug_id=drug_id, need_model=True)
+            if not drug:
+                raise DrugNotFound
+
+            drug = await self.update_dosages(drug=drug)
+            drug = await self.update_pathways(drug=drug)
+            drug = await self.update_combinations(drug=drug)
+
+            drug.updated_at = datetime.now()
+
+            await self.save(drug)
+            return drug
+        except Exception as ex:
+            await self._session.rollback()
+
+            logger.error(f"EXCEPTION: {ex}")
+            return None
+
+    async def new_drug(self, drug_name: str) -> Drug:
+        """
+        Создает модель препарата после валидации и обновляет его таблицы.
+        :param drug_name: ДВ на английском
+        """
+        drug: Drug = await self.create_drug(drug_name)
+        await self.update_drug(drug.id)
+
+        return drug
+
+    async def create_drug(self, drug_name: str) -> Drug:
+        """
+        Создает модель препарата после валидации перед обновлением его таблиц.
+
+        :param drug_name: ДВ на английском.
+        """
+        drug: Drug = Drug(
+            name=drug_name,
+        )
+
+        await self.save(drug)
+        return drug
+
+    @staticmethod
+    async def update_dosages(drug: Drug) -> Optional[Drug]:
+        """
+        Обновляет три таблицы:
+            - Обновляет данные о дозировках препарата.
+            - Обновляет синонимы.
+            - Обновляет аналоги препарата.
+
+        НЕ сохраняет в БД.
+        """
+
+        try:
+            assistant_response = assistant.get_dosage(drug_name=drug.name)
+            if not assistant_response.drug_name:
+                logger.error("ассистент не может найти оффициальное название.")
+                raise AssistantResponseError("Couldn't get official drugName from assistant.")
+        except Exception as ex:
+            raise ex
+
+        try:
+            drug.name = assistant_response.drug_name
+            drug.name_ru = assistant_response.drug_name_ru
+            drug.latin_name = assistant_response.latin_name
+            drug.description = assistant_response.description
+            drug.classification = assistant_response.classification
+            drug.dosages_fun_fact = assistant_response.dosages_fun_fact
+            drug.dosages_sources = assistant_response.sources
+
+            drug.absorption = assistant_response.pharmacokinetics.absorption
+            drug.metabolism = assistant_response.pharmacokinetics.metabolism
+            drug.excretion = assistant_response.pharmacokinetics.excretion
+            drug.time_to_peak = assistant_response.pharmacokinetics.time_to_peak
+        except Exception as ex:
+            raise AssistantResponseError(ex)
+
+        # новый временный массив
+        dosages_data = []
+        for route, methods in assistant_response.dosages.items():
+            if methods:
+                for method, params in methods.items():
+                    if params:
+                        dosage = DrugDosage(
+                            drug_id=drug.id,
+                            route=route,
+                            method=method,
+                            **params.dict(exclude_none=True)
+                        )
+                        dosages_data.append(dosage)
+
+        # Обновляем список дозировок
+        drug.dosages = dosages_data
+
+        existing_synonyms = {s.synonym for s in drug.synonyms}
+        drug.synonyms = [
+            DrugSynonym(synonym=synonym)
+            for synonym in assistant_response.synonyms
+            if synonym not in existing_synonyms
+        ]
+
+        # Обновление остальных списков
+        drug.analogs = [
+            DrugAnalog(analog_name=analog.analog_name, percent=analog.percent, difference=analog.difference)
+            for analog in assistant_response.analogs
+        ]
+
+        return drug
+
+    @staticmethod
+    async def update_pathways(drug: Drug) -> Optional[Drug]:
+        """Обновляет пути активации препарата на основе данных от ассистента"""
+
+        try:
+            # Получаем данные от ассистента
+            assistant_response = assistant.get_pathways(drug.name)
+            if not assistant_response:
+                raise AssistantResponseError()
+
+            # Обновление Drug модели
+            if assistant_response.mechanism_summary:
+                drug.pathways_sources = assistant_response.mechanism_summary.sources
+                drug.primary_action = assistant_response.mechanism_summary.primary_action
+                drug.secondary_actions = assistant_response.mechanism_summary.secondary_actions
+                drug.clinical_effects = assistant_response.mechanism_summary.clinical_effects
+            else:
+                logger.warning("ASSISTANT RESPONSE: Missing mechanism summary!")
+                raise AssistantResponseError
+
+            # Создаем новые DrugPathways объекты
+            new_pathways = []
+            for pathway_data in assistant_response.pathways:
+                new_pathways.append(DrugPathway(
+                    drug_id=drug.id,
+                    receptor=pathway_data.receptor,
+                    binding_affinity=pathway_data.binding_affinity,
+                    affinity_description=pathway_data.affinity_description,
+                    activation_type=pathway_data.activation_type,
+                    pathway=pathway_data.pathway,
+                    effect=pathway_data.effect,
+                    note=pathway_data.note,
+                    source=pathway_data.source
+                ))
+
+            drug.pathways = new_pathways
+
+            return drug
+
+        except Exception as ex:
+            logger.error(f"Failed to update pathways for {drug.name}: {str(ex)}")
+            raise ex
+
+    @staticmethod
+    async def update_combinations(drug: Drug) -> Optional[Drug]:
+        """Update combinations relationship"""
+
+        try:
+            assistant_response: AssistantResponseCombinations = assistant.get_combinations(drug_name=drug.name)
+            if not assistant_response:
+                raise AssistantResponseError()
+
+            new_combinations = []
+            for combination in assistant_response.combinations:
+                new_combinations.append(DrugCombination(
+                    drug_id=drug.id,
+                    combination_type=combination.combination_type,
+                    substance=combination.substance,
+                    effect=combination.effect,
+                    risks=combination.risks,
+                    products=combination.products,
+                    sources=combination.sources
+                ))
+
+            drug.combinations = new_combinations
+
+            return drug
+
+        except Exception as ex:
+            logger.error(f"Failed to update combinations for {drug.name}, {drug.id}: {str(ex)}")
+            raise ex
 
 
 def get_drug_repository(session: AsyncSession = Depends(get_async_session)) -> DrugRepository:

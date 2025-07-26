@@ -3,7 +3,7 @@ from typing import Optional, Dict
 
 from pydantic import BaseModel, Field
 
-from schemas.drug_schemas import DrugAnalog, Pharmacokinetics, Combination, Pathway, MechanismSummary
+from schemas.drug_schemas import DrugAnalogSchema, Pharmacokinetics, DrugCombinationSchema, Pathway, MechanismSummary
 
 
 class STATUS(Enum):
@@ -33,7 +33,7 @@ class AssistantDosageDescriptionResponse(BaseModel):
 
     synonyms: Optional[list[str]] = Field(None, description="все возможные названия для препарата на RU")
 
-    analogs: Optional[list[DrugAnalog]] = Field(None, description="аналоги препарата")
+    analogs: Optional[list[DrugAnalogSchema]] = Field(None, description="аналоги препарата")
     dosages_fun_fact: Optional[str] = Field(default=None)
     description: str = Field(...)
     classification: str = Field(...)
@@ -48,7 +48,7 @@ class AssistantDosageDescriptionResponse(BaseModel):
 
 
 class AssistantResponseCombinations(BaseModel):
-    combinations: list[Combination]
+    combinations: list[DrugCombinationSchema]
 
 
 class AssistantResponseDrugPathway(BaseModel):

@@ -50,4 +50,4 @@ class BaseRepository(Generic[T]):
             delete(self._model).where(self._model.id == id)
         )
         await self._session.commit()
-        return result.rowcount() > 0
+        return result.rowcount > 0

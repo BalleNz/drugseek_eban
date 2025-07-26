@@ -30,17 +30,18 @@ class Pharmacokinetics(BaseModel):
     time_to_peak: Optional[str] = Field(default=None, description="время до достижения Cmax")
 
 
-class DrugSynonym(BaseModel):
+class DrugSynonymSchema(BaseModel):
     synonym: str
 
 
-class DrugAnalog(BaseModel):
+class DrugAnalogSchema(BaseModel):
     analog_name: str = Field(...)
     percent: float = Field(...)
     difference: str = Field(...)
 
 
-class Combination(BaseModel):
+class DrugCombinationSchema(BaseModel):
+    id: UUID = Field(...)
     combination_type: CombinationType
     substance: str
     effect: str
@@ -49,9 +50,9 @@ class Combination(BaseModel):
     sources: List[str]
 
 
-class DrugDosage(BaseModel):
+class DrugDosageSchema(BaseModel):
     """Схема дозировки препарата из таблицы drug_dosages."""
-    id: int = Field(...)
+    id: UUID = Field(...)
     drug_id: UUID = Field(...)
 
     route: str = Field(...)
@@ -67,15 +68,14 @@ class DrugDosage(BaseModel):
     duration: str = Field(None, description="продолжительность действия")
 
     notes: Optional[str] = Field(default=None)
-    created_at: datetime = Field(...)
-    updated_at: datetime = Field(...)
 
     class Config:
         from_attributes = True
 
 
-class DrugPathway(BaseModel):
+class DrugPathwaySchema(BaseModel):
     """Схема одной записи из таблицы drug_pathways"""
+    id: UUID = Field(...)
     receptor: str = Field(...)
     binding_affinity: Optional[str] = Field(default=None)
     affinity_description: str = Field(...)
@@ -83,15 +83,11 @@ class DrugPathway(BaseModel):
     pathway: str = Field(...)
     effect: str = Field(...)
 
-    primary_action: str = Field(...)
-    secondary_actions: List[str] = Field(...)
-    clinical_effects: List[str] = Field(...)
-
     source: str = Field(...)
     note: str = Field(...)
 
 
-class DrugPrice(BaseModel):
+class DrugPriceSchema(BaseModel):
     """Схема цены препарата"""
     id: int = Field(...)
     drug_brandname: str = Field(...)
@@ -108,22 +104,29 @@ class DrugSchema(BaseModel):
     """Полная схема препарата"""
     id: UUID = Field(...)
     name: str = Field(...)
-    latin_name: str = Field(default=None)
-    name_ru: list[str] = Field(...)
-    description: str = Field(...)
-    classification: str = Field(...)
-    dosages_fun_fact: str = Field(...)
+    latin_name: Optional[str] = Field(default=None)
+    name_ru: Optional[str] = Field(default=None)
+    description: Optional[str] = Field(default=None)
+    classification: Optional[str] = Field(default=None)
+    dosages_fun_fact: Optional[str] = Field(default=None)
+
+    synonyms: Optional[list[DrugSynonymSchema]] = Field(default_factory=list)  # в планах не подгружать лишний раз таблицу , пока будет пустая
+    dosages: list[DrugDosageSchema] = Field(default_factory=list)
+    pathways: list[DrugPathwaySchema] = Field(default_factory=list)
+    analogs: list[DrugAnalogSchema] = Field(default_factory=list)
+    combinations: list[DrugCombinationSchema] = Field(default_factory=list)
+
+    drug_prices: Optional[list[DrugPriceSchema]] = Field(default=None)  # FUTURE
+
+    pathways_sources: list[str] = Field(default_factory=list)
+    dosages_sources: list[str] = Field(default_factory=list)
+
+    primary_action: str = Field(...)
+    secondary_actions: str = Field(...)
+    clinical_effects: str = Field(...)
+
     created_at: datetime = Field(...)
     updated_at: datetime = Field(...)
-
-    dosages: List[DrugDosage] = []
-    pathways: List[DrugPathway] = []
-    drug_prices: List[DrugPrice] = []
-    drug_synonyms: Optional[list[DrugSynonym]] = []  # в планах не подгружать лишний раз таблицу , пока будет пустая
-    analogs: list[DrugAnalog] = Field(default=None)
-
-    pathways_sources: List[str] = Field(...)
-    dosages_sources: List[str] = Field(...)
 
     class Config:
         from_attributes = True
@@ -149,5 +152,3 @@ class MechanismSummary(BaseModel):
     secondary_actions: str = Field(...)
     clinical_effects: str = Field(...)
     sources: list[str] = Field(...)
-
-

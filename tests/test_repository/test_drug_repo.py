@@ -1,13 +1,11 @@
 import pytest
 
-from conftest import drug_service, session
 from core.database.models.drug import Drug, DrugSynonym, DrugPathway, DrugDosage, DrugAnalog, DrugCombination
 from core.database.repository.drug import DrugRepository
-from services.drug import DrugService
 
 
 @pytest.mark.asyncio
-async def test_find_drug_by_query(drug_repo: DrugRepository, drug_service: DrugService):
+async def test_find_drug_by_query(session):
     """
     Тестирование записи препарата в БД, а после — поиска с использованием pg_trgm.
 
@@ -15,6 +13,8 @@ async def test_find_drug_by_query(drug_repo: DrugRepository, drug_service: DrugS
         - pg_trgm
     """
     search_query = "парамол"
+
+    drug_repo: DrugRepository = DrugRepository(session=session)
 
     await drug_repo.create(
         Drug(
@@ -37,13 +37,16 @@ async def test_find_drug_by_query(drug_repo: DrugRepository, drug_service: DrugS
 
 
 @pytest.mark.asyncio
-async def test_get_with_all_relationships(drug_repo: DrugRepository):
+async def test_get_with_all_relationships(session):
     """
     Тестирование записи препарата и его смежных таблиц.
 
     check:
         - drug relationships
     """
+
+    drug_repo: DrugRepository = DrugRepository(session=session)
+
     drug: Drug = await drug_repo.create(
         Drug(
             name="Acetaminophen",
@@ -87,15 +90,15 @@ async def test_get_with_all_relationships(drug_repo: DrugRepository):
                 )
             ],
             combinations=[
-            DrugCombination(
-                combination_type="good",
-                substance="Autismophen",
-                effect="увеличивает ауе",
-                risks="нихуя",
-                products=["спермавирин", "ауефлекс"],
-                sources=["drug.org/hui", "aue.com"],
-            )
-        ],
+                DrugCombination(
+                    combination_type="good",
+                    substance="Autismophen",
+                    effect="увеличивает ауе",
+                    risks="нихуя",
+                    products=["спермавирин", "ауефлекс"],
+                    sources=["drug.org/hui", "aue.com"],
+                )
+            ],
         )
     )
 

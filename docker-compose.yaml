@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    container_name: drug_search_db
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: pharmacy_db
+    ports:
+      - "5430:5430"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    restart: always # Автоматически перезапускать контейнер при сбоях
+
+volumes:
+  pg_data:

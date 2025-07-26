@@ -1,34 +1,10 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import String, ForeignKey, Text, Boolean, Index, Table, Column
-from sqlalchemy import func, DateTime
-from sqlalchemy import insert
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID  # Важно импортировать UUID для PostgreSQL
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import String, ForeignKey, Text, Index, func, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from database.models.base import IDMixin, TimestampsMixin
-from database.models.drug import Drug
-
-
-class AllowedDrugs(IDMixin):
-    __tablename__ = "allowed_drugs"
-
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="CASCADE"),
-        primary_key=True
-    )
-    drug_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        ForeignKey("drugs.id", ondelete="CASCADE"),
-        primary_key=True
-    )
-
-    __table_args__ = (
-        Index('ix_allowed_drugs_user_id_drug_id', 'user_id', 'drug_id'),
-    )
+from core.database.models.base import IDMixin, TimestampsMixin
 
 
 class User(IDMixin, TimestampsMixin):
@@ -49,8 +25,9 @@ class User(IDMixin, TimestampsMixin):
         comment="Каждые 10 запросов о пользователе обновляется его описание. Аля 'какой ты биофакер/химик/фармацевт?'"
     )
 
-    allowed_drugs: Mapped[list["Drug"]] = relationship(
-        secondary="allowed_drugs",  # имя таблицы связи
+    allowed_drugs: Mapped[list["AllowedDrugs"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
         lazy="selectin"
     )
 
@@ -58,21 +35,6 @@ class User(IDMixin, TimestampsMixin):
         Index('uq_users_telegram_id', 'telegram_id', unique=True),
         Index('uq_users_username', 'username', unique=True),
     )
-
-    async def add_allowed_drug_by_id(
-            self,
-            drug_id: uuid.UUID,
-            session: AsyncSession
-    ) -> "User":
-        """Добавляет препарат в разрешенные по его ID без загрузки объекта"""
-        stmt = insert(AllowedDrugs).values(
-            user_id=self.id,
-            drug_id=drug_id
-        ).on_conflict_do_nothing()
-
-        await session.execute(stmt)
-        await session.commit()
-        return self
 
 
 class UserRequestLog(IDMixin):

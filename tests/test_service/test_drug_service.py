@@ -1,11 +1,23 @@
 import pytest
 
+from database.models.drug import Drug, DrugSynonym
+
 
 @pytest.mark.asyncio
-async def test_update_dosages_and_analogs(drug_service, drug_model):
+async def test_update_dosages_and_analogs(drug_service):
     """
     Тестирование обновления данных о дозировках, аналогах, базовой информации препарата и синонимах для триграмм.
     """
+    drug_model = Drug(
+        name="Acetaminophen",
+        name_ru="Парацетамол",
+        synonyms=[
+            DrugSynonym(
+                synonym="Парацетамол"
+            )
+        ]
+    )
+
     drug = await drug_service.repo.create(drug_model)
     updated_drug = await drug_service.update_dosages(drug)
 
@@ -28,10 +40,19 @@ async def test_update_dosages_and_analogs(drug_service, drug_model):
 
 
 @pytest.mark.asyncio
-async def test_update_pathways(drug_service, drug_model):
+async def test_update_pathways(drug_service):
     """
     Тестирование обновления путей активации препарата.
     """
+    drug_model = Drug(
+        name="Acetaminophen",
+        name_ru="Парацетамол",
+        synonyms=[
+            DrugSynonym(
+                synonym="Парацетамол"
+            )
+        ]
+    )
     drug = await drug_service.repo.create(drug_model)
     drug = await drug_service.update_pathways(drug)
 
@@ -45,10 +66,19 @@ async def test_update_pathways(drug_service, drug_model):
 
 
 @pytest.mark.asyncio
-async def test_update_combinations(drug_service, drug_model):
+async def test_update_combinations(drug_service):
     """
     Тестирование обновления комбинаций препарата.
     """
+    drug_model = Drug(
+        name="Acetaminophen",
+        name_ru="Парацетамол",
+        synonyms=[
+            DrugSynonym(
+                synonym="Парацетамол"
+            )
+        ]
+    )
     drug = await drug_service.repo.create(drug_model)
     drug = await drug_service.update_combinations(drug)
 

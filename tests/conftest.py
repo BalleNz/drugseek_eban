@@ -1,14 +1,19 @@
 import asyncio
-from typing import AsyncGenerator
 from pathlib import Path
+from typing import AsyncGenerator
 
 import pytest
-from alembic.config import Config
 from alembic import command
+from alembic.config import Config
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.pool import NullPool
 
 from config import config
+from core.database.repository.drug import DrugRepository  # Писать везде АБСОЛЮТНЫЕ ПУТИ обязательно.
+from core.database.repository.user import UserRepository
+from core.services.drug import DrugService
+from core.services.user import UserService
 
 
 # Фикстура для event loop
@@ -91,4 +96,29 @@ async def session(test_engine) -> AsyncGenerator[AsyncSession, None]:
             yield test_session
         finally:
             await test_session.rollback()
+
+            # Очищаем все таблицы. Важно.
+            async with test_engine.begin() as conn:
+                await conn.run_sync(lambda sync_conn: sync_conn.execute(text("TRUNCATE TABLE users, drugs CASCADE")))
+
             await test_session.close()
+
+
+@pytest.fixture
+async def drug_repo(session: AsyncSession) -> DrugRepository:
+    return DrugRepository(session=session)
+
+
+@pytest.fixture
+async def drug_service(drug_repo: DrugRepository):
+    return DrugService(drug_repo)
+
+
+@pytest.fixture
+async def user_repo(session: AsyncSession) -> UserRepository:
+    return UserRepository(session=session)
+
+
+@pytest.fixture
+async def user_service(user_repo: UserRepository) -> UserService:
+    return UserService(user_repo)

@@ -1,11 +1,10 @@
 import pytest
 
 from core.database.models.drug import Drug, DrugSynonym, DrugPathway, DrugDosage, DrugAnalog, DrugCombination
-from core.database.repository.drug import DrugRepository
 
 
 @pytest.mark.asyncio
-async def test_find_drug_by_query(session):
+async def test_find_drug_by_query(drug_repo):
     """
     Тестирование записи препарата в БД, а после — поиска с использованием pg_trgm.
 
@@ -13,8 +12,6 @@ async def test_find_drug_by_query(session):
         - pg_trgm
     """
     search_query = "парамол"
-
-    drug_repo: DrugRepository = DrugRepository(session=session)
 
     await drug_repo.create(
         Drug(
@@ -37,15 +34,13 @@ async def test_find_drug_by_query(session):
 
 
 @pytest.mark.asyncio
-async def test_get_with_all_relationships(session):
+async def test_get_with_all_relationships(drug_repo):
     """
     Тестирование записи препарата и его смежных таблиц.
 
     check:
         - drug relationships
     """
-
-    drug_repo: DrugRepository = DrugRepository(session=session)
 
     drug: Drug = await drug_repo.create(
         Drug(
@@ -108,3 +103,8 @@ async def test_get_with_all_relationships(session):
     assert drug.pathways[0].binding_affinity
     assert drug.combinations[0].effect
     assert drug.dosages[0].per_time
+
+
+@pytest.mark.asyncio
+async def test_update_drug_with_assistant(drug_repo):
+    ...

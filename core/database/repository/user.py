@@ -1,6 +1,6 @@
 import logging
 import uuid
-from typing import Optional
+from typing import Optional, Any, Coroutine
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,30 +16,38 @@ from schemas import UserTelegramDataSchema, UserSchema
 logger = logging.getLogger("bot.core.repository")
 
 
-# TODO замена во всех репо моделей на схемы в возвращении
 class UserRepository(BaseRepository):
     def __init__(self, session: AsyncSession):
         super().__init__(model=User, session=session)
 
     async def get_by_telegram_id(self, telegram_id: str) -> User | None:
+        """
+        Возвращает модель пользователя по телеграм айди.
+        """
         stmt = select(User).where(User.telegram_id == telegram_id)
         result = await self._session.execute(stmt)
         user: Optional[User] = result.scalar_one_or_none()
+        if not user:
+            return None
         return user
 
-    async def get_or_create_from_telegram(self, telegram_user: UserTelegramDataSchema) -> UserSchema:
-        user_model = await self.get_by_telegram_id(telegram_user.id)
+    async def get_or_create_from_telegram(self, telegram_user: UserTelegramDataSchema) -> UserSchema | None:
+        """
+        Возвращает модель пользователя по Telegram ID если существует.
 
-        if not user_model:
-            user_model = User(
-                telegram_id=telegram_user.id,
+        Если не сущетсвует, Создает нового пользователя по схеме из Telegram Web App.
+        """
+        user: User = await self.get_by_telegram_id(telegram_user.telegram_id)
+        if not user:
+            user = User(
+                telegram_id=telegram_user.telegram_id,
                 username=telegram_user.username,
                 first_name=telegram_user.first_name,
                 last_name=telegram_user.last_name,
             )
-            user_model = await self.create(user_model)
-        user: UserSchema = UserSchema.model_validate(user_model)
-        return user
+            user = await self.create(user)
+
+        return UserSchema.model_validate(user.__dict__)
 
     async def allow_drug_to_user(self, drug_id: uuid.UUID, user_id: uuid.UUID) -> None:
         try:

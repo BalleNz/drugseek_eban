@@ -20,7 +20,7 @@ class UserSchema(BaseModel):
     allowed_requests: int = Field(..., description="allowed requests on drug search")
     used_requests: int = Field(..., description="count of used requests")
 
-    description: str = Field(None, description="описание пользователя")
+    description: Optional[str] = Field(None, description="описание пользователя")
     allowed_drugs: list[UserAllowedDrugs]
 
 

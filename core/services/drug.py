@@ -18,6 +18,7 @@ class DrugService:
     def __init__(self, repo: DrugRepository):
         self.repo = repo
 
+    # TODO user identify
     async def find_drug_by_query(self, user: ..., user_query: str) -> Optional[DrugSchema]:
         """
         Возвращает препарат по запросу юзера.

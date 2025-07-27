@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Optional
 
 from sqlalchemy import String, ForeignKey, Text, Index, func, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -12,14 +13,14 @@ class User(IDMixin, TimestampsMixin):
 
     telegram_id: Mapped[str] = mapped_column(String, comment="telegram id")
     username: Mapped[str] = mapped_column(String, comment="telegram username")
-    first_name: Mapped[str] = mapped_column(String, comment="telegram first name")
-    last_name: Mapped[str] = mapped_column(String, comment="telegram last name")
+    first_name: Mapped[Optional[str]] = mapped_column(String, comment="telegram first name")
+    last_name: Mapped[Optional[str]] = mapped_column(String, comment="telegram last name")
 
     allowed_requests: Mapped[int] = mapped_column(default=3, comment="Количество разрешенных запросов")
     used_requests: Mapped[int] = mapped_column(default=0, comment="Количество использованных запросов")
 
     # TODO: prompt + if not used_requests % 10: user_service.user_description_update(user)
-    description: Mapped[str] = mapped_column(
+    description: Mapped[Optional[str]] = mapped_column(
         Text,
         default=None,
         comment="Каждые 10 запросов о пользователе обновляется его описание. Аля 'какой ты биофакер/химик/фармацевт?'"

@@ -155,7 +155,7 @@ class DrugRepository(BaseRepository):
 
             drug.absorption = assistant_response.pharmacokinetics.absorption
             drug.metabolism = assistant_response.pharmacokinetics.metabolism
-            drug.excretion = assistant_response.pharmacokinetics.excretion
+            drug.elimination = assistant_response.pharmacokinetics.elimination
             drug.time_to_peak = assistant_response.pharmacokinetics.time_to_peak
 
             dosages_data = []

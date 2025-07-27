@@ -27,8 +27,8 @@ class Drug(IDMixin, TimestampsMixin):
     time_to_peak: Mapped[Optional[str]] = mapped_column(String(100))
 
     # pathways generation
-    primary_action: Mapped[Optional[str]] = mapped_column(String(100))
-    secondary_actions: Mapped[Optional[str]] = mapped_column(String(100))  # TODO
+    primary_action: Mapped[Optional[str]] = mapped_column(Text)
+    secondary_actions: Mapped[Optional[str]] = mapped_column(Text)
     clinical_effects: Mapped[Optional[str]] = mapped_column(Text)
 
     pathways_sources: Mapped[Optional[list[str]]] = mapped_column(ARRAY(String))

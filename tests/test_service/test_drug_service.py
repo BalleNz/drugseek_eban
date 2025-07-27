@@ -1,6 +1,7 @@
 import pytest
 
-from database.models.drug import Drug, DrugSynonym
+from assistant import assistant
+from core.database.models.drug import Drug, DrugSynonym
 
 
 @pytest.mark.asyncio
@@ -19,24 +20,32 @@ async def test_update_dosages_and_analogs(drug_service):
     )
 
     drug = await drug_service.repo.create(drug_model)
-    updated_drug = await drug_service.update_dosages(drug)
 
-    assert updated_drug
-    assert updated_drug.dosages_fun_fact
-    assert updated_drug.elimination
-    assert updated_drug.metabolism
-    assert updated_drug.absorption
+    assistant_response = assistant.get_dosage(drug.name)
+    await drug_service.repo.update_dosages(drug.id, assistant_response=assistant_response)
 
-    assert updated_drug.synonyms[0]
+    assert drug_model
+    assert drug_model.dosages_fun_fact
+    assert drug_model.elimination
+    assert drug_model.metabolism
+    assert drug_model.absorption
 
-    for analog in updated_drug.analogs:
+    for synonym in drug_model.synonyms:
+        assert synonym.synonym
+
+    for analog in drug_model.analogs:
         assert analog.percent
         assert analog.difference
         assert analog.analog_name
 
-    assert updated_drug.description
-    assert updated_drug.classification
-    assert updated_drug.latin_name
+    for dosage in drug_model.dosages:
+        assert dosage.route
+        assert dosage.drug_id == drug.id
+        ...
+
+    assert drug_model.description
+    assert drug_model.classification
+    assert drug_model.latin_name
 
 
 @pytest.mark.asyncio
@@ -54,15 +63,19 @@ async def test_update_pathways(drug_service):
         ]
     )
     drug = await drug_service.repo.create(drug_model)
-    drug = await drug_service.update_pathways(drug)
 
-    assert drug.pathways
-    assert drug.pathways[0].effect
-    assert drug.pathways[0].pathway
-    assert drug.pathways[0].activation_type
-    assert drug.pathways[0].binding_affinity
-    assert drug.pathways[0].affinity_description
-    assert drug.pathways[0].receptor
+    assistant_response = assistant.get_pathways(drug_name=drug.name)
+    await drug_service.repo.update_pathways(drug.id, assistant_response)
+
+    assert drug_model.pathways
+    for pathway in drug_model.pathways:
+        assert pathway.effect
+        assert pathway.pathway
+        assert pathway.activation_type
+        assert pathway.binding_affinity
+        assert pathway.affinity_description
+        assert pathway.receptor
+        assert pathway.source
 
 
 @pytest.mark.asyncio
@@ -80,9 +93,14 @@ async def test_update_combinations(drug_service):
         ]
     )
     drug = await drug_service.repo.create(drug_model)
-    drug = await drug_service.update_combinations(drug)
 
-    for combination in drug.combinations:
+    assistant_response = assistant.get_combinations(drug.name)
+    await drug_service.repo.update_combinations(
+        drug_id=drug.id,
+        assistant_response=assistant_response
+    )
+
+    for combination in drug_model.combinations:
         assert combination.effect
         assert combination.combination_type
         if combination.combination_type == "bad":

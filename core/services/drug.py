@@ -28,35 +28,37 @@ class DrugService:
         drug: DrugSchema = await self.repo.find_drug_by_query(user_query=user_query)
         return drug
 
-    async def update_drug(self, drug_id: uuid.UUID) -> DrugSchema:
-        drug: DrugSchema = await self.repo.get(drug_id)
+    async def update_drug(self, drug_id: uuid.UUID, drug_name: str) -> None:
+        """
+        Обновляет все поля препарата.
+        :param drug_id: ID препарата.
+        :param drug_name: строго правильное ДВ препарата.
+        """
         try:
-            assistant_response_dosages: AssistantDosageDescriptionResponse = assistant.get_dosage(drug_name=drug.name)
+            assistant_response_dosages: AssistantDosageDescriptionResponse = assistant.get_dosage(drug_name=drug_name)
             if not assistant_response_dosages.drug_name:
                 logger.error("Ассистент не может найти оффициальное название.")
-                raise AssistantResponseError(f"Couldn't get official drugName for {drug.name}.")
+                raise AssistantResponseError(f"Couldn't get official drugName for {drug_name}.")
             await self.repo.update_dosages(drug_id=drug_id, assistant_response=assistant_response_dosages)
 
-            assistant_response_pathways: AssistantResponseDrugPathways = assistant.get_pathways(drug_name=drug.name)
+            assistant_response_pathways: AssistantResponseDrugPathways = assistant.get_pathways(drug_name=drug_name)
             if not assistant_response_pathways:
                 logger.error("Ассистент не может найти пути активации.")
-                raise AssistantResponseError(f"Couldn't get pathways for {drug.name}")
+                raise AssistantResponseError(f"Couldn't get pathways for {drug_name}")
             await self.repo.update_pathways(drug_id=drug_id, assistant_response=assistant_response_pathways)
 
             assistant_response_combinations: AssistantResponseCombinations = assistant.get_combinations(
-                drug_name=drug.name)
+                drug_name=drug_name)
             if not assistant_response_combinations:
                 logger.error("Ассистент не может найти комбинации.")
-                raise AssistantResponseError(f"Couldn't get combinations for {drug.name}")
+                raise AssistantResponseError(f"Couldn't get combinations for {drug_name}")
             await self.repo.update_combinations(drug_id=drug_id, assistant_response=assistant_response_combinations)
 
         except Exception as ex:
             logger.error(f"Ошибка при обновлении препарата.")
             raise ex
 
-        return await self.repo.get(drug_id)
-
-    async def new_drug(self, drug_name: str) -> DrugSchema:
+    async def new_drug(self, drug_name: str) -> None:
         """
         Создает новый препарат со всеми смежными таблицами после валидации нейронкой.
 
@@ -64,11 +66,10 @@ class DrugService:
         """
         try:
             drug: DrugSchema = await self.repo.create_drug(drug_name)
-            drug: DrugSchema = await self.update_drug(drug.id)
+            await self.update_drug(drug_name=drug.name, drug_id=drug.id)
         except Exception as ex:
             logger.error(f"Ошибка при создании препарата: {ex}")
             raise ex
-        return drug
 
     async def validate_user_query(self, user_query: str) -> Optional[str]:
         """

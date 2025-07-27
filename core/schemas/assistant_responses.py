@@ -3,7 +3,8 @@ from typing import Optional, Dict
 
 from pydantic import BaseModel, Field
 
-from schemas.drug_schemas import DrugAnalogSchema, Pharmacokinetics, DrugCombinationSchema, Pathway, MechanismSummary
+from schemas.drug_schemas import DrugAnalogSchema, Pharmacokinetics, DrugCombinationSchema, Pathway, MechanismSummary, \
+    CombinationType
 
 
 class STATUS(Enum):
@@ -47,8 +48,17 @@ class AssistantDosageDescriptionResponse(BaseModel):
         allow_population_by_field_name = True
 
 
+class AssistantResponseDrugCombinationSchema(BaseModel):
+    combination_type: CombinationType
+    substance: str
+    effect: str
+    products: Optional[list[str]] = Field(default=None)  # only for good
+    risks: Optional[str] = Field(default=None)  # only for bad
+    sources: list[str]
+
+
 class AssistantResponseCombinations(BaseModel):
-    combinations: list[DrugCombinationSchema]
+    combinations: list[AssistantResponseDrugCombinationSchema]
 
 
 class AssistantResponseDrugPathways(BaseModel):

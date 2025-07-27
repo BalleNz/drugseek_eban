@@ -1,5 +1,3 @@
-import uuid
-
 import pytest
 
 from core.database.models.drug import Drug, DrugSynonym, DrugPathway, DrugDosage, DrugAnalog, DrugCombination
@@ -108,8 +106,3 @@ async def test_get_with_all_relationships(drug_repo):
     assert drug.dosages[0].per_time
 
     await drug_repo.delete(drug.id)
-
-
-@pytest.mark.asyncio
-async def test_update_drug_with_assistant(drug_repo):
-    ...

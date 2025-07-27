@@ -9,7 +9,7 @@ from pydantic import ValidationError
 from config import config
 from utils.exceptions import AssistantResponseError
 from schemas.assistant_responses import AssistantDosageDescriptionResponse, AssistantResponseCombinations, \
-    AssistantResponseDrugPathway, AssistantResponseDrugValidation
+    AssistantResponseDrugPathways, AssistantResponseDrugValidation
 from neuro_assistant.prompts import Prompts
 
 env = dotenv_values(".env")
@@ -19,7 +19,7 @@ DEEPSEEK_API_KEY = env.get("DEEPSEEK_API_KEY")
 logger = logging.getLogger("bot.assistant")
 
 AssistantResponseModel = Union[
-    AssistantResponseDrugPathway,
+    AssistantResponseDrugPathways,
     AssistantDosageDescriptionResponse,
     AssistantResponseCombinations,
     None,
@@ -36,7 +36,7 @@ class AssistantInterface(ABC):
         ...
 
     @abstractmethod
-    def get_pathways(self) -> AssistantResponseDrugPathway:
+    def get_pathways(self) -> AssistantResponseDrugPathways:
         """Возвращает все пути активации."""
         ...
 
@@ -92,9 +92,9 @@ class Assistant():
         return self.get_response(user_query=drug_name, prompt=self.promptsClient.GET_DRUG_DESCRIPTION,
                                  pydantic_model=AssistantDosageDescriptionResponse)
 
-    def get_pathways(self, drug_name: str) -> AssistantResponseDrugPathway:
+    def get_pathways(self, drug_name: str) -> AssistantResponseDrugPathways:
         return self.get_response(user_query=drug_name, prompt=self.promptsClient.GET_DRUG_PATHWAYS,
-                                 pydantic_model=AssistantResponseDrugPathway)
+                                 pydantic_model=AssistantResponseDrugPathways)
 
     def get_combinations(self, drug_name: str) -> AssistantResponseCombinations:
         return self.get_response(user_query=drug_name, prompt=self.promptsClient.GET_DRUG_SYNERGISTS,

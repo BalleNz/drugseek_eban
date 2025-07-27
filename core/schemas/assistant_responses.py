@@ -51,7 +51,7 @@ class AssistantResponseCombinations(BaseModel):
     combinations: list[DrugCombinationSchema]
 
 
-class AssistantResponseDrugPathway(BaseModel):
+class AssistantResponseDrugPathways(BaseModel):
     pathways: list[Pathway]
     mechanism_summary: MechanismSummary
 

@@ -12,7 +12,8 @@ from assistant import assistant
 from core.database.models.drug import Drug, DrugSynonym, DrugCombination, DrugPathway, DrugAnalog, DrugDosage
 from core.database.repository.base import BaseRepository
 from database.engine import get_async_session
-from schemas import AssistantResponseCombinations, DrugSchema
+from schemas import AssistantResponseCombinations, DrugSchema, AssistantDosageDescriptionResponse, \
+    AssistantResponseDrugPathways
 from utils.exceptions import AssistantResponseError, DrugNotFound
 
 logger = logging.getLogger("bot.core.repository.drug")
@@ -77,7 +78,6 @@ class DrugRepository(BaseRepository):
 
         return self.__convert_to_drug_schema(drug)
 
-
     async def get_with_all_relationships(self, drug_id: uuid.UUID, need_model: bool) -> Union[Drug, DrugSchema, None]:
         """
         Возращает модель или схему препарата в зависимости от флага need_model.
@@ -117,46 +117,7 @@ class DrugRepository(BaseRepository):
 
         return drug
 
-    async def update_drug(self, drug_id: uuid.UUID) -> Optional[Drug]:
-        """
-        Обновляет все данные о существующем препарате.
-
-        Returns:
-            - pathways: Список путей метаболизма (done)
-            - dosage: Словарь дозировок (done)
-            - drug_prices: Список цен в разных аптеках (FUTURE: yandex search api)
-            - drug_combinations: Полезные и негативные комбинации с другими препаратами (done)
-        """
-        try:
-            drug: Optional[Drug] = await self.get_with_all_relationships(drug_id=drug_id, need_model=True)
-            if not drug:
-                raise DrugNotFound
-
-            drug = await self.update_dosages(drug=drug)
-            drug = await self.update_pathways(drug=drug)
-            drug = await self.update_combinations(drug=drug)
-
-            drug.updated_at = datetime.now()
-
-            await self.save(drug)
-            return drug
-        except Exception as ex:
-            await self._session.rollback()
-
-            logger.error(f"EXCEPTION: {ex}")
-            return None
-
-    async def new_drug(self, drug_name: str) -> Drug:
-        """
-        Создает модель препарата после валидации и обновляет его таблицы.
-        :param drug_name: ДВ на английском
-        """
-        drug: Drug = await self.create_drug(drug_name)
-        await self.update_drug(drug.id)
-
-        return drug
-
-    async def create_drug(self, drug_name: str) -> Drug:
+    async def create_drug(self, drug_name: str) -> DrugSchema:
         """
         Создает модель препарата после валидации перед обновлением его таблиц.
 
@@ -165,28 +126,23 @@ class DrugRepository(BaseRepository):
         drug: Drug = Drug(
             name=drug_name,
         )
-
         await self.save(drug)
-        return drug
+        return DrugSchema.model_validate(drug)
 
-    @staticmethod
-    async def update_dosages(drug: Drug) -> Optional[Drug]:
+    async def update_dosages(
+            self,
+            drug_id: uuid.UUID,
+            assistant_response: AssistantDosageDescriptionResponse
+    ) -> None:
         """
         Обновляет три таблицы:
             - Обновляет данные о дозировках препарата.
             - Обновляет синонимы.
             - Обновляет аналоги препарата.
-
-        НЕ сохраняет в БД.
         """
-
-        try:
-            assistant_response = assistant.get_dosage(drug_name=drug.name)
-            if not assistant_response.drug_name:
-                logger.error("ассистент не может найти оффициальное название.")
-                raise AssistantResponseError("Couldn't get official drugName from assistant.")
-        except Exception as ex:
-            raise ex
+        drug: Drug = await self.get(drug_id)
+        if not drug:
+            raise DrugNotFound
 
         try:
             drug.name = assistant_response.drug_name
@@ -201,52 +157,55 @@ class DrugRepository(BaseRepository):
             drug.metabolism = assistant_response.pharmacokinetics.metabolism
             drug.excretion = assistant_response.pharmacokinetics.excretion
             drug.time_to_peak = assistant_response.pharmacokinetics.time_to_peak
+
+            dosages_data = []
+            for route, methods in assistant_response.dosages.items():
+                if methods:
+                    for method, params in methods.items():
+                        if params:
+                            dosage = DrugDosage(
+                                drug_id=drug.id,
+                                route=route,
+                                method=method,
+                                **params.model_dump(exclude_none=True)
+                            )
+                            dosages_data.append(dosage)
+            drug.dosages = dosages_data
+
+            existing_synonyms = {s.synonym for s in drug.synonyms}
+            drug.synonyms = [
+                DrugSynonym(synonym=synonym)
+                for synonym in assistant_response.synonyms
+                if synonym not in existing_synonyms
+            ]
+
+            # Обновление остальных списков
+            drug.analogs = [
+                DrugAnalog(analog_name=analog.analog_name, percent=analog.percent, difference=analog.difference)
+                for analog in assistant_response.analogs
+            ]
+
+            drug.updated_at = datetime.now()
+
+            await self.save(drug)
+
         except Exception as ex:
-            raise AssistantResponseError(ex)
+            logger.error(f"Failed to update dosages for {drug.name}: {str(ex)}")
+            raise ex
 
-        # новый временный массив
-        dosages_data = []
-        for route, methods in assistant_response.dosages.items():
-            if methods:
-                for method, params in methods.items():
-                    if params:
-                        dosage = DrugDosage(
-                            drug_id=drug.id,
-                            route=route,
-                            method=method,
-                            **params.dict(exclude_none=True)
-                        )
-                        dosages_data.append(dosage)
-
-        # Обновляем список дозировок
-        drug.dosages = dosages_data
-
-        existing_synonyms = {s.synonym for s in drug.synonyms}
-        drug.synonyms = [
-            DrugSynonym(synonym=synonym)
-            for synonym in assistant_response.synonyms
-            if synonym not in existing_synonyms
-        ]
-
-        # Обновление остальных списков
-        drug.analogs = [
-            DrugAnalog(analog_name=analog.analog_name, percent=analog.percent, difference=analog.difference)
-            for analog in assistant_response.analogs
-        ]
-
-        return drug
-
-    @staticmethod
-    async def update_pathways(drug: Drug) -> Optional[Drug]:
-        """Обновляет пути активации препарата на основе данных от ассистента"""
+    async def update_pathways(
+            self,
+            drug_id: uuid.UUID,
+            assistant_response: AssistantResponseDrugPathways
+    ) -> None:
+        """
+        Обновляет пути активации препарата на основе данных от ассистента.
+        """
+        drug: Drug = await self.get(drug_id)
+        if not drug:
+            raise DrugNotFound
 
         try:
-            # Получаем данные от ассистента
-            assistant_response = assistant.get_pathways(drug.name)
-            if not assistant_response:
-                raise AssistantResponseError()
-
-            # Обновление Drug модели
             if assistant_response.mechanism_summary:
                 drug.pathways_sources = assistant_response.mechanism_summary.sources
                 drug.primary_action = assistant_response.mechanism_summary.primary_action
@@ -273,21 +232,25 @@ class DrugRepository(BaseRepository):
 
             drug.pathways = new_pathways
 
-            return drug
+            await self.save(drug)
 
         except Exception as ex:
             logger.error(f"Failed to update pathways for {drug.name}: {str(ex)}")
             raise ex
 
-    @staticmethod
-    async def update_combinations(drug: Drug) -> Optional[Drug]:
-        """Update combinations relationship"""
+    async def update_combinations(
+            self,
+            drug_id: uuid.UUID,
+            assistant_response: AssistantResponseCombinations
+    ) -> None:
+        """
+        Update combinations relationship.
+        """
+        drug: Drug = await self.get(drug_id)
+        if not drug:
+            raise DrugNotFound
 
         try:
-            assistant_response: AssistantResponseCombinations = assistant.get_combinations(drug_name=drug.name)
-            if not assistant_response:
-                raise AssistantResponseError()
-
             new_combinations = []
             for combination in assistant_response.combinations:
                 new_combinations.append(DrugCombination(
@@ -302,7 +265,7 @@ class DrugRepository(BaseRepository):
 
             drug.combinations = new_combinations
 
-            return drug
+            await self.save(drug)
 
         except Exception as ex:
             logger.error(f"Failed to update combinations for {drug.name}, {drug.id}: {str(ex)}")

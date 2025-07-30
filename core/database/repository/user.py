@@ -1,16 +1,16 @@
 import logging
 import uuid
-from typing import Optional, Any, Coroutine
+from typing import Optional
 
 from fastapi import Depends
+from sqlalchemy import select, insert
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from database.engine import get_async_session
 from database.models.relationships import AllowedDrugs
 from database.models.user import User
 from database.repository.base import BaseRepository
-from sqlalchemy import select, insert
-
 from schemas import UserTelegramDataSchema, UserSchema
 
 logger = logging.getLogger("bot.core.repository")
@@ -24,7 +24,12 @@ class UserRepository(BaseRepository):
         """
         Возвращает модель пользователя по телеграм айди.
         """
-        stmt = select(User).where(User.telegram_id == telegram_id)
+        stmt = (
+            select(User).where(
+                User.telegram_id == telegram_id
+            )
+        )
+
         result = await self._session.execute(stmt)
         user: Optional[User] = result.scalar_one_or_none()
         if not user:
@@ -35,7 +40,7 @@ class UserRepository(BaseRepository):
         """
         Возвращает модель пользователя по Telegram ID если существует.
 
-        Если не сущетсвует, Создает нового пользователя по схеме из Telegram Web App.
+        Если не существует, Создает нового пользователя по схеме из Telegram Web App.
         """
         user: User = await self.get_by_telegram_id(telegram_user.telegram_id)
         if not user:

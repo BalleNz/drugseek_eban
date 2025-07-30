@@ -32,6 +32,10 @@ class User(IDMixin, TimestampsMixin):
         lazy="selectin"
     )
 
+    @property
+    def allowed_drug_ids(self) -> list[uuid.UUID]:
+        return [ad.drug_id for ad in self.allowed_drugs]
+
     __table_args__ = (
         Index('uq_users_telegram_id', 'telegram_id', unique=True),
         Index('uq_users_username', 'username', unique=True),

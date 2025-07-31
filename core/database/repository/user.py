@@ -1,9 +1,9 @@
 import logging
 import uuid
-from typing import Optional
+from typing import Optional, Any, Coroutine, Sequence
 
 from fastapi import Depends
-from sqlalchemy import select, insert
+from sqlalchemy import select, insert, text, Row, RowMapping
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -55,6 +55,9 @@ class UserRepository(BaseRepository):
         return UserSchema.model_validate(user.__dict__)
 
     async def allow_drug_to_user(self, drug_id: uuid.UUID, user_id: uuid.UUID) -> None:
+        """
+        Разрешает препарат пользователю для его использования.
+        """
         try:
             stmt = insert(AllowedDrugs).values(
                 user_id=user_id,
@@ -67,6 +70,32 @@ class UserRepository(BaseRepository):
         except Exception as ex:
             logger.exception(f"Ошибка при разрешении препарата пользователю: {ex}")
             raise ex
+
+    async def get_allowed_drug_names(self, user_id: uuid.UUID) -> Sequence[Row[Any] | RowMapping | Any]:
+        """
+        Возвращает список имен разрешенных препаратов для юзера.
+        """
+        stmt = text(f"""
+            SELECT drugs.name AS _drug_name
+            FROM allowed_drugs
+            JOIN drugs ON drugs.id = allowed_drugs.drug_id
+            WHERE allowed_drugs.user_id = '{user_id}'
+        """)
+        result = await self._session.execute(stmt)
+        return result.scalars().all()
+
+    async def get_allowed_drug_ids(self, user_id: uuid.UUID) -> Sequence[uuid.UUID]:
+        """
+        Возвращает список ID препаратов разрешенных для использования пользователю по user_id.
+        """
+        stmt = text(f"""
+            SELECT allowed_drugs.drug_id
+            FROM allowed_drugs
+            JOIN drugs ON drugs.id = allowed_drugs.drug_id
+            WHERE allowed_drugs.user_id = '{user_id}'
+        """)
+        result = await self._session.execute(stmt)
+        return result.scalars().all()
 
 
 def get_user_repository(session: AsyncSession = Depends(get_async_session)) -> UserRepository:

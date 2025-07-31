@@ -57,15 +57,45 @@ async def test_get_by_telegram_id(user_repo):
 
 
 @pytest.mark.asyncio
-async def test_allow_drug_to_user(user_service, drug_repo):
+async def test_allow_drug_to_user(user_repo, drug_repo):
     drug = create_test_drug_model()
     drug_ = await drug_repo.create(drug)
 
     user: User = get_user()
-    user = await user_service.repo.create(user)
+    user = await user_repo.create(user)
 
-    await user_service.allow_drug_to_user(user.id, drug_.id)
+    await user_repo.allow_drug_to_user(drug_.id, user.id)
 
-    await user_service.repo._session.refresh(user)
+    await user_repo._session.refresh(user)
 
     assert drug_.id in user.allowed_drug_ids
+
+
+@pytest.mark.asyncio
+async def test_get_allowed_drug_names(user_repo, drug_repo):
+    drug = create_test_drug_model()
+    drug_ = await drug_repo.create(drug)
+
+    user: User = get_user()
+    user = await user_repo.create(user)
+
+    await user_repo.allow_drug_to_user(drug_.id, user.id)
+
+    allowed_drug_names = await user_repo.get_allowed_drug_names(user.id)
+
+    assert drug_.name in allowed_drug_names
+
+
+@pytest.mark.asyncio
+async def test_get_allowed_drug_ids(user_repo, drug_repo):
+    drug = create_test_drug_model()
+    drug_ = await drug_repo.create(drug)
+
+    user: User = get_user()
+    user = await user_repo.create(user)
+
+    await user_repo.allow_drug_to_user(drug_.id, user.id)
+
+    allowed_drug_ids = await user_repo.get_allowed_drug_ids(user.id)
+
+    assert drug.id in allowed_drug_ids

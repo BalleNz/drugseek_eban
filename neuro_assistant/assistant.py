@@ -62,6 +62,7 @@ class Assistant():
             prompt: str,
             pydantic_model: Type[AssistantResponseModel]
     ):
+        # TODO: обработка нулевого баланса
         try:
             response = self.client.chat.completions.create(
                 model="deepseek-chat",
@@ -100,13 +101,13 @@ class Assistant():
         return self.get_response(user_query=drug_name, prompt=self.promptsClient.GET_DRUG_SYNERGISTS,
                                  pydantic_model=AssistantResponseCombinations)
 
-    def get_user_description(self, user_name: str, user_drug_names: list[str]):
+    def get_user_description(self, user_name: str, user_drug_names: list[str]) -> ...:
         user_drug_names_text = ', '.join(user_drug_names)
         user_query = user_name + ' ' + user_drug_names_text
         return self.get_response(user_query=user_query, prompt=self.promptsClient.GET_USER_DESCRIPTION,
                                  pydantic_model=None)
 
-    def get_user_query_validation(self, user_query: str):
+    def get_user_query_validation(self, user_query: str) -> ...:
         return self.get_response(user_query=user_query, prompt=self.promptsClient.DRUG_SEARCH_VALIDATION,
                                  pydantic_model=AssistantResponseDrugValidation)
 

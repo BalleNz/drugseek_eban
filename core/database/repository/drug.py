@@ -8,7 +8,6 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from assistant import assistant
 from core.database.models.drug import Drug, DrugSynonym, DrugCombination, DrugPathway, DrugAnalog, DrugDosage
 from core.database.repository.base import BaseRepository
 from database.engine import get_async_session
@@ -24,7 +23,7 @@ class DrugRepository(BaseRepository):
         super().__init__(model=Drug, session=session)
 
     @staticmethod
-    def __convert_to_drug_schema(drug: Drug):
+    def _convert_to_drug_schema(drug: Drug):
         # Явное преобразование в словарь для вложенных объектов
         drug_dict = {
             **{k: v for k, v in drug.__dict__.items() if not k.startswith('_')},
@@ -76,7 +75,7 @@ class DrugRepository(BaseRepository):
         if not drug:
             return None
 
-        return self.__convert_to_drug_schema(drug)
+        return self._convert_to_drug_schema(drug)
 
     async def get_with_all_relationships(self, drug_id: uuid.UUID, need_model: bool) -> Union[Drug, DrugSchema, None]:
         """
@@ -108,7 +107,7 @@ class DrugRepository(BaseRepository):
         if need_model:
             return drug
 
-        return self.__convert_to_drug_schema(drug)
+        return self._convert_to_drug_schema(drug)
 
     async def save(self, drug: Drug) -> Drug:
         self._session.add(drug)

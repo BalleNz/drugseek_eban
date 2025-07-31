@@ -5,8 +5,8 @@ from typing import Optional
 from fastapi import Depends
 
 from assistant import assistant
-from core.database.repository.drug import DrugRepository
-from database.repository.drug import get_drug_repository
+from core.database.repository.drug_repo import DrugRepository
+from database.repository.drug_repo import get_drug_repository
 from schemas import AssistantResponseCombinations, AssistantResponseDrugPathways, AssistantDosageDescriptionResponse
 from schemas.drug_schemas import DrugSchema
 from utils.exceptions import AssistantResponseError
@@ -59,7 +59,7 @@ class DrugService:
             logger.error(f"Ошибка при обновлении препарата.")
             raise ex
 
-    async def new_drug(self, drug_name: str) -> None:
+    async def new_drug(self, drug_name: str) -> DrugSchema:
         """
         Создает новый препарат со всеми смежными таблицами после валидации нейронкой.
 
@@ -68,6 +68,7 @@ class DrugService:
         try:
             drug: DrugSchema = await self.repo.create_drug(drug_name)
             await self.update_drug(drug_name=drug.name, drug_id=drug.id)
+            return DrugSchema.model_validate(self.repo._convert_to_drug_schema(await self.repo.get(drug.id)))
         except Exception as ex:
             logger.error(f"Ошибка при создании препарата: {ex}")
             raise ex

@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from core.database.models.drug import Drug, DrugSynonym, DrugCombination, DrugPathway, DrugAnalog, DrugDosage
-from core.database.repository.base import BaseRepository
+from core.database.repository.base_repo import BaseRepository
 from database.engine import get_async_session
 from schemas import AssistantResponseCombinations, DrugSchema, AssistantDosageDescriptionResponse, \
     AssistantResponseDrugPathways

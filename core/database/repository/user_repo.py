@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql import insert
 from database.engine import get_async_session
 from database.models.relationships import AllowedDrugs
 from database.models.user import User
-from database.repository.base import BaseRepository
+from database.repository.base_repo import BaseRepository
 from schemas import UserTelegramDataSchema, UserSchema
 
 logger = logging.getLogger("bot.core.repository")
@@ -81,7 +81,7 @@ class UserRepository(BaseRepository):
         Возвращает список имен разрешенных препаратов для юзера.
         """
         stmt = text(f"""
-            SELECT drugs.name AS _drug_name
+            SELECT drugs.name_ru AS _drug_name
             FROM allowed_drugs
             JOIN drugs ON drugs.id = allowed_drugs.drug_id
             WHERE allowed_drugs.user_id = '{user_id}'

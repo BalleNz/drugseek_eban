@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import Depends
 
 from assistant import assistant
-from database.repository.user import UserRepository, get_user_repository
+from database.repository.user_repo import UserRepository, get_user_repository
 from schemas.user import UserTelegramDataSchema, UserSchema
 
 

@@ -46,7 +46,7 @@ async def test_create_from_telegram_data(user_repo):
 
 @pytest.mark.asyncio
 async def test_get_by_telegram_id(user_repo):
-    user_model = await user_repo.create(get_user())
+    await user_repo.create(get_user())
 
     user = await user_repo.get_by_telegram_id(get_user().telegram_id)
     assert user.telegram_id == "1488221"
@@ -99,3 +99,17 @@ async def test_get_allowed_drug_ids(user_repo, drug_repo):
     allowed_drug_ids = await user_repo.get_allowed_drug_ids(user.id)
 
     assert drug.id in allowed_drug_ids
+
+
+@pytest.mark.asyncio
+async def test_update_description(user_repo):
+    user: User = get_user()
+    user = await user_repo.create(user)
+
+    description = "хуесос пидор лох какашка"
+
+    await user_repo.update_user_description(description, user.id)
+
+    await user_repo._session.refresh(user)
+
+    assert user.description == description

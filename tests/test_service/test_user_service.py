@@ -1,10 +1,7 @@
-import random
 import uuid
 
 import pytest
 
-from database.models.user import User
-from schemas import UserSchema, UserTelegramDataSchema
 from test_repository.test_drug_repo import create_test_drug_model
 from test_repository.test_user_repo import get_user
 

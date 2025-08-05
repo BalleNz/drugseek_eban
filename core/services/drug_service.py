@@ -3,13 +3,17 @@ import uuid
 from typing import Optional
 
 from fastapi import Depends
+from pydantic import ValidationError
 
 from assistant import assistant
 from core.database.repository.drug_repo import DrugRepository
 from database.repository.drug_repo import get_drug_repository
-from schemas import AssistantResponseCombinations, AssistantResponseDrugPathways, AssistantDosageDescriptionResponse
+from schemas import AssistantResponseCombinations, AssistantResponseDrugPathways, AssistantDosageDescriptionResponse, \
+    AssistantResponseDrugResearchs, AssistantResponseDrugResearch
 from schemas.drug_schemas import DrugSchema
+from schemas.pubmed_schema import PubmedResearchSchema, ClearResearchsRequest
 from utils.exceptions import AssistantResponseError
+from utils.pubmed_parser import get_pubmed_parser, PubmedParser
 
 logger = logging.getLogger("bot.core.drug_service")
 
@@ -55,6 +59,9 @@ class DrugService:
                 raise AssistantResponseError(f"Couldn't get combinations for {drug_name}")
             await self.repo.update_combinations(drug_id=drug_id, assistant_response=assistant_response_combinations)
 
+            # Отдельный метод для исследований, тк исследования будут обновляться с выходом новых версий модели Deepseek.
+            # Изначально список исследований не будет доступен и будет за доп плату в виде N токенов.
+
         except Exception as ex:
             logger.error(f"Ошибка при обновлении препарата.")
             raise ex
@@ -73,13 +80,46 @@ class DrugService:
             logger.error(f"Ошибка при создании препарата: {ex}")
             raise ex
 
-    async def validate_user_query(self, user_query: str) -> Optional[str]:
+    @staticmethod
+    async def validate_user_query(user_query: str) -> Optional[str]:
         """
         ВАЛИДИРУЕТ ЗАПРОС ПОЛЬЗОВАТЕЛЯ НА РЕАЛЬНОСТЬ ПРЕПАРАТА.
         :param user_query: Запрос пользователя, предполгаемое название препарата
         :returns: Действующее вещество на английском | None
         """
         return assistant.get_user_query_validation(user_query)
+
+    async def update_drug_researchs(self, drug_id: uuid.UUID, drug_name: str) -> None:
+        """
+        Обновляет таблицу с исследованиями препарата. Можно отдельно обновлять без обновления всего препарата целиком.
+
+        Тратит 1 юзер-токен — реализовать в хенделере апи.
+        """
+        try:
+            pubmed_parser: PubmedParser = get_pubmed_parser()
+            pubmed_researchs: list[Optional[PubmedResearchSchema]] = pubmed_parser.get_researchs(drug_name=drug_name)
+        except Exception as ex:
+            logger.error(f"Ошибка во время парсинга исследований для {drug_name}: {ex}")
+            raise ex
+
+        try:
+            pubmed_researchs_with_drug_name = ClearResearchsRequest(
+                researchs=pubmed_researchs,
+                drug_name=drug_name
+            )
+        except ValidationError as ex:
+            logger.error(f"Ошибка при валидации Pydantic схемы ClearResearchsRequest: {ex}")
+            raise ex
+
+        try:
+            drug_researchs: list[AssistantResponseDrugResearch] = assistant.get_clear_researchs(
+                pubmed_researchs_with_drug_name=pubmed_researchs_with_drug_name
+            ).researchs
+        except Exception as ex:
+            logger.error(f"Ошибка при получении исследований ассистентом: {ex}")
+            raise ex
+
+        await self.repo.update_researchs(drug_id=drug_id, researchs=drug_researchs)
 
 
 def get_drug_service(repo: DrugRepository = Depends(get_drug_repository)):

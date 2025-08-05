@@ -1,3 +1,4 @@
+from datetime import date as date_epta  # обход ошибки PydanticUserError
 from enum import Enum
 from typing import Optional, Dict
 
@@ -90,7 +91,7 @@ class AssistantResponseDrugPathways(BaseModel):
 class AssistantResponseDrugResearch(BaseModel):
     name: str = Field(..., description="название исследования")
     description: str = Field(..., description="описание исследования")
-    date: str = Field(..., description="дата публикации (YYYY-MM-DD)")
+    date: date_epta = Field(..., description="дата публикации (YYYY-MM-DD)")
     url: str = Field(..., description="ссылка на исследование <https://doi.org/ + ‘doi’>")
     summary: Optional[str] = Field(None, description="вывод <что исследовали/изучили/открыли> если нет — строго <None>")
     journal: str = Field(..., description="журнал")
@@ -106,5 +107,5 @@ class AssistantResponseDrugResearchs(BaseModel):
 
 
 class AssistantResponsePubmedQuery(BaseModel):
-    """Схема для получения оптимизированного запроса для поиска исследований PubMed от ассистента."""
+    """Нужна для получения оптимизированного поискового запроса для PubMed ассистенту."""
     pubmed_query: str = Field(...)

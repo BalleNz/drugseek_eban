@@ -15,6 +15,14 @@ class BaseRepository(Generic[T]):
         self._model = model  # table model
         self._session = session
 
+    async def save(self, model: T) -> T:
+        """Saves all changes and refresh model."""
+        self._session.add(model)
+        await self._session.commit()
+        await self._session.refresh(model)
+
+        return model
+
     async def get(self, id: UUID) -> Optional[T]:
         """Get model by primary key ID."""
         return await self._session.get(self._model, id)

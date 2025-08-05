@@ -8,12 +8,12 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from core.database.models.drug import Drug, DrugSynonym, DrugCombination, DrugPathway, DrugAnalog, DrugDosage
+from core.database.models.drug import Drug, DrugSynonym, DrugCombination, DrugPathway, DrugAnalog, DrugDosage, \
+    DrugResearch
 from core.database.repository.base_repo import BaseRepository
 from database.engine import get_async_session
 from schemas import AssistantResponseCombinations, DrugSchema, AssistantDosageDescriptionResponse, \
-    AssistantResponseDrugPathways, AssistantResponseDrugResearchs, AssistantResponseDrugResearch
-from schemas.pubmed_schema import ClearResearchsRequest
+    AssistantResponseDrugPathways, AssistantResponseDrugResearch
 from utils.exceptions import AssistantResponseError, DrugNotFound
 
 logger = logging.getLogger("bot.core.repository.drug")
@@ -78,7 +78,8 @@ class DrugRepository(BaseRepository):
 
         return self._convert_to_drug_schema(drug)
 
-    async def get_with_all_relationships(self, drug_id: uuid.UUID, need_model: bool) -> Union[Drug, DrugSchema, None]:
+    async def get_with_all_relationships(self, drug_id: uuid.UUID, need_model: bool = False) -> Union[
+        Drug, DrugSchema, None]:
         """
         Возращает модель или схему препарата в зависимости от флага need_model.
 
@@ -94,7 +95,9 @@ class DrugRepository(BaseRepository):
                 selectinload(Drug.pathways),
                 selectinload(Drug.combinations),
                 selectinload(Drug.dosages),
-                selectinload(Drug.synonyms)
+                selectinload(Drug.synonyms),
+                selectinload(Drug.researchs),
+                selectinload(Drug.analogs)
             )
         )
 
@@ -109,14 +112,6 @@ class DrugRepository(BaseRepository):
             return drug
 
         return self._convert_to_drug_schema(drug)
-
-    async def save(self, drug: Drug) -> Drug:
-        # TODO move into BaseRepository
-        self._session.add(drug)
-        await self._session.commit()
-        await self._session.refresh(drug)
-
-        return drug
 
     async def create_drug(self, drug_name: str) -> DrugSchema:
         """
@@ -244,9 +239,7 @@ class DrugRepository(BaseRepository):
             drug_id: uuid.UUID,
             assistant_response: AssistantResponseCombinations
     ) -> None:
-        """
-        Update combinations relationship.
-        """
+        """Update combinations relationship."""
         drug: Drug = await self.get(drug_id)
         if not drug:
             raise DrugNotFound
@@ -276,8 +269,39 @@ class DrugRepository(BaseRepository):
             self,
             drug_id: uuid.UUID,
             researchs: list[AssistantResponseDrugResearch]
-    ):
-        pass
+    ) -> None:
+        """Обновляет таблицу исследований препарата."""
+        drug: Drug = await self.get(drug_id)
+        if not drug:
+            raise DrugNotFound
+
+        try:
+            new_researchs = []
+            # каждый раз будет новый список, на стороне клиента обновление исследований будет доступно раз в месяц.
+            for research in researchs:
+                new_researchs.append(
+                    DrugResearch(
+                        name=research.name,
+                        description=research.description,
+                        date=research.date,
+                        url=research.url,
+                        summary=research.summary,
+                        journal=research.journal,
+                        doi=research.doi,
+                        authors=research.authors,
+                        study_type=research.study_type,
+                        interest=research.interest
+                    )
+                )
+
+                drug.researchs = new_researchs
+
+                await self.save(drug)
+
+        except Exception as ex:
+            logger.error(f"Error while updating researchs model: {ex}")
+            raise ex
+
 
 def get_drug_repository(session: AsyncSession = Depends(get_async_session)) -> DrugRepository:
     return DrugRepository(session=session)

@@ -1,7 +1,8 @@
 import uuid
+from datetime import date
 from typing import Optional
 
-from sqlalchemy import String, Float, ForeignKey, Text, UniqueConstraint, ARRAY, Index, func
+from sqlalchemy import String, Float, ForeignKey, Text, UniqueConstraint, ARRAY, Index, func, Date
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID  # Важно импортировать UUID для PostgreSQL
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -71,6 +72,12 @@ class Drug(IDMixin, TimestampsMixin):
         lazy="selectin"
     )
 
+    researchs: Mapped[list["DrugResearch"]] = relationship(
+        back_populates="drug",
+        cascade="all, delete-orphan",
+        lazy="selectin"
+    )
+
     __table_args__ = (
         UniqueConstraint("id", "name"),
     )
@@ -87,11 +94,7 @@ class DrugAnalog(IDMixin):
     )
     drug: Mapped["Drug"] = relationship(back_populates="analogs")
 
-    analog_name: Mapped[str] = mapped_column(
-        String(100),
-        unique=True,
-        comment="аналог к основному drug"
-    )
+    analog_name: Mapped[str] = mapped_column(String(100), comment="аналог к основному drug")
     percent: Mapped[float] = mapped_column(Float, comment="процент схожести")
     difference: Mapped[str] = mapped_column(String(100), comment="отличие от основного препа")
 
@@ -234,4 +237,31 @@ class DrugDosage(IDMixin):
 
     __table_args__ = (
         UniqueConstraint('drug_id', 'route', 'method', name='uq_drug_dosage'),
+    )
+
+
+class DrugResearch(IDMixin):
+    __tablename__ = "drug_researchs"
+
+    drug_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("drugs.id", ondelete="CASCADE", name="fk_drug_researchs_drug_id"),
+        nullable=False,
+        index=True
+    )
+    drug: Mapped["Drug"] = relationship(back_populates="researchs")
+
+    name: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str] = mapped_column(Text)
+    date: Mapped[date] = mapped_column(Date)
+    url: Mapped[str] = mapped_column(String(255))
+    summary: Mapped[Optional[str]] = mapped_column(Text)
+    journal: Mapped[str] = mapped_column(String(100))
+    doi: Mapped[str] = mapped_column(String(50), unique=True)
+    authors: Mapped[Optional[str]] = mapped_column(Text)
+    study_type: Mapped[Optional[str]] = mapped_column(String(50))
+    interest: Mapped[float] = mapped_column()
+
+    __table_args__ = (
+        Index('idx_drug_researchs_doi', doi, unique=True),
     )

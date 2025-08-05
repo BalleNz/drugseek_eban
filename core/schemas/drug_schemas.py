@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date as date_epta
 from enum import Enum
 from typing import Optional, List
 from uuid import UUID
@@ -100,6 +100,22 @@ class DrugPriceSchema(BaseModel):
         from_attributes = True
 
 
+class DrugResearchSchema(BaseModel):
+    name: str = Field(..., description="название исследования")
+    description: str = Field(..., description="описание исследования")
+    date: date_epta = Field(..., description="дата публикации")
+    url: str = Field(..., description="ссылка на исследование")
+    summary: Optional[str] = Field(None, description="вывод исследования")
+    journal: str = Field(..., description="журнал")
+    doi: str = Field(..., description="DOI")
+    authors: Optional[str] = Field(None, description="авторы")
+    study_type: Optional[str] = Field(None, description="тип исследования")
+    interest: float = Field(..., description="уровень интереса")
+
+    class Config:
+        from_attributes = True
+
+
 class DrugSchema(BaseModel):
     """Полная схема препарата"""
     id: UUID = Field(...)
@@ -115,6 +131,7 @@ class DrugSchema(BaseModel):
     pathways: list[DrugPathwaySchema] = Field(default_factory=list)
     analogs: list[DrugAnalogSchema] = Field(default_factory=list)
     combinations: list[DrugCombinationSchema] = Field(default_factory=list)
+    researchs: list[DrugResearchSchema] = Field(default_factory=list)
 
     drug_prices: Optional[list[DrugPriceSchema]] = Field(default=None)  # FUTURE
 

@@ -166,6 +166,6 @@ class Pathway(BaseModel):
 
 class MechanismSummary(BaseModel):
     primary_action: str = Field(...)
-    secondary_actions: str = Field(...)
+    secondary_actions: Optional[str] = Field(None)
     clinical_effects: str = Field(...)
     sources: list[str] = Field(...)

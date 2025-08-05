@@ -283,7 +283,7 @@ class DrugRepository(BaseRepository):
                     DrugResearch(
                         name=research.name,
                         description=research.description,
-                        date=research.date,
+                        date=research.publication_date,
                         url=research.url,
                         summary=research.summary,
                         journal=research.journal,

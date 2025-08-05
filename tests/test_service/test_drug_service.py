@@ -86,7 +86,7 @@ async def test_update_combinations(drug_service):
     Тестирование обновления комбинаций препарата.
     """
     drug_model = Drug(
-        name="Acetaminophen",
+        name="Drostanalone",
         name_ru="Парацетамол",
         synonyms=[
             DrugSynonym(

@@ -105,7 +105,7 @@ class Assistant():
                                  pydantic_model=AssistantResponseDrugPathways)
 
     def get_combinations(self, drug_name: str) -> AssistantResponseCombinations:
-        return self.get_response(input_query=drug_name, prompt=self.prompts.GET_DRUG_SYNERGISTS,
+        return self.get_response(input_query=drug_name, prompt=self.prompts.GET_DRUG_COMBINATIONS,
                                  pydantic_model=AssistantResponseCombinations)
 
     def get_user_description(self, user_name: str, user_drug_names: list[str]) -> ...:

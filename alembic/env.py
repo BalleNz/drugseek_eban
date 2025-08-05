@@ -12,7 +12,7 @@ if config.config_file_name is not None:
 
 from core.config import config as app_config
 
-config.set_main_option("sqlalchemy.url", app_config.DATABASE_URL + "_test?async_fallback=True")
+config.set_main_option("sqlalchemy.url", app_config.DATABASE_URL + "?async_fallback=True")
 
 
 from core.database.models.base import *  # noqa

@@ -253,7 +253,7 @@ class DrugResearch(IDMixin):
 
     name: Mapped[str] = mapped_column(String(255))
     description: Mapped[str] = mapped_column(Text)
-    date: Mapped[date] = mapped_column(Date)
+    publication_date: Mapped[date] = mapped_column(Date)
     url: Mapped[str] = mapped_column(String(255))
     summary: Mapped[Optional[str]] = mapped_column(Text)
     journal: Mapped[str] = mapped_column(String(100))

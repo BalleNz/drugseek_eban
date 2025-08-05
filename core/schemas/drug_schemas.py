@@ -1,4 +1,4 @@
-from datetime import datetime, date as date_epta
+from datetime import datetime, date
 from enum import Enum
 from typing import Optional, List
 from uuid import UUID
@@ -103,7 +103,7 @@ class DrugPriceSchema(BaseModel):
 class DrugResearchSchema(BaseModel):
     name: str = Field(..., description="название исследования")
     description: str = Field(..., description="описание исследования")
-    date: date_epta = Field(..., description="дата публикации")
+    publication_date: date = Field(..., description="дата публикации")
     url: str = Field(..., description="ссылка на исследование")
     summary: Optional[str] = Field(None, description="вывод исследования")
     journal: str = Field(..., description="журнал")

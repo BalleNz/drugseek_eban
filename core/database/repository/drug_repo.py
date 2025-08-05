@@ -12,7 +12,8 @@ from core.database.models.drug import Drug, DrugSynonym, DrugCombination, DrugPa
 from core.database.repository.base_repo import BaseRepository
 from database.engine import get_async_session
 from schemas import AssistantResponseCombinations, DrugSchema, AssistantDosageDescriptionResponse, \
-    AssistantResponseDrugPathways
+    AssistantResponseDrugPathways, AssistantResponseDrugResearchs, AssistantResponseDrugResearch
+from schemas.pubmed_schema import ClearResearchsRequest
 from utils.exceptions import AssistantResponseError, DrugNotFound
 
 logger = logging.getLogger("bot.core.repository.drug")
@@ -110,6 +111,7 @@ class DrugRepository(BaseRepository):
         return self._convert_to_drug_schema(drug)
 
     async def save(self, drug: Drug) -> Drug:
+        # TODO move into BaseRepository
         self._session.add(drug)
         await self._session.commit()
         await self._session.refresh(drug)
@@ -270,6 +272,12 @@ class DrugRepository(BaseRepository):
             logger.error(f"Failed to update combinations for {drug.name}, {drug.id}: {str(ex)}")
             raise ex
 
+    async def update_researchs(
+            self,
+            drug_id: uuid.UUID,
+            researchs: list[AssistantResponseDrugResearch]
+    ):
+        pass
 
 def get_drug_repository(session: AsyncSession = Depends(get_async_session)) -> DrugRepository:
     return DrugRepository(session=session)

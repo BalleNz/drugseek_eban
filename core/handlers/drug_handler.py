@@ -10,8 +10,8 @@ from schemas import AssistantResponseDrugValidation, DrugSchema
 from schemas.assistant_responses import AssistantResponseDrugValidation, STATUS
 from schemas.drug_schemas import DrugSchema
 from schemas.api_responses import DrugResponse
-from services.drug import DrugService, get_drug_service
-from services.user import UserService, get_user_service
+from services.drug_service import DrugService, get_drug_service
+from services.user_service import UserService, get_user_service
 from utils.exceptions import AssistantResponseError
 
 drug_router = APIRouter(prefix="/drugs", tags=["Drugs"])

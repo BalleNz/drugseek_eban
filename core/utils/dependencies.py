@@ -1,6 +1,6 @@
 from fastapi import HTTPException, Depends, Request
 
-from services.user import UserService, get_user_service
+from services.user_service import UserService, get_user_service
 from schemas.user import UserSchema
 
 

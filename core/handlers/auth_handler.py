@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from fastapi.params import Body
 from fastapi.responses import JSONResponse
 
-from services.user import UserService, get_user_service
+from services.user_service import UserService, get_user_service
 from utils import auth
 
 auth_router = APIRouter(prefix="/webapp_auth", tags=["WebAppAuth"])

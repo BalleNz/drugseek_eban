@@ -1,9 +1,9 @@
 import logging
 import uuid
-from typing import Optional, Any, Coroutine, Sequence
+from typing import Optional, Any, Sequence
 
 from fastapi import Depends
-from sqlalchemy import select, text, Row, RowMapping, func
+from sqlalchemy import select, text, Row, RowMapping
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
 

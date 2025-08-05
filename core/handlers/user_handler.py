@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from fastapi.params import Path
 
 from database.models.user import User
-from services.user import UserService, get_user_service
+from services.user_service import UserService, get_user_service
 
 user_router = APIRouter(prefix="/user", tags=["User"])
 

@@ -3,7 +3,7 @@ import uuid
 from typing import Optional, Any, Sequence
 
 from fastapi import Depends
-from sqlalchemy import select, text, Row, RowMapping
+from sqlalchemy import select, text, Row, RowMapping, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
 
@@ -111,6 +111,15 @@ class UserRepository(BaseRepository):
         """).bindparams(description=description, user_id=user_id)
 
         await self._session.execute(stmt)
+        await self._session.commit()
+
+    async def decrement_user_requests(self, user_id: uuid.UUID, amount: int = 1) -> None:
+        """Atomically decrements user's allowed_requests counter."""
+        await self._session.execute(
+            update(User)
+            .where(User.id == user_id)
+            .values(allowed_requests=User.allowed_requests - amount)
+        )
         await self._session.commit()
 
 

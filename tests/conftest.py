@@ -7,10 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sess
 from sqlalchemy.pool import NullPool
 
 from config import config
-from core.database.repository.drug import DrugRepository  # Писать везде АБСОЛЮТНЫЕ ПУТИ обязательно.
-from core.database.repository.user import UserRepository
-from core.services.drug import DrugService
-from core.services.user import UserService
+from core.database.repository.drug_repo import DrugRepository  # Писать везде АБСОЛЮТНЫЕ ПУТИ обязательно.
+from core.database.repository.user_repo import UserRepository
+from core.services.drug_service import DrugService
+from core.services.user_service import UserService
 
 
 # Фикстура для event loop

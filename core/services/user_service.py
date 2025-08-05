@@ -1,3 +1,4 @@
+import uuid
 from uuid import UUID
 
 from fastapi import Depends
@@ -12,9 +13,11 @@ class UserService:
         self.repo = repo
 
     async def allow_drug_to_user(self, user_id: UUID, drug_id: UUID) -> None:
+        "Разрешает препарат юзеру."
         return await self.repo.allow_drug_to_user(user_id=user_id, drug_id=drug_id)
 
-    async def update_user_description(self, user_id: UUID):
+    async def update_user_description(self, user_id: UUID) -> None:
+        "Обновляет информацию описания юзера."
         user: UserSchema = await self.repo.get(user_id)
         user_drugs = await self.repo.get_allowed_drug_names(user_id=user.id)
 
@@ -23,6 +26,10 @@ class UserService:
             user_drug_names=user_drugs
         )
         await self.repo.update_user_description(description=user_description, user_id=user.id)
+
+    async def reduce_tokens(self, user_id: uuid.UUID, tokens_to_reduce = 1) -> None:
+        "Отнимает количество разрешенных юзеру запросов."
+        await self.repo.decrement_user_requests(user_id=user_id, amount=tokens_to_reduce)
 
 
 def get_user_service(repo: UserRepository = Depends(get_user_repository)) -> UserService:

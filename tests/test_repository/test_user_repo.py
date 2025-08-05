@@ -83,7 +83,7 @@ async def test_get_allowed_drug_names(user_repo, drug_repo):
 
     allowed_drug_names = await user_repo.get_allowed_drug_names(user.id)
 
-    assert drug_.name in allowed_drug_names
+    assert drug_.name_ru in allowed_drug_names
 
 
 @pytest.mark.asyncio
@@ -102,7 +102,8 @@ async def test_get_allowed_drug_ids(user_repo, drug_repo):
 
 
 @pytest.mark.asyncio
-async def test_update_description(user_repo):
+async def test_update_description_without_Assistant(user_repo):
+    """Тест обновления описание без ассистента."""
     user: User = get_user()
     user = await user_repo.create(user)
 
@@ -113,3 +114,18 @@ async def test_update_description(user_repo):
     await user_repo._session.refresh(user)
 
     assert user.description == description
+
+
+@pytest.mark.asyncio
+async def test_reduce_allowed_requests(user_repo, user = get_user()):
+    user = await user_repo.create(user)
+    assert user.allowed_requests == 3
+
+    await user_repo.decrement_user_requests(user.id, 1)
+
+    user = await user_repo.get(user.id)
+    assert user.allowed_requests == 2
+
+    await user_repo.decrement_user_requests(user.id, 2)
+    assert user.allowed_requests == 0
+

@@ -3,7 +3,7 @@ from typing import Optional, Dict
 
 from pydantic import BaseModel, Field
 
-from schemas.drug_schemas import DrugAnalogSchema, Pharmacokinetics, DrugCombinationSchema, Pathway, MechanismSummary, \
+from schemas.drug_schemas import DrugAnalogSchema, Pharmacokinetics, Pathway, MechanismSummary, \
     CombinationType
 
 
@@ -85,3 +85,26 @@ class AssistantResponseDrugPathways(BaseModel):
                 "sources": ["DrugBank", "PubChem", "IUPHAR"]
             }
         }
+
+
+class AssistantResponseDrugResearch(BaseModel):
+    name: str = Field(..., description="название исследования")
+    description: str = Field(..., description="описание исследования")
+    date: str = Field(..., description="дата публикации (YYYY-MM-DD)")
+    url: str = Field(..., description="ссылка на исследование <https://doi.org/ + ‘doi’>")
+    summary: Optional[str] = Field(None, description="вывод <что исследовали/изучили/открыли> если нет — строго <None>")
+    journal: str = Field(..., description="журнал")
+    doi: str = Field(..., description="DOI")
+    authors: Optional[str] = Field(None, description="несколько самых популярных участвующих в исследовании авторов")
+    study_type: Optional[str] = Field(None, description="тип исследования (RCT/метаанализ/обзор)")
+    interest: float = Field(...,
+                          description="насколько исследование интересно <число с плавающей точкой, где 1.00 — максимально интересное>")
+
+
+class AssistantResponseDrugResearchs(BaseModel):
+    researchs: list[AssistantResponseDrugResearch]
+
+
+class AssistantResponsePubmedQuery(BaseModel):
+    """Схема для получения оптимизированного запроса для поиска исследований PubMed от ассистента."""
+    pubmed_query: str = Field(...)

@@ -123,6 +123,8 @@ class UserRepository(BaseRepository):
         )
         await self._session.commit()
 
+    def __del__(self):
+        logger.info("USER REPO IS COLLECTED BY GARBAGE COLLECTOR")
 
 async def get_user_repository(
         session_generator: AsyncGenerator[AsyncSession, None] = Depends(get_async_session)

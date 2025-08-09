@@ -1,26 +1,22 @@
-from typing import Union, Optional, Any, Coroutine
-from uuid import UUID
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.params import Path, Body
 
 from assistant import assistant
 from database.models.user import User
-from schemas import AssistantResponseDrugValidation, DrugSchema
+from schemas import DrugResponse, UserSchema
 from schemas.assistant_responses import AssistantResponseDrugValidation, STATUS
 from schemas.drug_schemas import DrugSchema
-from schemas.api_responses import DrugResponse
 from services.drug_service import DrugService, get_drug_service
 from services.user_service import UserService, get_user_service
 from utils.exceptions import AssistantResponseError
 
-drug_router = APIRouter(prefix="/drugs", tags=["Drugs"])
+drug_router = APIRouter(prefix="/drugs")
 
 
 @drug_router.post(path="/", response_model=DrugSchema)
 async def new_drug(
-        user_query: Body(),
-        user: User = ...,
+        user_query: dict = Body(),
+        user: UserSchema = Body(),
         drug_service: DrugService = Depends(get_drug_service),
         user_service: UserService = Depends(get_user_service)
 ) -> AssistantResponseDrugValidation | DrugSchema:
@@ -47,8 +43,8 @@ async def new_drug(
 
 @drug_router.get("/{user_query}")
 async def search_and_allow_request(
-        user_query: Path(),
-        user: User = ...,  # TODO: auth with O2auth schema via telegram
+        user_query: str = Path(),
+        user: UserSchema = Body(),  # TODO: auth with O2auth schema via telegram
         drug_service: DrugService = Depends(get_drug_service)
 ):
     """ПОИСК ПО ТРИГРАММАМ"""
@@ -72,6 +68,7 @@ async def search_and_allow_request(
         drug=drug,
         is_allowed=is_allowed,
     )
+
 
 @drug_router.post(path="/{drug_id}")
 async def update_existing_drug(

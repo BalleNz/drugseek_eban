@@ -1,16 +1,13 @@
-from uuid import UUID
+from fastapi import APIRouter
+from fastapi.params import Body
 
-from fastapi import APIRouter, Depends
-from fastapi.params import Path
+from schemas import UserSchema
 
-from database.models.user import User
-from services.user_service import UserService, get_user_service
-
-user_router = APIRouter(prefix="/user", tags=["User"])
+user_router = APIRouter(prefix="/user")
 
 
-@user_router.get(path="/", response_model=User)
+@user_router.get(path="/", response_model=UserSchema)
 async def get_me(
-        user: User = ...
+        user: UserSchema = Body()
 ):
     return user

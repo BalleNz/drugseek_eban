@@ -1,7 +1,7 @@
 import logging
 import uuid
 from datetime import datetime
-from typing import Optional, Union
+from typing import Optional, Union, AsyncGenerator
 
 from fastapi import Depends
 from sqlalchemy import select, func
@@ -303,5 +303,8 @@ class DrugRepository(BaseRepository):
             raise ex
 
 
-def get_drug_repository(session: AsyncSession = Depends(get_async_session)) -> DrugRepository:
-    return DrugRepository(session=session)
+async def get_drug_repository(
+        session_generator: AsyncGenerator[AsyncSession, None] = Depends(get_async_session)
+) -> DrugRepository:
+    async with session_generator as session:
+        return DrugRepository(session=session)

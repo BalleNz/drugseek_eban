@@ -22,10 +22,9 @@ class DrugService:
     def __init__(self, repo: DrugRepository):
         self.repo = repo
 
-    # TODO user identify
-    async def find_drug_by_query(self, user: ..., user_query: str) -> Optional[DrugSchema]:
+    async def find_drug_by_query(self, user_query: str) -> Optional[DrugSchema]:
         """
-        Возвращает препарат по запросу юзера.
+        Возвращает препарат по запросу юзера
 
         - поиск препаратов по имени в таблице синонимов на русском.
         :returns: drug | None
@@ -35,7 +34,7 @@ class DrugService:
 
     async def update_drug(self, drug_id: uuid.UUID, drug_name: str) -> None:
         """
-        Обновляет все поля препарата.
+        Обновляет все поля препарата, кроме исследований.
         :param drug_id: ID препарата.
         :param drug_name: строго правильное ДВ препарата.
         """
@@ -89,11 +88,10 @@ class DrugService:
         """
         return assistant.get_user_query_validation(user_query)
 
+    # TODO Тратит 1 юзер-токен — реализовать в хендлере апи.
     async def update_drug_researchs(self, drug_id: uuid.UUID, drug_name: str) -> None:
         """
         Обновляет таблицу с исследованиями препарата. Можно отдельно обновлять без обновления всего препарата целиком.
-
-        Тратит 1 юзер-токен — реализовать в хенделере апи.
         """
         try:
             pubmed_parser: PubmedParser = get_pubmed_parser()

@@ -2,7 +2,8 @@ from fastapi import FastAPI
 import uvicorn
 
 from config import config
-from handlers.drug import drug_router
+from handlers import user_router, auth_router
+from handlers.drug_handler import drug_router
 
 
 def get_app() -> FastAPI:
@@ -10,7 +11,9 @@ def get_app() -> FastAPI:
         title="DrugSearch API"
     )
 
-    app.include_router(drug_router, prefix="/drugs", tags=["drugs"])
+    app.include_router(drug_router, prefix="/v1", tags=["Drugs"])
+    app.include_router(user_router, prefix="/v1", tags=["User"])
+    app.include_router(auth_router, prefix="/v1", tags=["Auth"])
     return app
 
 

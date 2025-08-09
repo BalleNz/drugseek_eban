@@ -45,11 +45,11 @@ engine, async_session_maker = create_async_db_engine_and_session(
 
 @asynccontextmanager
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
-    async with async_session_maker() as session:
+    async with async_session_maker() as session_generator:
         try:
-            yield session
+            yield session_generator
         except Exception:
-            await session.rollback()
+            await session_generator.rollback()
             raise
         finally:
-            await session.close()
+            await session_generator.close()

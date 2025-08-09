@@ -1,11 +1,11 @@
 import logging
 import uuid
-from typing import Optional, Any, Sequence
+from typing import Optional, Any, Sequence, AsyncGenerator
 
 from fastapi import Depends
 from sqlalchemy import select, text, Row, RowMapping, update
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import get_async_session
 from database.models.relationships import AllowedDrugs
@@ -57,6 +57,7 @@ class UserRepository(BaseRepository):
 
         result = await self._session.execute(stmt)
         user = result.scalar_one()
+        await self._session.commit()
         return UserSchema.model_validate(user.__dict__)
 
     async def allow_drug_to_user(self, drug_id: uuid.UUID, user_id: uuid.UUID) -> None:
@@ -123,8 +124,11 @@ class UserRepository(BaseRepository):
         await self._session.commit()
 
 
-def get_user_repository(session: AsyncSession = Depends(get_async_session)) -> UserRepository:
+async def get_user_repository(
+        session_generator: AsyncGenerator[AsyncSession, None] = Depends(get_async_session)
+) -> UserRepository:
     """
     :return: UserRepository obj with AsyncSession for onion service layer
     """
-    return UserRepository(session=session)
+    async with session_generator as session:
+        return UserRepository(session=session)

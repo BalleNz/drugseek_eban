@@ -1,7 +1,7 @@
 import json
 import logging
 from abc import ABC, abstractmethod
-from typing import Union, Type, Optional
+from typing import Union, Type
 
 from dotenv import dotenv_values
 from openai import OpenAI, APIError
@@ -9,9 +9,9 @@ from pydantic import ValidationError
 
 from config import config
 from schemas import AssistantResponseDrugResearchs, AssistantResponsePubmedQuery
-from schemas.pubmed_schema import PubmedResearchSchema, ClearResearchsRequest
+from schemas.API_schemas.pubmed_schema import ClearResearchsRequest
 from utils.exceptions import AssistantResponseError
-from schemas.assistant_responses import AssistantDosageDescriptionResponse, AssistantResponseCombinations, \
+from schemas.API_schemas.assistant_responses import AssistantDosageDescriptionResponse, AssistantResponseCombinations, \
     AssistantResponseDrugPathways, AssistantResponseDrugValidation
 from neuro_assistant.prompts import Prompts
 

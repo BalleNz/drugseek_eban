@@ -1,6 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
-from schemas.drug_schemas import DrugSchema
+from schemas.API_schemas.drug_schemas import DrugSchema
 
 """
 drug_router

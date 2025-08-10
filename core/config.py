@@ -2,6 +2,7 @@ from os import environ
 from typing import ClassVar
 
 from dotenv import load_dotenv
+from fastapi.security import OAuth2PasswordBearer
 from pydantic_settings import BaseSettings
 
 load_dotenv()
@@ -13,7 +14,6 @@ class Config(BaseSettings):
     """
     # TOKEN SYSTEM
     NEW_DRUG_COST: int = 1  # allow or generate drug to user
-
 
     # Режим разработки True/False
     DEBUG_MODE: ClassVar[bool] = True
@@ -34,9 +34,25 @@ class Config(BaseSettings):
 
     # JWT
     SECRET_KEY: str = "zallopppaaa"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRES_MINUTES: int = 1200
 
     # Redis (для хранения временных данных или кеша)
     REDIS_URL: str = environ.get("REDIS_URL", "redis://localhost:6379/0")
+
+    # AUTH ENDPOINT
+    ACCESS_TOKEN_ENDPOINT: str = "v1/auth/"
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        self._oauth2_scheme = OAuth2PasswordBearer(
+            tokenUrl=self.ACCESS_TOKEN_ENDPOINT,
+            scheme_name="TelegramAccessToken"
+        )
+
+    @property
+    def OAUTH2_SCHEME(self):
+        return self._oauth2_scheme
 
 
 config = Config()

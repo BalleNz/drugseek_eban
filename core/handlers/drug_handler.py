@@ -1,11 +1,12 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.params import Path, Body
 
 from assistant import assistant
-from database.models.user import User
 from schemas import DrugResponse, UserSchema
-from schemas.assistant_responses import AssistantResponseDrugValidation, STATUS
-from schemas.drug_schemas import DrugSchema
+from schemas.API_schemas.assistant_responses import AssistantResponseDrugValidation, STATUS
+from schemas.API_schemas.drug_schemas import DrugSchema
 from services.drug_service import DrugService, get_drug_service
 from services.user_service import UserService, get_user_service
 from utils.exceptions import AssistantResponseError
@@ -15,12 +16,11 @@ drug_router = APIRouter(prefix="/drugs")
 
 @drug_router.post(path="/", response_model=DrugSchema)
 async def new_drug(
+        drug_service: Annotated[DrugService, Depends(get_drug_service)],
+        user_service: Annotated[UserService, Depends(get_user_service)],
         user_query: dict = Body(),
-        user: UserSchema = Body(),
-        drug_service: DrugService = Depends(get_drug_service),
-        user_service: UserService = Depends(get_user_service)
+        user: UserSchema = ...  # auth user
 ) -> AssistantResponseDrugValidation | DrugSchema:
-    # TODO в одну транзакцию получать два репо а потом сервисы
 
     # TODO:
     # 1. Neuro_response: {"status": "exist/not exist", "drug_name":"..."}

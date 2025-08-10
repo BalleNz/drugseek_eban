@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Body, Depends
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 
@@ -6,12 +6,55 @@ from schemas import UserTelegramDataSchema
 from services.user_service import UserService, get_user_service
 from utils import auth
 
-auth_router = APIRouter(prefix="/telegram_auth")
+auth_router = APIRouter(prefix="/auth")
 
 
-@auth_router.post("/")
+@auth_router.post(
+    "/",
+    summary="Getting JWT from telegram data.",
+    description="Endpoint is needed to get access token from telegram.",
+    responses={
+        "200": {
+            "description": "Successful authentication. Returns the access token.",
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "access_token": {
+                                "type": "string",
+                                "description": "The Telegram Access Token.",
+                            },
+                            "token_type": {
+                                "type": "string",
+                                "example": "bearer",
+                            },
+                        },
+                        "required": ["access_token"],
+                    }
+                }
+            },
+        },
+        "400": {
+            "description": "Invalid Telegram authentication data.",
+            "content": {"application/json": {"example": {"detail": "Invalid Telegram auth data"}}},
+        },
+        "500": {"description": "Internal server error"}
+    }
+)
 async def telegram_auth(
-        telegram_user_data: UserTelegramDataSchema,
+        telegram_user_data: UserTelegramDataSchema = Body(
+            ...,
+            examples=[
+                {
+                    "telegram_id": "123456789",
+                    "username": "johndoe",
+                    "first_name": "John",
+                    "last_name": "Doe",
+                    "photo_url": "https://t.me/i/userpic/123/johndoe.jpg"
+                }
+            ]
+        ),
         user_service: UserService = Depends(get_user_service)
 ):
     """

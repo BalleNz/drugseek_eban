@@ -10,8 +10,8 @@ from core.database.repository.drug_repo import DrugRepository
 from database.repository.drug_repo import get_drug_repository
 from schemas import AssistantResponseCombinations, AssistantResponseDrugPathways, AssistantDosageDescriptionResponse, \
     AssistantResponseDrugResearchs, AssistantResponseDrugResearch
-from schemas.drug_schemas import DrugSchema
-from schemas.pubmed_schema import PubmedResearchSchema, ClearResearchsRequest
+from schemas.API_schemas.drug_schemas import DrugSchema
+from schemas.API_schemas.pubmed_schema import PubmedResearchSchema, ClearResearchsRequest
 from utils.exceptions import AssistantResponseError
 from utils.pubmed_parser import get_pubmed_parser, PubmedParser
 

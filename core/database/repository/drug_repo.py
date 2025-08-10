@@ -84,7 +84,7 @@ class DrugRepository(BaseRepository):
         Возращает модель или схему препарата в зависимости от флага need_model.
 
         :param drug_id: ID препарата в БД.
-        :param need_model: Флаг, если активен — функция возвращает модель, иначе — pydantic схему.
+        :param need_model: Флаг, если активен — функция возвращает модель, иначе — API_schemas схему.
         """
 
         stmt = (

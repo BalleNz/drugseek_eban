@@ -4,7 +4,7 @@ from typing import Optional, Dict
 
 from pydantic import BaseModel, Field
 
-from schemas.drug_schemas import DrugAnalogSchema, Pharmacokinetics, Pathway, MechanismSummary, \
+from schemas.API_schemas.drug_schemas import DrugAnalogSchema, Pharmacokinetics, Pathway, MechanismSummary, \
     CombinationType
 
 

@@ -5,7 +5,7 @@ from fastapi import Depends
 
 from assistant import assistant
 from database.repository.user_repo import UserRepository, get_user_repository
-from schemas.user import UserTelegramDataSchema, UserSchema
+from schemas.API_schemas.user_schemas import UserSchema
 
 
 class UserService:

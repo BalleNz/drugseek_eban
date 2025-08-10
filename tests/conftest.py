@@ -2,10 +2,12 @@ import asyncio
 from typing import AsyncGenerator
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.pool import NullPool
 
+import app
 from config import config
 from core.database.repository.drug_repo import DrugRepository  # Писать везде АБСОЛЮТНЫЕ ПУТИ обязательно.
 from core.database.repository.user_repo import UserRepository
@@ -19,6 +21,12 @@ def event_loop():
     loop = asyncio.get_event_loop()
     yield loop
     loop.close()
+
+
+@pytest.fixture(scope="module")
+def client():
+    with TestClient(app.fastapi_app) as c:
+        yield c
 
 
 @pytest.fixture(scope="session")

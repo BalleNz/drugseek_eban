@@ -65,7 +65,7 @@ class AsyncHttpClient:
         return response_json
 
     async def _create_session(self):
-        self._session = aiohttp.ClientSession(base_url=get_settings().FULL_ADDRESS)
+        self._session = aiohttp.ClientSession(base_url=...)
 
     async def _close_session(self):
         if self._session:

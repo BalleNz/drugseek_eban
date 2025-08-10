@@ -1,4 +1,4 @@
-# bot/handlers/auth.py
+# bot/handlers/auth_handler.py
 from aiogram import Update, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext

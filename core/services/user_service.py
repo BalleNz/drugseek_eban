@@ -27,7 +27,7 @@ class UserService:
         )
         await self.repo.update_user_description(description=user_description, user_id=user.id)
 
-    async def reduce_tokens(self, user_id: uuid.UUID, tokens_to_reduce = 1) -> None:
+    async def reduce_tokens(self, user_id: uuid.UUID, tokens_to_reduce=1) -> None:
         "Отнимает количество разрешенных юзеру запросов."
         await self.repo.decrement_user_requests(user_id=user_id, amount=tokens_to_reduce)
 

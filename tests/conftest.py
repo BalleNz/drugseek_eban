@@ -23,7 +23,7 @@ def event_loop():
     loop.close()
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def client():
     with TestClient(app.fastapi_app) as c:
         yield c
@@ -31,7 +31,7 @@ def client():
 
 @pytest.fixture(scope="session")
 async def test_engine():
-    test_db_url = config.DATABASE_URL + "_test"
+    test_db_url = config.DATABASE_URL  # + "_test"
 
     test_engine = create_async_engine(
         test_db_url,
@@ -65,7 +65,8 @@ async def session(test_engine) -> AsyncGenerator[AsyncSession, None]:
 
 @pytest.fixture
 async def drug_repo(session: AsyncSession) -> DrugRepository:
-    return DrugRepository(session=session)
+    async with session as session:
+        return DrugRepository(session=session)
 
 
 @pytest.fixture
@@ -81,3 +82,21 @@ async def user_repo(session: AsyncSession) -> UserRepository:
 @pytest.fixture
 async def user_service(user_repo: UserRepository) -> UserService:
     return UserService(user_repo)
+
+
+@pytest.fixture
+def test_user_data():
+    return {
+        "telegram_id": "123456789",
+        "username": "testuser",
+        "first_name": "Test",
+        "last_name": "User",
+        "photo_url": "https://example.com/photo.jpg"
+    }
+
+
+@pytest.fixture
+async def auth_token(test_user_data, client):
+    response = client.post("/v1/auth/", json=test_user_data)
+    return response.json()["token"]
+

@@ -16,3 +16,5 @@ async def get_me(
         user: UserSchema = Depends(get_auth_user)
 ):
     return user
+
+# TODO: GET allowed drugs (list with name_ru)

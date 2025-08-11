@@ -43,7 +43,6 @@ engine, async_session_maker = create_async_db_engine_and_session(
 )
 
 
-@asynccontextmanager
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_maker() as session_generator:
         try:

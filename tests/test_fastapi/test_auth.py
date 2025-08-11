@@ -1,21 +1,4 @@
-# test_api.py
 import pytest
-from uuid import UUID
-from fastapi.testclient import TestClient
-
-from app import fastapi_app
-from schemas import UserTelegramDataSchema
-
-
-@pytest.fixture
-def test_user_data():
-    return {
-        "telegram_id": "123456789",
-        "username": "testuser",
-        "first_name": "Test",
-        "last_name": "User",
-        "photo_url": "https://example.com/photo.jpg"
-    }
 
 
 @pytest.mark.asyncio

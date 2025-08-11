@@ -12,7 +12,7 @@ from core.database.models.base import TimestampsMixin, IDMixin
 class Drug(IDMixin, TimestampsMixin):
     __tablename__ = "drugs"
 
-    name: Mapped[str] = mapped_column(String(100))  # ДВ на англ
+    name: Mapped[str] = mapped_column(String(100), unique=True)  # ДВ на англ
     name_ru: Mapped[Optional[str]] = mapped_column(String(100))  # ДВ на русском
     latin_name: Mapped[Optional[str]] = mapped_column(String(100))
     description: Mapped[Optional[str]] = mapped_column(Text)

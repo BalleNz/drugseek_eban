@@ -31,7 +31,7 @@ def client():
 
 @pytest.fixture(scope="session")
 async def test_engine():
-    test_db_url = config.DATABASE_URL  # + "_test"
+    test_db_url = config.DATABASE_URL + "_test"
 
     test_engine = create_async_engine(
         test_db_url,

@@ -5,7 +5,7 @@ from schemas.API_schemas.user_schemas import UserSchema, UserTelegramDataSchema
 
 __all__ = [
     "AssistantResponseDrugValidation", "AssistantDosageDescriptionResponse",
-    "AssistantResponseCombinations", "AssistantResponseDrugPathways", "STATUS",
+    "AssistantResponseCombinations", "AssistantResponseDrugPathways", "EXIST_STATUS",
     "DrugSchema", "DrugDosageSchema", "DrugPathwaySchema", "DrugSynonymSchema",
     "DrugAnalogSchema", "Pharmacokinetics", "DrugCombinationSchema", "Pathway", "ActivationType",
     "CombinationType", "MechanismSummary", "DrugPriceSchema",

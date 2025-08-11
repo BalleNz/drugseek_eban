@@ -63,9 +63,9 @@ class DrugDosageSchema(BaseModel):
     per_time_weight_based: Optional[str] = Field(default=None)
     max_day_weight_based: Optional[str] = Field(default=None)
 
-    onset: str = Field(None, description="время начала действия (например, 'немедленно')")
-    half_life: str = Field(None, description="период полувыведения")
-    duration: str = Field(None, description="продолжительность действия")
+    onset: Optional[str] = Field(None, description="время начала действия (например, 'немедленно')")
+    half_life: Optional[str] = Field(None, description="период полувыведения")
+    duration: Optional[str] = Field(None, description="продолжительность действия")
 
     notes: Optional[str] = Field(default=None)
 
@@ -135,12 +135,12 @@ class DrugSchema(BaseModel):
 
     drug_prices: Optional[list[DrugPriceSchema]] = Field(default=None)  # FUTURE
 
-    pathways_sources: list[str] = Field(default_factory=list)
-    dosages_sources: list[str] = Field(default_factory=list)
+    pathways_sources: Optional[list[str]] = Field(default_factory=list)
+    dosages_sources: Optional[list[str]] = Field(default_factory=list)
 
-    primary_action: str = Field(...)
-    secondary_actions: str = Field(...)
-    clinical_effects: str = Field(...)
+    primary_action: Optional[str] = Field(...)
+    secondary_actions: Optional[str] = Field(...)
+    clinical_effects: Optional[str] = Field(...)
 
     created_at: datetime = Field(...)
     updated_at: datetime = Field(...)

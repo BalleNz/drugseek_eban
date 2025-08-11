@@ -67,7 +67,7 @@ class Assistant():
             prompt: str,
             pydantic_model: Type[AssistantResponseModel]
     ):
-        # TODO: обработка нулевого баланса (отдельный метод)
+        # TODO: обработка нулевого баланса (отдельный метод) + Обработка если дипсик не работает (server is busy)
         try:
             response = self.client.chat.completions.create(
                 model="deepseek-chat",

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.params import Path
 
 from assistant import assistant
-from schemas import UserSchema, DrugExistingResponse
+from schemas import UserSchema, DrugExistingResponse, EXIST_STATUS
 from schemas.API_schemas.assistant_responses import AssistantResponseDrugValidation
 from schemas.API_schemas.drug_schemas import DrugSchema
 from services.drug_service import DrugService, get_drug_service
@@ -15,45 +15,53 @@ from utils.auth import get_auth_user
 drug_router = APIRouter(prefix="/drugs")
 
 
-@drug_router.post("/{user_query}", description="Поиск препарата среди существующих")
+@drug_router.post("/{user_query}", description="Поиск препарата среди существующих. Создает новый препарат если его не было.")
 async def get_exist_drug(
         user: Annotated[UserSchema, Depends(get_auth_user)],
         user_query: str = Path(),
-        drug_service: DrugService = Depends(get_drug_service),
-        user_service: UserService = Depends(get_user_service)
+        drug_service: DrugService = Depends(get_drug_service)
 ):
     """
     Проверяет наличие препарата и его доступ у пользователя.
 
-    :returns: {"drug_allowed": bool, "is_drug": bool, "drug": DrugSchema}
+    Если препарата нет в БД — создает.
+
+    :returns:
+        {
+            "drug_allowed": bool,
+            "is_drug": bool,
+            "drug": DrugSchema
+        }
     """
     if not user.allowed_requests:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User hasn't allowed requests")
 
-    drug: DrugSchema = await drug_service.find_drug_by_query(
+    drug: DrugSchema | None = await drug_service.find_drug_by_query(
         user_query=user_query
     )
 
-    is_drug = bool(drug)
-    if not is_drug:
+    drug_exist = bool(drug)
+    if not drug_exist:
         assistant_response: AssistantResponseDrugValidation = assistant.get_user_query_validation(user_query=user_query)
-        if assistant_response.status == "exist":
+        if assistant_response.status == EXIST_STATUS.EXIST:
             # Запись нового препарата
-            drug = await drug_service.new_drug(assistant_response.drug_name)
-            is_drug = True
+            drug: DrugSchema = await drug_service.new_drug(assistant_response.drug_name)
+            drug_exist = True
         else:
-            is_drug = False
+            drug_exist = False
 
-    is_allowed = drug.id in user.allowed_drugs
+    is_allowed = False
+    if drug:
+        is_allowed = drug.id in user.allowed_drug_ids
 
     return DrugExistingResponse(
-        drug_exist=is_drug,
+        drug_exist=drug_exist,
         is_allowed=is_allowed,
         drug=drug
     )
 
 
-@drug_router.post(path="/allow/{drug_id}", description="Разрешает и возвращает препарат")
+@drug_router.post(path="/allow/{drug_id}", description="Разрешает и возвращает существующий препарат")
 async def allow_drug(
         drug_service: Annotated[DrugService, Depends(get_drug_service)],
         user_service: Annotated[UserService, Depends(get_user_service)],
@@ -69,8 +77,8 @@ async def allow_drug(
             "is_allowed": bool
         }
     """
-    drug: DrugSchema = await drug_service.repo.get(drug_id)
-    if drug_id in user.allowed_drugs:
+    drug: DrugSchema | None = await drug_service.repo.get(drug_id)
+    if drug_id in user.allowed_drug_ids:
         return {
             "drug": drug,
             "is_allowed": True
@@ -94,6 +102,7 @@ async def allow_drug(
 async def update_existing_drug(
         user: Annotated[UserSchema, Depends(get_auth_user)]
 ):
+    # TODO Тратит 1 токен, обновляет препарат.
     ...
 
 
@@ -101,4 +110,5 @@ async def update_existing_drug(
 async def update_drug_researchs(
         user: Annotated[UserSchema, Depends(get_auth_user)]
 ):
+    # TODO Тратит 1 токен, обновляет исследования.
     ...

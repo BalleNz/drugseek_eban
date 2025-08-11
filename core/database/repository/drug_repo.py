@@ -66,7 +66,8 @@ class DrugRepository(BaseRepository):
                 selectinload(Drug.pathways),
                 selectinload(Drug.synonyms),
                 selectinload(Drug.combinations),
-                selectinload(Drug.prices)
+                selectinload(Drug.prices),
+                selectinload(Drug.researchs)
             )
         )
 
@@ -92,12 +93,13 @@ class DrugRepository(BaseRepository):
                 Drug.id == drug_id
             )
             .options(
-                selectinload(Drug.pathways),
-                selectinload(Drug.combinations),
+                selectinload(Drug.analogs),
                 selectinload(Drug.dosages),
+                selectinload(Drug.pathways),
                 selectinload(Drug.synonyms),
-                selectinload(Drug.researchs),
-                selectinload(Drug.analogs)
+                selectinload(Drug.combinations),
+                selectinload(Drug.prices),
+                selectinload(Drug.researchs)
             )
         )
 

@@ -8,7 +8,7 @@ from schemas.API_schemas.drug_schemas import DrugAnalogSchema, Pharmacokinetics,
     CombinationType
 
 
-class STATUS(Enum):
+class EXIST_STATUS(Enum):
     EXIST: str = "exist"
     NOT_EXIST: str = "not exist"
 
@@ -23,7 +23,7 @@ class DosageParams(BaseModel):
 
 
 class AssistantResponseDrugValidation(BaseModel):
-    status: STATUS = Field(...)
+    status: EXIST_STATUS = Field(...)
     drug_name: str = Field(default=None)
 
 

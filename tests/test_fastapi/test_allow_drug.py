@@ -7,6 +7,7 @@ from test_repository.test_drug_repo import create_test_drug_model
 
 @pytest.mark.asyncio
 async def test_allow_drug(client, user_service, drug_repo, auth_token):
+    "ТЕСТИРОВАНИЕ ПЕРЕДАЧИ ДОСТУПА ПРЕПАРАТА ЮЗЕРУ"
     test_drug = create_test_drug_model()
     await drug_repo.create(test_drug)
 

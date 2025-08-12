@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from schemas.API_schemas.drug_schemas import DrugSchema
+from schemas.drug_schemas import DrugSchema
 
 
 class DrugExistingResponse(BaseModel):

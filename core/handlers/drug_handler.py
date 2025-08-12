@@ -6,8 +6,8 @@ from fastapi.params import Path
 
 from assistant import assistant
 from schemas import UserSchema, DrugExistingResponse, EXIST_STATUS
-from schemas.API_schemas.assistant_responses import AssistantResponseDrugValidation
-from schemas.API_schemas.drug_schemas import DrugSchema
+from schemas.assistant_responses import AssistantResponseDrugValidation
+from schemas.drug_schemas import DrugSchema
 from services.drug_service import DrugService, get_drug_service
 from services.user_service import UserService, get_user_service
 from utils.auth import get_auth_user
@@ -15,7 +15,11 @@ from utils.auth import get_auth_user
 drug_router = APIRouter(prefix="/drugs")
 
 
-@drug_router.post("/{user_query}", description="Поиск препарата среди существующих. Создает новый препарат если его не было.")
+@drug_router.post(
+    "/{user_query}",
+    description="Поиск препарата среди существующих. Создает новый препарат (после валидации), если его не было.",
+    response_model=DrugExistingResponse
+)
 async def get_exist_drug(
         user: Annotated[UserSchema, Depends(get_auth_user)],
         user_query: str = Path(),
@@ -52,7 +56,7 @@ async def get_exist_drug(
 
     is_allowed = False
     if drug:
-        is_allowed = drug.id in user.allowed_drug_ids
+        is_allowed = drug.id in user.allowed_drug_ids()
 
     return DrugExistingResponse(
         drug_exist=drug_exist,
@@ -61,8 +65,11 @@ async def get_exist_drug(
     )
 
 
-@drug_router.post(path="/allow/{drug_id}", description="Разрешает и возвращает существующий препарат")
-async def allow_drug(
+@drug_router.post(
+    path="/allowed/{drug_id}",
+    description="Разрешает и возвращает существующий препарат"
+)
+async def get_drug(
         drug_service: Annotated[DrugService, Depends(get_drug_service)],
         user_service: Annotated[UserService, Depends(get_user_service)],
         user: Annotated[UserSchema, Depends(get_auth_user)],
@@ -78,7 +85,7 @@ async def allow_drug(
         }
     """
     drug: DrugSchema | None = await drug_service.repo.get(drug_id)
-    if drug_id in user.allowed_drug_ids:
+    if drug_id in user.allowed_drug_ids():
         return {
             "drug": drug,
             "is_allowed": True
@@ -90,25 +97,53 @@ async def allow_drug(
     try:
         await user_service.reduce_tokens(user_id=user.id, tokens_to_reduce=1)
         await user_service.allow_drug_to_user(user_id=user.id, drug_id=drug_id)
+
+        # Возможное обновление описание пользователя
+        if not (user.used_requests + 1) % 10:
+            await user_service.update_user_description(user_id=user.id)
+
         return {
             "drug": drug,
             "is_allowed": True
         }
+
     except Exception as ex:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex)
 
 
 @drug_router.post(path="/update/{drug_id}")
 async def update_existing_drug(
-        user: Annotated[UserSchema, Depends(get_auth_user)]
+        user: Annotated[UserSchema, Depends(get_auth_user)],
+        drug_service: Annotated[DrugService, Depends(get_drug_service)],
+        user_service: Annotated[UserService, Depends(get_user_service)],
+        drug_id: UUID = Path(..., description="ID препарата в формате UUID")
 ):
-    # TODO Тратит 1 токен, обновляет препарат.
-    ...
+    """
+    Обновляет препарат, который уже разрешен пользователю (проверка в клиенте бота)
+    """
+    if not user.allowed_requests:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов.")
+
+    await user_service.reduce_tokens(user_id=user.id, tokens_to_reduce=1)
+    drug: DrugSchema = await drug_service.update_drug(drug_id)
+    return {
+        "drug": drug,
+        "is_allowed": True
+    }
 
 
 @drug_router.post(path="/update/researchs/{drug_id}", description="Обновляет исследования для препарата")
 async def update_drug_researchs(
-        user: Annotated[UserSchema, Depends(get_auth_user)]
+        user: Annotated[UserSchema, Depends(get_auth_user)],
+        drug_service: Annotated[DrugService, Depends(get_drug_service)],
+        user_service: Annotated[UserService, Depends(get_user_service)],
+        drug_id: UUID = Path(..., description="ID препарата в формате UUID")
 ):
-    # TODO Тратит 1 токен, обновляет исследования.
-    ...
+    """Обновляет таблицу с исследованиями препарата. Возвращает схему препарата."""
+    if not user.allowed_requests:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов.")
+
+    await user_service.reduce_tokens(user.id, 1)
+    await drug_service.update_drug_researchs(drug_id)
+
+    return await drug_service.repo.get_drug(drug_id)

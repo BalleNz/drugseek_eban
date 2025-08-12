@@ -22,6 +22,11 @@ class AllowedDrugs(IDMixin):
     )
 
     user: Mapped["User"] = relationship(back_populates="allowed_drugs")
+    drug: Mapped["Drug"] = relationship(lazy="joined")  # Автоматический JOIN
+
+    @property
+    def drug_name_ru(self) -> str:
+        return self.drug.name_ru if self.drug else None
 
     __table_args__ = (
         Index('ix_allowed_drugs_user_id_drug_id', 'user_id', 'drug_id'),

@@ -5,7 +5,7 @@ from fastapi import Depends
 
 from assistant import assistant
 from database.repository.user_repo import UserRepository, get_user_repository
-from schemas.API_schemas.user_schemas import UserSchema
+from schemas.user_schemas import UserSchema
 
 
 class UserService:
@@ -31,6 +31,8 @@ class UserService:
         "Отнимает количество разрешенных юзеру запросов."
         await self.repo.decrement_user_requests(user_id=user_id, amount=tokens_to_reduce)
 
+    async def add_request_log(self, user_id: uuid.UUID, query: str):
+        ...
 
 def get_user_service(repo: UserRepository = Depends(get_user_repository)) -> UserService:
     return UserService(repo=repo)

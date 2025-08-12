@@ -4,7 +4,7 @@ import uvicorn
 from config import config
 from handlers import user_router, auth_router
 from handlers.drug_handler import drug_router
-from schemas.O2AuthSchema import jwt_openapi
+from schemas.API_schemas.O2AuthSchema import jwt_openapi
 
 
 def get_app() -> FastAPI:

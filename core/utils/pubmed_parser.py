@@ -4,7 +4,7 @@ from pymed import PubMed
 
 from assistant import assistant
 from schemas import AssistantResponsePubmedQuery
-from schemas.API_schemas.pubmed_schema import PubmedResearchSchema
+from schemas.pubmed_schema import PubmedResearchSchema
 
 
 class PubmedParser:

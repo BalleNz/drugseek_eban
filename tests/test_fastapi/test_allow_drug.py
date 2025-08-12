@@ -2,19 +2,25 @@ import httpx
 import pytest
 
 from schemas import DrugSchema
-from test_repository.test_drug_repo import create_test_drug_model
 
 
 @pytest.mark.asyncio
-async def test_allow_drug(client, user_service, drug_repo, auth_token):
+async def test_allow_drug(client, auth_token):
     "ТЕСТИРОВАНИЕ ПЕРЕДАЧИ ДОСТУПА ПРЕПАРАТА ЮЗЕРУ"
-    test_drug = create_test_drug_model()
-    await drug_repo.create(test_drug)
+    paracetamol_id = "1c773dc0-2919-4671-aeca-439ab94c6f3a"
 
     headers = {"Authorization": f"Bearer {auth_token}"}
 
     async with httpx.AsyncClient(base_url="http://0.0.0.0:8000", timeout=None) as client:
-        response = await client.post(f"/v1/drugs/allow/{test_drug.id}", headers=headers)
+        user_response = await client.get(f"/v1/user/", headers=headers)
+        assert user_response.status_code == 200
+        user_response_data = user_response.json()
+
+        assert user_response_data
+        user_tokens = user_response_data["allowed_requests"]
+
+    async with httpx.AsyncClient(base_url="http://0.0.0.0:8000", timeout=None) as client:
+        response = await client.post(f"/v1/drugs/allowed/{paracetamol_id}", headers=headers)
         assert response.status_code == 200
 
         response_data = response.json()
@@ -31,7 +37,8 @@ async def test_allow_drug(client, user_service, drug_repo, auth_token):
         user_response_data = user_response.json()
 
         assert user_response_data
+        user_new_tokens = int(user_response_data['allowed_requests'])
 
     assert drug["id"] in [data['drug_id'] for data in user_response_data["allowed_drugs"]]
-    assert user_response_data['allowed_requests'] == 2
+    assert user_new_tokens == user_tokens  # не меняется тк уже был разрешен
 

@@ -9,9 +9,9 @@ from assistant import assistant
 from core.database.repository.drug_repo import DrugRepository
 from database.repository.drug_repo import get_drug_repository
 from schemas import AssistantResponseCombinations, AssistantResponseDrugPathways, AssistantDosageDescriptionResponse, \
-    AssistantResponseDrugResearchs, AssistantResponseDrugResearch
-from schemas.API_schemas.drug_schemas import DrugSchema
-from schemas.API_schemas.pubmed_schema import PubmedResearchSchema, ClearResearchsRequest
+    AssistantResponseDrugResearch
+from schemas.drug_schemas import DrugSchema
+from schemas.pubmed_schema import PubmedResearchSchema, ClearResearchsRequest
 from utils.exceptions import AssistantResponseError
 from utils.pubmed_parser import get_pubmed_parser, PubmedParser
 
@@ -32,17 +32,17 @@ class DrugService:
         drug: DrugSchema = await self.repo.find_drug_by_query(user_query=user_query)
         return drug
 
-    async def update_drug(self, drug_id: uuid.UUID, drug_name: str) -> None:
+    async def update_drug(self, drug_id: uuid.UUID) -> DrugSchema:
         """
         Обновляет все поля препарата, кроме исследований.
         :param drug_id: ID препарата.
-        :param drug_name: строго правильное ДВ препарата.
         """
+        drug_name = (await self.repo.get_drug(drug_id)).name
         try:
             assistant_response_dosages: AssistantDosageDescriptionResponse = assistant.get_dosage(drug_name=drug_name)
-            if not assistant_response_dosages.drug_name:
-                logger.error("Ассистент не может найти оффициальное название.")
-                raise AssistantResponseError(f"Couldn't get official drugName for {drug_name}.")
+            if not assistant_response_dosages:
+                logger.error("Ассистент не может найти дозировки.")
+                raise AssistantResponseError(f"Couldn't get dosages for {drug_name}.")
             await self.repo.update_dosages(drug_id=drug_id, assistant_response=assistant_response_dosages)
 
             assistant_response_pathways: AssistantResponseDrugPathways = assistant.get_pathways(drug_name=drug_name)
@@ -65,6 +65,8 @@ class DrugService:
             logger.error(f"Ошибка при обновлении препарата.")
             raise ex
 
+        return await self.repo.get_drug(drug_id)
+
     async def new_drug(self, drug_name: str) -> DrugSchema:
         """
         Создает новый препарат со всеми смежными таблицами после валидации нейронкой.
@@ -73,7 +75,7 @@ class DrugService:
         """
         try:
             drug: DrugSchema = await self.repo.create_drug(drug_name)
-            await self.update_drug(drug_name=drug.name, drug_id=drug.id)
+            await self.update_drug(drug_id=drug.id)
             return DrugSchema.model_validate(self.repo._convert_to_drug_schema(await self.repo.get(drug.id)))
         except Exception as ex:
             logger.error(f"Ошибка при создании препарата: {ex}")
@@ -89,10 +91,13 @@ class DrugService:
         return assistant.get_user_query_validation(user_query)
 
     # TODO Тратит 1 юзер-токен — реализовать в хендлере апи.
-    async def update_drug_researchs(self, drug_id: uuid.UUID, drug_name: str) -> None:
+    async def update_drug_researchs(self, drug_id: uuid.UUID) -> None:
         """
         Обновляет таблицу с исследованиями препарата. Можно отдельно обновлять без обновления всего препарата целиком.
         """
+        drug: DrugSchema = await self.repo.get_drug(drug_id)
+        drug_name: str = drug.name
+
         try:
             pubmed_parser: PubmedParser = get_pubmed_parser()
             pubmed_researchs: list[Optional[PubmedResearchSchema]] = pubmed_parser.get_researchs(drug_name=drug_name)

@@ -304,6 +304,10 @@ class DrugRepository(BaseRepository):
             logger.error(f"Error while updating researchs model: {ex}")
             raise ex
 
+    async def get_drug(self, drug_id: uuid.UUID) -> DrugSchema:
+        drug_model: Drug = await self._session.get(self._model, drug_id)
+        return DrugSchema.model_validate(drug_model)
+
 
 async def get_drug_repository(
         session_generator: AsyncGenerator[AsyncSession, None] = Depends(get_async_session)

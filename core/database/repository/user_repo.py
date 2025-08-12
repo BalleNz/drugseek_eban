@@ -123,6 +123,10 @@ class UserRepository(BaseRepository):
         )
         await self._session.commit()
 
+    # TODO
+    async def add_user_log_request(self):
+        ...
+
     def __del__(self):
         logger.info("USER REPO IS COLLECTED BY GARBAGE COLLECTOR")
 

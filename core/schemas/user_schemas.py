@@ -5,9 +5,12 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
-class UserAllowedDrugs(BaseModel):
-    user_id: UUID = Field(...)
-    drug_id: UUID = Field(...)
+class AllowedDrugsSchema(BaseModel):
+    drug_id: UUID = Field(..., description="ID препарата")
+    drug_name_ru: Optional[str] = Field(None, description="Название препарата на русском")
+
+    class Config:
+        from_attributes = True
 
 
 class UserSchema(BaseModel):
@@ -21,7 +24,16 @@ class UserSchema(BaseModel):
     used_requests: int = Field(..., description="count of used requests")
 
     description: Optional[str] = Field(None, description="описание пользователя")
-    allowed_drugs: list[UserAllowedDrugs]
+    allowed_drugs: list[AllowedDrugsSchema] = Field(
+        default_factory=list,
+        description="Список разрешенных препаратов"
+    )
+
+    def allowed_drug_ids(self):
+        return [allowed_drug.drug_id for allowed_drug in self.allowed_drugs]
+
+    class Config:
+        from_attributes = True
 
 
 class UserTelegramDataSchema(BaseModel):

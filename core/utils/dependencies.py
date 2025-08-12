@@ -1,7 +1,7 @@
 from fastapi import HTTPException, Depends, Request
 
 from services.user_service import UserService, get_user_service
-from schemas.API_schemas.user_schemas import UserSchema
+from schemas.user_schemas import UserSchema
 
 
 async def get_telegram_user(

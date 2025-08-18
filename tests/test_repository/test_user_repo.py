@@ -66,7 +66,7 @@ async def test_allow_drug_to_user(user_repo, drug_repo):
 
     await user_repo.allow_drug_to_user(drug_.id, user.id)
 
-    await user_repo._session.refresh(user)
+    await user_repo.session.refresh(user)
 
     assert drug_.id in user.allowed_drug_ids
 
@@ -111,7 +111,7 @@ async def test_update_description_without_Assistant(user_repo):
 
     await user_repo.update_user_description(description, user.id)
 
-    await user_repo._session.refresh(user)
+    await user_repo.session.refresh(user)
 
     assert user.description == description
 

@@ -73,7 +73,7 @@ class DrugRepository(BaseRepository):
             )
         )
 
-        result = await self._session.execute(stmt)
+        result = await self.session.execute(stmt)
         drug: Drug = result.scalar_one_or_none()
 
         if not drug:
@@ -105,7 +105,7 @@ class DrugRepository(BaseRepository):
             )
         )
 
-        result = await self._session.execute(stmt)
+        result = await self.session.execute(stmt)
         drug = result.scalars().one_or_none()
 
         if not drug:
@@ -307,7 +307,7 @@ class DrugRepository(BaseRepository):
             raise ex
 
     async def get_drug(self, drug_id: uuid.UUID) -> DrugSchema:
-        drug_model: Drug = await self._session.get(self._model, drug_id)
+        drug_model: Drug = await self.session.get(self.model, drug_id)
         return DrugSchema.model_validate(drug_model)
 
 

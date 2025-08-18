@@ -10,7 +10,7 @@ from test_repository.test_user_repo import get_user
 async def test_get_user_description_via_assistant(user_service, drug_repo):
     user = get_user()
     await user_service.repo.create(user)
-    await user_service.repo._session.refresh(user)
+    await user_service.repo.session.refresh(user)
 
     # добавление препаратов
     drug_names_ru = [
@@ -37,7 +37,7 @@ async def test_get_user_description_via_assistant(user_service, drug_repo):
         await user_service.allow_drug_to_user(user_id=user.id, drug_id=drug.id)
 
     await user_service.update_user_description(user.id)
-    await user_service.repo._session.refresh(user)
+    await user_service.repo.session.refresh(user)
 
     assert user.description
 

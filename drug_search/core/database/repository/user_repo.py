@@ -30,7 +30,7 @@ class UserRepository(BaseRepository):
             )
         )
 
-        result = await self._session.execute(stmt)
+        result = await self.session.execute(stmt)
         user: Optional[User] = result.scalar_one_or_none()
         if not user:
             return None
@@ -55,9 +55,9 @@ class UserRepository(BaseRepository):
             }
         ).returning(User)
 
-        result = await self._session.execute(stmt)
+        result = await self.session.execute(stmt)
         user = result.scalar_one()
-        await self._session.commit()
+        await self.session.commit()
         return UserSchema.model_validate(user.__dict__)
 
     async def allow_drug_to_user(self, drug_id: uuid.UUID, user_id: uuid.UUID) -> None:
@@ -70,8 +70,8 @@ class UserRepository(BaseRepository):
                 drug_id=drug_id
             )
 
-            await self._session.execute(stmt)
-            await self._session.commit()
+            await self.session.execute(stmt)
+            await self.session.commit()
 
         except Exception as ex:
             logger.exception(f"Ошибка при разрешении препарата пользователю: {ex}")
@@ -87,7 +87,7 @@ class UserRepository(BaseRepository):
             JOIN drugs ON drugs.id = allowed_drugs.drug_id
             WHERE allowed_drugs.user_id = '{user_id}'
         """)
-        result = await self._session.execute(stmt)
+        result = await self.session.execute(stmt)
         return result.scalars().all()
 
     async def get_allowed_drug_ids(self, user_id: uuid.UUID) -> Sequence[uuid.UUID]:
@@ -100,7 +100,7 @@ class UserRepository(BaseRepository):
             JOIN drugs ON drugs.id = allowed_drugs.drug_id
             WHERE allowed_drugs.user_id = '{user_id}'
         """)
-        result = await self._session.execute(stmt)
+        result = await self.session.execute(stmt)
         return result.scalars().all()
 
     async def update_user_description(self, description: str, user_id: uuid.UUID):
@@ -111,17 +111,17 @@ class UserRepository(BaseRepository):
             WHERE id = :user_id
         """).bindparams(description=description, user_id=user_id)
 
-        await self._session.execute(stmt)
-        await self._session.commit()
+        await self.session.execute(stmt)
+        await self.session.commit()
 
     async def decrement_user_requests(self, user_id: uuid.UUID, amount: int = 1) -> None:
         """Atomically decrements user's allowed_requests counter."""
-        await self._session.execute(
+        await self.session.execute(
             update(User)
             .where(User.id == user_id)
             .values(allowed_requests=User.allowed_requests - amount)
         )
-        await self._session.commit()
+        await self.session.commit()
 
     # TODO
     async def add_user_log_request(self):

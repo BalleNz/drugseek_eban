@@ -1,12 +1,18 @@
 import uuid
 from datetime import date
-from typing import Optional
+from typing import Optional, Type, TypeVar
 
+from pydantic import BaseModel
 from sqlalchemy import String, Float, ForeignKey, Text, UniqueConstraint, ARRAY, Index, func, Date
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID  # Важно импортировать UUID для PostgreSQL
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from drug_search.core.database.models.base import TimestampsMixin, IDMixin
+from schemas import DrugSchema
+
+
+M = TypeVar("M", bound=IDMixin)
+S = TypeVar("S", bound=BaseModel)
 
 
 class Drug(IDMixin, TimestampsMixin):
@@ -81,6 +87,11 @@ class Drug(IDMixin, TimestampsMixin):
     __table_args__ = (
         UniqueConstraint("id", "name"),
     )
+
+    @property
+    def schema_class(cls) -> Type[S]:
+        return DrugSchema
+
 
 
 class DrugAnalog(IDMixin):

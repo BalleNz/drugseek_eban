@@ -1,8 +1,8 @@
 import pytest
 
-from assistant import assistant
-from core.database.models.drug import Drug, DrugSynonym
-from schemas import DrugSchema
+from drug_search.neuro_assistant.assistant import assistant
+from drug_search.core.database.models.drug import Drug, DrugSynonym
+from drug_search.core.schemas import DrugSchema
 from test_repository.test_drug_repo import create_test_drug_model
 
 
@@ -96,7 +96,7 @@ async def test_update_combinations(drug_service):
     )
     drug = await drug_service.repo.create(drug_model)
 
-    assistant_response = assistant.get_combinations(drug.name)
+    assistant_response = assistant.get_synergists(drug.name)
     await drug_service.repo.update_combinations(
         drug_id=drug.id,
         assistant_response=assistant_response

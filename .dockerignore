@@ -1,0 +1,10 @@
+*.pyc
+__pycache__
+.git
+.env
+venv/
+.venv
+.idea/
+tests/
+alembic.ini
+*.log

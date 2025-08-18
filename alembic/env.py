@@ -5,20 +5,21 @@ from sqlalchemy import pool
 
 from alembic import context
 
+
 config = context.config
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-from core.config import config as app_config
+from drug_search.config import config as app_config
 
 config.set_main_option("sqlalchemy.url", app_config.DATABASE_URL + "?async_fallback=True")
 
 
-from core.database.models.base import *  # noqa
-from core.database.models.drug import *  # noqa
-from core.database.models.user import *  # noqa
-from core.database.models.relationships import *  # noqa
+from drug_search.core.database.models.base import *  # noqa
+from drug_search.core.database.models.drug import *  # noqa
+from drug_search.core.database.models.user import *  # noqa
+from drug_search.core.database import *  # noqa
 
 target_metadata = IDMixin.metadata
 print("Tables in metadata:", list(target_metadata.tables.keys()))
@@ -36,34 +37,41 @@ def run_migrations_offline():
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
-    context.configure(
-        url=url,
-        target_metadata=target_metadata,
-        literal_binds=True,
-        dialect_opts={"paramstyle": "named"},
-    )
-
-    with context.begin_transaction():
-        context.run_migrations()
-
-
-def run_migrations_online():
-    """Run migrations in 'online' mode."""
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
-
-    with connectable.connect() as connection:
+    for _ in range(2):
+        url = config.get_main_option("sqlalchemy.url")
         context.configure(
-            connection=connection,
-            target_metadata=target_metadata
+            url=url,
+            target_metadata=target_metadata,
+            literal_binds=True,
+            dialect_opts={"paramstyle": "named"},
         )
 
         with context.begin_transaction():
             context.run_migrations()
+
+        config.set_main_option("sqlalchemy.url", app_config.DATABASE_TEST_URL + "?async_fallback=True")
+
+
+def run_migrations_online():
+    """Run migrations in 'online' mode."""
+    for _ in range(2):
+        connectable = engine_from_config(
+            config.get_section(config.config_ini_section),
+            prefix="sqlalchemy.",
+            poolclass=pool.NullPool,
+        )
+
+        print("making migration on DATABASE_URL:" + app_config.DATABASE_URL)
+        with connectable.connect() as connection:
+            context.configure(
+                connection=connection,
+                target_metadata=target_metadata
+            )
+
+            with context.begin_transaction():
+                context.run_migrations()
+
+        config.set_main_option("sqlalchemy.url", app_config.DATABASE_TEST_URL + "?async_fallback=True")
 
 
 if context.is_offline_mode():

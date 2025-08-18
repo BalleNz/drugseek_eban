@@ -1,0 +1,10 @@
+fastapi
+sqlalchemy
+aiogram
+uvicorn
+PyJWT
+dotenv
+pydantic_settings
+asyncpg
+openai
+pymed

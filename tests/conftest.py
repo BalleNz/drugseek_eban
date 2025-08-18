@@ -8,11 +8,11 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sess
 from sqlalchemy.pool import NullPool
 
 import app
-from config import config
-from core.database.repository.drug_repo import DrugRepository  # Писать везде АБСОЛЮТНЫЕ ПУТИ обязательно.
-from core.database.repository.user_repo import UserRepository
-from core.services.drug_service import DrugService
-from core.services.user_service import UserService
+from drug_search.config import config
+from drug_search.core.database.repository.drug_repo import DrugRepository  # Писать везде АБСОЛЮТНЫЕ ПУТИ обязательно.
+from drug_search.core.database.repository.user_repo import UserRepository
+from drug_search.core.services.drug_service import DrugService
+from drug_search.core.services.user_service import UserService
 
 
 # Фикстура для event loop
@@ -31,7 +31,7 @@ def client():
 
 @pytest.fixture(scope="session")
 async def test_engine():
-    test_db_url = config.DATABASE_URL + "_test"
+    test_db_url = config.DATABASE_URL_TEST
 
     test_engine = create_async_engine(
         test_db_url,
@@ -99,4 +99,3 @@ def test_user_data():
 async def auth_token(test_user_data, client):
     response = client.post("/v1/auth/", json=test_user_data)
     return response.json()["token"]
-

@@ -19,6 +19,7 @@ config.set_main_option("sqlalchemy.url", app_config.DATABASE_URL + "?async_fallb
 from drug_search.core.database.models.base import *  # noqa
 from drug_search.core.database.models.drug import *  # noqa
 from drug_search.core.database.models.user import *  # noqa
+from drug_search.core.database.models.relationships import *  # noqa
 from drug_search.core.database import *  # noqa
 
 target_metadata = IDMixin.metadata
@@ -54,6 +55,9 @@ def run_migrations_offline():
 
 def run_migrations_online():
     """Run migrations in 'online' mode."""
+    print("making migration on DATABASE_URL:" + app_config.DATABASE_URL)
+    print("making migration on DATABASE_URL:" + app_config.DATABASE_TEST_URL)
+
     for _ in range(2):
         connectable = engine_from_config(
             config.get_section(config.config_ini_section),
@@ -61,7 +65,6 @@ def run_migrations_online():
             poolclass=pool.NullPool,
         )
 
-        print("making migration on DATABASE_URL:" + app_config.DATABASE_URL)
         with connectable.connect() as connection:
             context.configure(
                 connection=connection,

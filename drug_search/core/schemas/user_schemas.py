@@ -4,7 +4,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
-class AllowedDrugsSchema(BaseModel):
+class AllowedDrugSchema(BaseModel):
     drug_id: UUID = Field(..., description="ID препарата")
 
     class Config:
@@ -22,7 +22,7 @@ class UserSchema(BaseModel):
     used_requests: int = Field(..., description="count of used requests")
 
     description: Optional[str] = Field(None, description="описание пользователя")
-    allowed_drugs: list[AllowedDrugsSchema] = Field(
+    allowed_drugs: list[AllowedDrugSchema] = Field(
         default_factory=list,
         description="Список разрешенных препаратов"
     )

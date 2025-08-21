@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 from typing import Optional
 
@@ -17,3 +18,9 @@ class UserTelegramDataSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class UserRequestLogSchema(BaseModel):
+    user_id: uuid.UUID = Field(..., description="User ID")
+    user_query: str = Field(..., description="запрос пользователя")
+    used_at: datetime = Field(..., description="дата и время использования")

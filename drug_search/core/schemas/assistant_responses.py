@@ -4,7 +4,7 @@ from typing import Optional, Dict
 
 from pydantic import BaseModel, Field
 
-from drug_search.core.schemas.drug_schemas import DrugAnalogSchema, Pharmacokinetics, Pathway, MechanismSummary, \
+from drug_search.core.schemas.drug_schemas import DrugAnalogSchemaRequest, Pharmacokinetics, Pathway, MechanismSummary, \
     CombinationType
 
 
@@ -35,7 +35,7 @@ class AssistantDosageDescriptionResponse(BaseModel):
 
     synonyms: Optional[list[str]] = Field(None, description="все возможные названия для препарата на RU")
 
-    analogs: Optional[list[DrugAnalogSchema]] = Field(None, description="аналоги препарата")
+    analogs: Optional[list[DrugAnalogSchemaRequest]] = Field(None, description="аналоги препарата")
     dosages_fun_fact: Optional[str] = Field(default=None)
     description: str = Field(...)
     classification: str = Field(...)
@@ -51,7 +51,7 @@ class AssistantDosageDescriptionResponse(BaseModel):
 
 class AssistantResponseDrugCombinationSchema(BaseModel):
     combination_type: CombinationType
-    substance: str
+    substance: str = Field(..., description="ДВ")
     effect: str
     products: Optional[list[str]] = Field(default=None)  # only for good
     risks: Optional[str] = Field(default=None)  # only for bad

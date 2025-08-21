@@ -8,3 +8,4 @@ pydantic_settings
 asyncpg
 openai
 pymed
+greenlet

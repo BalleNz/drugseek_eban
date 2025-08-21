@@ -55,8 +55,8 @@ def run_migrations_offline():
 
 def run_migrations_online():
     """Run migrations in 'online' mode."""
-    print("making migration on DATABASE_URL:" + app_config.DATABASE_URL)
-    print("making migration on DATABASE_URL:" + app_config.DATABASE_TEST_URL)
+    print("making migration on DATABASE_URL: " + app_config.DATABASE_URL)
+    print("making migration on DATABASE_URL: " + app_config.DATABASE_TEST_URL)
 
     for _ in range(2):
         connectable = engine_from_config(

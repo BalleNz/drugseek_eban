@@ -99,3 +99,5 @@ def test_user_data():
 async def auth_token(test_user_data, client):
     response = client.post("/v1/auth/", json=test_user_data)
     return response.json()["token"]
+
+# TODO: перейти на моки

@@ -49,8 +49,14 @@ async def get_exist_drug(
         assistant_response: AssistantResponseDrugValidation = assistant.get_user_query_validation(user_query=user_query)
         if assistant_response.status == EXIST_STATUS.EXIST:
             # Запись нового препарата
-            drug: DrugSchema = await drug_service.new_drug(assistant_response.drug_name)
-            drug_exist = True
+            # TODO: rabbitmq or something to workflow
+            await drug_service.new_drug(assistant_response.drug_name)
+            # Когда создастся -> отправить сообщение в боте юзеру через воркфлоу с инлайн клавиатурой: (купить/отменить)
+            return DrugExistingResponse(
+                drug_exist=True,
+                is_allowed=False,
+                drug=None
+            )
         else:
             drug_exist = False
 
@@ -109,27 +115,6 @@ async def get_drug(
 
     except Exception as ex:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex)
-
-
-@drug_router.post(path="/update/{drug_id}")
-async def update_existing_drug(
-        user: Annotated[UserSchema, Depends(get_auth_user)],
-        drug_service: Annotated[DrugService, Depends(get_drug_service)],
-        user_service: Annotated[UserService, Depends(get_user_service)],
-        drug_id: UUID = Path(..., description="ID препарата в формате UUID")
-):
-    """
-    Обновляет препарат, который уже разрешен пользователю (проверка в клиенте бота)
-    """
-    if not user.allowed_requests:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов.")
-
-    await user_service.reduce_tokens(user_id=user.id, tokens_to_reduce=1)
-    drug: DrugSchema = await drug_service.update_drug(drug_id)
-    return {
-        "drug": drug,
-        "is_allowed": True
-    }
 
 
 @drug_router.post(path="/update/researchs/{drug_id}", description="Обновляет исследования для препарата")

@@ -135,12 +135,12 @@ class DrugRepository(BaseRepository):
             assistant_response: AssistantDosageDescriptionResponse
     ) -> None:
         """
-        Обновляет три таблицы:
+        Обновляет три смежные таблицы:
             - Обновляет данные о дозировках препарата.
             - Обновляет синонимы.
             - Обновляет аналоги препарата.
         """
-        drug: Drug = await self.get(drug_id)
+        drug: Drug = await self.get_model(drug_id)
         if not drug:
             raise DrugNotFound
 
@@ -172,19 +172,21 @@ class DrugRepository(BaseRepository):
                             dosages_data.append(dosage)
             drug.dosages = dosages_data
 
-            existing_synonyms = {s.synonym for s in drug.synonyms}
             drug.synonyms = [
-                DrugSynonym(synonym=synonym)
+                DrugSynonym(
+                    synonym=synonym
+                )
                 for synonym in assistant_response.synonyms
-                if synonym not in existing_synonyms
             ]
 
-            # Обновление остальных списков
             drug.analogs = [
-                DrugAnalog(analog_name=analog.analog_name, percent=analog.percent, difference=analog.difference)
+                DrugAnalog(
+                    analog_name=analog.analog_name,
+                    percent=analog.percent,
+                    difference=analog.difference
+                )
                 for analog in assistant_response.analogs
             ]
-
             drug.updated_at = datetime.now()
 
             await self.save(drug)
@@ -199,9 +201,10 @@ class DrugRepository(BaseRepository):
             assistant_response: AssistantResponseDrugPathways
     ) -> None:
         """
-        Обновляет пути активации препарата на основе данных от ассистента.
+        Обновляет таблицу:
+            — Пути активации препарата.
         """
-        drug: Drug = await self.get(drug_id)
+        drug: Drug = await self.get_model(drug_id)
         if not drug:
             raise DrugNotFound
 
@@ -227,7 +230,6 @@ class DrugRepository(BaseRepository):
                     pathway=pathway_data.pathway,
                     effect=pathway_data.effect,
                     note=pathway_data.note,
-                    source=pathway_data.source
                 ))
 
             drug.pathways = new_pathways
@@ -243,8 +245,11 @@ class DrugRepository(BaseRepository):
             drug_id: uuid.UUID,
             assistant_response: AssistantResponseCombinations
     ) -> None:
-        """Update combinations relationship."""
-        drug: Drug = await self.get(drug_id)
+        """
+        Обновляет таблицу:
+            — Комбинации препарата.
+        """
+        drug: Drug = await self.get_model(drug_id)
         if not drug:
             raise DrugNotFound
 
@@ -274,15 +279,22 @@ class DrugRepository(BaseRepository):
             drug_id: uuid.UUID,
             researchs: list[AssistantResponseDrugResearch]
     ) -> None:
-        """Обновляет таблицу исследований препарата."""
-        drug: Drug = await self.get(drug_id)
+        """
+        Обновляет таблицу:
+            — Исследования препарата.
+        """
+        drug: Drug = await self.get_model(drug_id)
         if not drug:
             raise DrugNotFound
 
         try:
+            old_researchs_doi = [res.doi for res in drug.researchs]
             new_researchs = []
-            # каждый раз будет новый список, на стороне клиента обновление исследований будет доступно раз в месяц.
+            # каждый раз будет новый список,
+            # TODO на стороне клиента обновление исследований будет доступно раз в месяц.
             for research in researchs:
+                if research.doi in old_researchs_doi:
+                    continue
                 new_researchs.append(
                     DrugResearch(
                         name=research.name,
@@ -298,7 +310,8 @@ class DrugRepository(BaseRepository):
                     )
                 )
 
-                drug.researchs = new_researchs
+
+                drug.researchs += new_researchs
 
                 await self.save(drug)
 

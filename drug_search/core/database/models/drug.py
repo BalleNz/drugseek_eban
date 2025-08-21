@@ -8,8 +8,8 @@ from sqlalchemy.dialects.postgresql import UUID as PG_UUID  # Важно имп�
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from drug_search.core.database.models.base import TimestampsMixin, IDMixin
-from schemas import DrugSchema
-
+from drug_search.core.schemas import DrugAnalogResponse, DrugCombinationResponse, DrugPathwayResponse, \
+    DrugResearchResponse, DrugSynonymResponse, DrugDosageResponse, DrugSchema
 
 M = TypeVar("M", bound=IDMixin)
 S = TypeVar("S", bound=BaseModel)
@@ -92,6 +92,35 @@ class Drug(IDMixin, TimestampsMixin):
     def schema_class(cls) -> Type[S]:
         return DrugSchema
 
+    def get_schema(self) -> DrugSchema:
+        return DrugSchema(
+            id=self.id,
+            name=self.name,
+            latin_name=self.latin_name,
+            name_ru=self.name_ru,
+            description=self.description,
+            classification=self.classification,
+            dosages_fun_fact=self.dosages_fun_fact,
+
+            synonyms=[syn.get_schema() for syn in self.synonyms] if self.synonyms else [],
+            dosages=[dosage.get_schema() for dosage in self.dosages] if self.dosages else [],
+            pathways=[pathway.get_schema() for pathway in self.pathways] if self.pathways else [],
+            analogs=[analog.get_schema() for analog in self.analogs] if self.analogs else [],
+            combinations=[comb.get_schema() for comb in self.combinations] if self.combinations else [],
+            researchs=[research.get_schema() for research in self.researchs] if self.researchs else [],
+
+            drug_prices=[price.get_schema() for price in self.prices] if self.prices else None,
+
+            pathways_sources=self.pathways_sources if self.pathways_sources else [],
+            dosages_sources=self.dosages_sources if self.dosages_sources else [],
+
+            primary_action=self.primary_action,
+            secondary_actions=self.secondary_actions,
+            clinical_effects=self.clinical_effects,
+
+            created_at=self.created_at,
+            updated_at=self.updated_at
+        )
 
 
 class DrugAnalog(IDMixin):
@@ -108,6 +137,10 @@ class DrugAnalog(IDMixin):
     analog_name: Mapped[str] = mapped_column(String(100), comment="аналог к основному drug")
     percent: Mapped[float] = mapped_column(Float, comment="процент схожести")
     difference: Mapped[str] = mapped_column(String(100), comment="отличие от основного препа")
+
+    @property
+    def schema_class(cls) -> Type[S]:
+        return DrugAnalogResponse
 
 
 class DrugSynonym(IDMixin):
@@ -142,6 +175,10 @@ class DrugSynonym(IDMixin):
         )
     )
 
+    @property
+    def schema_class(cls) -> Type[S]:
+        return DrugSynonymResponse
+
 
 class DrugCombination(IDMixin):
     __tablename__ = "drug_combinations"
@@ -159,6 +196,10 @@ class DrugCombination(IDMixin):
     risks: Mapped[Optional[str]] = mapped_column(Text)  # Только для bad
     products: Mapped[Optional[list[str]]] = mapped_column(ARRAY(String))  # название препаратов с этим ДВ
     sources: Mapped[list[str]] = mapped_column(ARRAY(String))
+
+    @property
+    def schema_class(cls) -> Type[S]:
+        return DrugCombinationResponse
 
 
 class DrugPathway(IDMixin):
@@ -183,12 +224,15 @@ class DrugPathway(IDMixin):
         String(100))  # Физиологический эффект (например, "повышение норадреналина")
 
     # Дополнительные технические поля
-    source: Mapped[Optional[str]] = mapped_column(String(100))  # Источник данных (например, "DrugBank")
     note: Mapped[Optional[str]] = mapped_column(Text)  # Дополнительные примечания
 
     __table_args__ = (
         UniqueConstraint('drug_id', 'receptor', 'activation_type', name='uq_drug_pathway'),
     )
+
+    @property
+    def schema_class(cls) -> Type[S]:
+        return DrugPathwayResponse
 
 
 class DrugPrice(IDMixin, TimestampsMixin):
@@ -204,6 +248,10 @@ class DrugPrice(IDMixin, TimestampsMixin):
     drug_brandname: Mapped[str] = mapped_column(String(100), unique=True)
     price: Mapped[float] = mapped_column(Float)
     shop_url: Mapped[str] = mapped_column(String(100))
+
+    @property
+    def schema_class(cls) -> ...:
+        return ...
 
 
 class DrugDosage(IDMixin):
@@ -250,6 +298,10 @@ class DrugDosage(IDMixin):
         UniqueConstraint('drug_id', 'route', 'method', name='uq_drug_dosage'),
     )
 
+    @property
+    def schema_class(cls) -> Type[S]:
+        return DrugDosageResponse
+
 
 class DrugResearch(IDMixin):
     __tablename__ = "drug_researchs"
@@ -276,3 +328,7 @@ class DrugResearch(IDMixin):
     __table_args__ = (
         Index('idx_drug_researchs_doi', doi, unique=True),
     )
+
+    @property
+    def schema_class(cls) -> Type[S]:
+        return DrugResearchResponse

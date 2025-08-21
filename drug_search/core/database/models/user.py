@@ -1,11 +1,17 @@
 import uuid
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Type, TypeVar
 
+from pydantic import BaseModel
 from sqlalchemy import String, ForeignKey, Text, Index, func, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from drug_search.core.database.models.base import IDMixin, TimestampsMixin
+from drug_search.core.schemas import UserSchema
+from drug_search.core.schemas.API_schemas.api_requests import UserRequestLogSchema
+
+M = TypeVar("M", bound='IDMixin')
+S = TypeVar("S", bound=BaseModel)
 
 
 class User(IDMixin, TimestampsMixin):
@@ -41,6 +47,10 @@ class User(IDMixin, TimestampsMixin):
         Index('uq_users_username', 'username', unique=True),
     )
 
+    @property
+    def schema_class(cls) -> Type[S]:
+        return UserSchema
+
 
 class UserRequestLog(IDMixin):
     """Логирование исрасходованных запросов пользователя"""
@@ -49,3 +59,7 @@ class UserRequestLog(IDMixin):
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     user_query: Mapped[str] = mapped_column(String, comment="запрос пользователя")
     used_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    @property
+    def schema_class(cls) -> Type[S]:
+        return UserRequestLogSchema

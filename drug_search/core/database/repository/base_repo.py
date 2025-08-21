@@ -3,7 +3,6 @@ from uuid import UUID
 
 from pydantic import BaseModel
 from sqlalchemy import update, delete
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from drug_search.core.database.models.base import IDMixin
@@ -28,6 +27,11 @@ class BaseRepository(Generic[M]):
         """Get model by primary key ID."""
         model: M = await self.session.get(self.model, id)
         return model.get_schema()
+
+    async def get_model(self, id: UUID) -> Optional[M]:
+        """Get model by primary key ID."""
+        model: M = await self.session.get(self.model, id)
+        return model
 
     async def create(self, model: M) -> S:
         """Create new model by instance."""

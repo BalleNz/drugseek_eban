@@ -1,8 +1,11 @@
+import logging
 from typing import Callable, Dict, Any, Awaitable
 
 from aiogram import BaseMiddleware
 from aiogram.fsm.context import FSMContext
 from aiogram.types import TelegramObject
+
+logger = logging.getLogger(__name__)
 
 
 class AuthMiddleware(BaseMiddleware):
@@ -21,10 +24,25 @@ class AuthMiddleware(BaseMiddleware):
         if not state:
             return await event.answer("Системная ошибка. Попробуйте позже.")
 
-        # 3. Проверяем токен
+        # 3. обработка токена
         user_data = await state.get_data()
-        if not user_data.get("access_token"):
-            return await event.answer("Требуется авторизация! Нажмите /login")
+        access_token = user_data.get("access_token")
 
-        # 4. Продолжаем цепочку обработки
+        if ...:
+            api_client: ... = ...
+            try:
+                response = await api_client.login_via_telegram(  # TODO
+                    telegram_id=...,
+                    first_name=...,
+                    last_name=...,
+                    username=...
+                )
+
+                # 4. Сохраняем токен в FSM
+                # TODO
+
+                logger.info("✅ Вы успешно авторизованы!")
+            except:
+                ...
+
         return await handler(event, data)

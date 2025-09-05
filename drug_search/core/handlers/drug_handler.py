@@ -49,7 +49,7 @@ async def get_exist_drug(
         assistant_response: AssistantResponseDrugValidation = assistant.get_user_query_validation(user_query=user_query)
         if assistant_response.status == EXIST_STATUS.EXIST:
             # Запись нового препарата
-            # TODO: rabbitmq or something to workflow
+            # TODO: rabbitmq, Celery to workflow
             await drug_service.new_drug(assistant_response.drug_name)
             # Когда создастся -> отправить сообщение в боте юзеру через воркфлоу с инлайн клавиатурой: (купить/отменить)
             return DrugExistingResponse(

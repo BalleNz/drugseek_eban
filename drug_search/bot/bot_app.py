@@ -1,7 +1,7 @@
 # bot/bot.py
 import aiogram
 from aiogram import Dispatcher
-from middlewares.auth import AuthMiddleware
+from middlewares.auth_middleware import AuthMiddleware
 from drug_search.config import config
 
 

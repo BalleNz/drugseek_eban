@@ -1,9 +1,8 @@
-from .callbacks import (DatabaseCallback, DrugBrieflyCallback,
-                        DrugDescribeCallback, DrugDatabaseScrollingCallback)
+from .callbacks import (DatabaseCallback,
+                        DrugDescribeCallback, DrugListCallback)
 
 __all__ = [
     "DatabaseCallback",
-    "DrugBrieflyCallback",
     "DrugDescribeCallback",
-    "DrugDatabaseScrollingCallback"
+    "DrugListCallback"
 ]

@@ -1,34 +1,33 @@
 import uuid
+from enum import Enum
+from typing import Optional
 
 from aiogram.filters.callback_data import CallbackData
 
-DESCRIBE_TYPES = [
-    "Dosages",
-    "Pathways",
-    "Combinations",
-    "Researches"
-]
 
-ARROW_TYPES = [
-    "back",
-    "forward"
-]
+class DescribeTypes(str, Enum):
+    DOSAGES = "Dosages"
+    PATHWAYS = "Pathways"
+    COMBINATIONS = "Combinations"
+    RESEARCHES = "Researches"
+
+
+class ArrowTypes(str, Enum):
+    BACK = "back"
+    FORWARD = "forward"
 
 
 class DatabaseCallback(CallbackData, prefix="database"):
     ...
 
 
-class DrugDatabaseScrollingCallback(CallbackData, prefix="database_arrows"):
-    arrow: ARROW_TYPES
+class DrugListCallback(CallbackData, prefix="drug_list"):
+    arrow: Optional[ArrowTypes] = None
     page: int  # текущая страница
-
-
-class DrugBrieflyCallback(CallbackData, prefix="drug_briefly"):
-    drug_id: uuid.UUID
 
 
 # Подробное описание препарата
 class DrugDescribeCallback(CallbackData, prefix="drug_describe"):
     drug_id: uuid.UUID
-    describe_type: DESCRIBE_TYPES
+    briefly: bool
+    describe_type: Optional[DescribeTypes]

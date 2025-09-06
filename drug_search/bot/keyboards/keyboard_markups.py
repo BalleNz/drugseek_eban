@@ -1,5 +1,6 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
+from keyboards import DrugListCallback
 from lexicon.keyboard_words import ButtonText
 
 # Reply
@@ -11,7 +12,19 @@ main_menu_keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(
 )
 
 # Inline
-def get_drugs_menu_inline(drugs: list[dict], page: int):
+drug_database_get_full_list = InlineKeyboardMarkup = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text=ButtonText.FULL_LIST,
+                callback_data=DrugListCallback(page=0).pack()
+            )
+        ]
+    ]
+)
+
+
+def get_drugs_list_keyboard(drugs: list[dict], page: int):
     # Получаем клавиатуру с названиями препов и CallbackData=uuid.UUID
 
     drug_pages = drugs[::9]  # по 9 препаратов

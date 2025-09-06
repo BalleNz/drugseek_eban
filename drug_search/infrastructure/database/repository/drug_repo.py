@@ -8,11 +8,11 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from drug_search.core.database.engine import get_async_session
-from drug_search.core.database.models.drug import Drug, DrugSynonym, DrugCombination, DrugPathway, DrugAnalog, \
+from drug_search.infrastructure.database.engine import get_async_session
+from drug_search.infrastructure.database.models.drug import Drug, DrugSynonym, DrugCombination, DrugPathway, DrugAnalog, \
     DrugDosage, \
     DrugResearch
-from drug_search.core.database.repository.base_repo import BaseRepository
+from drug_search.infrastructure.database.repository.base_repo import BaseRepository
 from drug_search.core.schemas import AssistantResponseCombinations, DrugSchema, AssistantDosageDescriptionResponse, \
     AssistantResponseDrugPathways, AssistantResponseDrugResearch
 from drug_search.core.utils.exceptions import AssistantResponseError, DrugNotFound
@@ -152,6 +152,7 @@ class DrugRepository(BaseRepository):
             drug.classification = assistant_response.classification
             drug.dosages_fun_fact = assistant_response.dosages_fun_fact
             drug.dosages_sources = assistant_response.sources
+            drug.is_danger = assistant_response.is_danger
 
             drug.absorption = assistant_response.pharmacokinetics.absorption
             drug.metabolism = assistant_response.pharmacokinetics.metabolism

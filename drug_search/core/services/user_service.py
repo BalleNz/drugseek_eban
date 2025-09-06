@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import Depends
 
-from drug_search.core.database.repository.user_repo import UserRepository, get_user_repository
+from drug_search.infrastructure.database.repository.user_repo import UserRepository, get_user_repository
 from drug_search.core.schemas.user_schemas import UserSchema
 from drug_search.neuro_assistant.assistant import assistant
 

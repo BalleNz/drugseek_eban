@@ -59,7 +59,6 @@ class DrugAnalogResponse(BaseModel):
         from_attributes = True
 
 
-
 class DrugCombinationResponse(BaseModel):
     id: UUID = Field(...)
     drug_id: UUID
@@ -164,7 +163,7 @@ class DrugSchema(BaseModel):
 
     drug_prices: Optional[list[DrugPriceSchema]] = Field(default=None)  # FUTURE
 
-    pathways_sources: Optional[list[str]] = Field(default_factory=list)
+    pathways_sources: Optional[list[str]] = Field(default_factory=list)  # TODO удалить
     dosages_sources: Optional[list[str]] = Field(default_factory=list)
 
     primary_action: Optional[str] = Field(...)
@@ -173,6 +172,8 @@ class DrugSchema(BaseModel):
 
     created_at: datetime = Field(...)
     updated_at: datetime = Field(...)
+
+    is_danger: bool = Field(..., description="Является ли препарат запрещенным")
 
     class Config:
         from_attributes = True

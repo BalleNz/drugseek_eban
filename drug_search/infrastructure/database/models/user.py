@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from sqlalchemy import String, ForeignKey, Text, Index, func, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from drug_search.core.database.models.base import IDMixin, TimestampsMixin
+from drug_search.infrastructure.database.models.base import IDMixin, TimestampsMixin
 from drug_search.core.schemas import UserSchema
 from drug_search.core.schemas.API_schemas.api_requests import UserRequestLogSchema
 
@@ -21,6 +21,10 @@ class User(IDMixin, TimestampsMixin):
     username: Mapped[str] = mapped_column(String, comment="telegram username")
     first_name: Mapped[Optional[str]] = mapped_column(String, comment="telegram first name")
     last_name: Mapped[Optional[str]] = mapped_column(String, comment="telegram last name")
+
+    # drugs_subscription
+    drug_subscription: Mapped[bool] = mapped_column(default=False, comment="подписка на запрещенку")
+    drug_subscription_end: Mapped[datetime] = mapped_column(DateTime, comment="окончание подписки на запрещенку")
 
     allowed_requests: Mapped[int] = mapped_column(default=3, comment="Количество разрешенных запросов")
     used_requests: Mapped[int] = mapped_column(default=0, comment="Количество использованных запросов")

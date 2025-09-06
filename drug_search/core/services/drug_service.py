@@ -5,8 +5,8 @@ from typing import Optional
 from fastapi import Depends
 from pydantic import ValidationError
 
-from drug_search.core.database.repository.drug_repo import DrugRepository
-from drug_search.core.database.repository.drug_repo import get_drug_repository
+from drug_search.infrastructure.database.repository.drug_repo import DrugRepository
+from drug_search.infrastructure.database.repository.drug_repo import get_drug_repository
 from drug_search.core.schemas import AssistantResponseCombinations, AssistantResponseDrugPathways, \
     AssistantDosageDescriptionResponse, \
     AssistantResponseDrugResearch

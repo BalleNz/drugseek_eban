@@ -3,11 +3,11 @@ from datetime import date
 from typing import Optional, Type, TypeVar
 
 from pydantic import BaseModel
-from sqlalchemy import String, Float, ForeignKey, Text, UniqueConstraint, ARRAY, Index, func, Date
+from sqlalchemy import String, Float, ForeignKey, Text, UniqueConstraint, ARRAY, Index, func, Date, Boolean
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID  # Важно импортировать UUID для PostgreSQL
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from drug_search.core.database.models.base import TimestampsMixin, IDMixin
+from drug_search.infrastructure.database.models.base import TimestampsMixin, IDMixin
 from drug_search.core.schemas import DrugAnalogResponse, DrugCombinationResponse, DrugPathwayResponse, \
     DrugResearchResponse, DrugSynonymResponse, DrugDosageResponse, DrugSchema
 
@@ -26,6 +26,8 @@ class Drug(IDMixin, TimestampsMixin):
 
     # dosages info
     dosages_fun_fact: Mapped[Optional[str]] = mapped_column(Text)
+
+    is_danger: Mapped[bool] = mapped_column(Boolean, comment="опасный ли препарат (наркотик, стероид и т.д.)")
 
     # pharmacokinetics
     absorption: Mapped[Optional[str]] = mapped_column(String(100))

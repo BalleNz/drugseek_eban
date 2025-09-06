@@ -1,6 +1,6 @@
 import pytest
 
-from drug_search.core.database.models.user import User
+from drug_search.infrastructure.database.models.user import User
 from drug_search.core.schemas import UserTelegramDataSchema, UserSchema
 from test_repository.test_drug_repo import create_test_drug_model
 

@@ -43,6 +43,8 @@ class AssistantDosageDescriptionResponse(BaseModel):
 
     pharmacokinetics: Pharmacokinetics
 
+    is_danger: bool = Field(...)
+
     dosages: Dict[str, Optional[Dict[str, Optional[DosageParams]]]]
 
     class Config:

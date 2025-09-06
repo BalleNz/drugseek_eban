@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy import update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from drug_search.core.database.models.base import IDMixin
+from drug_search.infrastructure.database.models.base import IDMixin
 
 M = TypeVar("M", bound=IDMixin)
 S = TypeVar("S", bound=BaseModel)

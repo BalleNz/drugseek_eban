@@ -1,6 +1,6 @@
 import pytest
 
-from drug_search.core.database.models.drug import Drug, DrugSynonym, DrugPathway, DrugDosage, DrugAnalog, DrugCombination
+from drug_search.infrastructure.database.models.drug import Drug, DrugSynonym, DrugPathway, DrugDosage, DrugAnalog, DrugCombination
 
 
 def create_test_drug_model():

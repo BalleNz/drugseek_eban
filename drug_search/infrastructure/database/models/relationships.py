@@ -5,8 +5,8 @@ from sqlalchemy import ForeignKey, Index
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID  # Важно импортировать UUID для PostgreSQL
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from drug_search.core.database.models.base import S
-from drug_search.core.database.models.base import IDMixin
+from drug_search.infrastructure.database.models.base import S
+from drug_search.infrastructure.database.models.base import IDMixin
 from drug_search.core.schemas.user_schemas import AllowedDrugSchema
 
 

@@ -7,10 +7,10 @@ from sqlalchemy import select, text, Row, RowMapping, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from drug_search.core.database.engine import get_async_session
-from drug_search.core.database.models.relationships import AllowedDrugs
-from drug_search.core.database.models.user import User
-from drug_search.core.database.repository.base_repo import BaseRepository
+from drug_search.infrastructure.database.engine import get_async_session
+from drug_search.infrastructure.database.models.relationships import AllowedDrugs
+from drug_search.infrastructure.database.models.user import User
+from drug_search.infrastructure.database.repository.base_repo import BaseRepository
 from drug_search.core.schemas import UserTelegramDataSchema, UserSchema
 
 logger = logging.getLogger("bot.core.repository")

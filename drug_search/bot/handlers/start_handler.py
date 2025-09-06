@@ -5,8 +5,8 @@ from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from keyboards.keyboard_markups import main_menu_keyboard
-from lexicon import MessageText
+from drug_search.bot.keyboards.keyboard_markups import main_menu_keyboard
+from drug_search.bot.lexicon import MessageText
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
@@ -17,4 +17,3 @@ async def start_dialog(message: Message, state: FSMContext):
     await state.clear()
     await message.answer(text=MessageText.HELLO, reply_markup=main_menu_keyboard)
     logger.info(f"User {message.from_user.id} has started dialog.")
-

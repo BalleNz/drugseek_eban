@@ -9,8 +9,8 @@ from sqlalchemy.pool import NullPool
 
 import app
 from drug_search.config import config
-from drug_search.core.database.repository.drug_repo import DrugRepository  # Писать везде АБСОЛЮТНЫЕ ПУТИ обязательно.
-from drug_search.core.database.repository.user_repo import UserRepository
+from drug_search.infrastructure.database.repository.drug_repo import DrugRepository  # Писать везде АБСОЛЮТНЫЕ ПУТИ обязательно.
+from drug_search.infrastructure.database.repository.user_repo import UserRepository
 from drug_search.core.services.drug_service import DrugService
 from drug_search.core.services.user_service import UserService
 

@@ -16,11 +16,11 @@ from drug_search.config import config as app_config
 config.set_main_option("sqlalchemy.url", app_config.DATABASE_URL + "?async_fallback=True")
 
 
-from drug_search.core.database.models.base import *  # noqa
-from drug_search.core.database.models.drug import *  # noqa
-from drug_search.core.database.models.user import *  # noqa
-from drug_search.core.database.models.relationships import *  # noqa
-from drug_search.core.database import *  # noqa
+from drug_search.infrastructure.database.models.base import *  # noqa
+from drug_search.infrastructure.database.models.drug import *  # noqa
+from drug_search.infrastructure.database.models.user import *  # noqa
+from drug_search.infrastructure.database.models.relationships import *  # noqa
+from drug_search.infrastructure.database import *  # noqa
 
 target_metadata = IDMixin.metadata
 print("Tables in metadata:", list(target_metadata.tables.keys()))

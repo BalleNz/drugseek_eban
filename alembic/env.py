@@ -56,26 +56,21 @@ def run_migrations_offline():
 def run_migrations_online():
     """Run migrations in 'online' mode."""
     print("making migration on DATABASE_URL: " + app_config.DATABASE_URL)
-    print("making migration on DATABASE_URL: " + app_config.DATABASE_TEST_URL)
 
-    for _ in range(2):
-        connectable = engine_from_config(
-            config.get_section(config.config_ini_section),
-            prefix="sqlalchemy.",
-            poolclass=pool.NullPool,
+    connectable = engine_from_config(
+        config.get_section(config.config_ini_section),
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+    )
+
+    with connectable.connect() as connection:
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata
         )
 
-        with connectable.connect() as connection:
-            context.configure(
-                connection=connection,
-                target_metadata=target_metadata
-            )
-
-            with context.begin_transaction():
-                context.run_migrations()
-
-        config.set_main_option("sqlalchemy.url", app_config.DATABASE_TEST_URL + "?async_fallback=True")
-
+        with context.begin_transaction():
+            context.run_migrations()
 
 if context.is_offline_mode():
     run_migrations_offline()

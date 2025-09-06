@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional, Type, TypeVar
 
 from pydantic import BaseModel
-from sqlalchemy import String, ForeignKey, Text, Index, func, DateTime
+from sqlalchemy import String, ForeignKey, Text, Index, func, DateTime, Boolean, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from drug_search.infrastructure.database.models.base import IDMixin, TimestampsMixin
@@ -23,11 +23,11 @@ class User(IDMixin, TimestampsMixin):
     last_name: Mapped[Optional[str]] = mapped_column(String, comment="telegram last name")
 
     # drugs_subscription
-    drug_subscription: Mapped[bool] = mapped_column(default=False, comment="подписка на запрещенку")
-    drug_subscription_end: Mapped[datetime] = mapped_column(DateTime, comment="окончание подписки на запрещенку")
+    drug_subscription: Mapped[bool] = mapped_column(Boolean, server_default="false", default=False, comment="подписка на запрещенку")
+    drug_subscription_end: Mapped[Optional[datetime]] = mapped_column(DateTime, comment="окончание подписки на запрещенку")
 
-    allowed_requests: Mapped[int] = mapped_column(default=3, comment="Количество разрешенных запросов")
-    used_requests: Mapped[int] = mapped_column(default=0, comment="Количество использованных запросов")
+    allowed_requests: Mapped[int] = mapped_column(Integer, default=3, comment="Количество разрешенных запросов")
+    used_requests: Mapped[int] = mapped_column(Integer, default=0, comment="Количество использованных запросов")
 
     # TODO: prompt + if not used_requests % 10: user_service.user_description_update(user)
     description: Mapped[Optional[str]] = mapped_column(

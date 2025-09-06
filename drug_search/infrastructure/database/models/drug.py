@@ -27,7 +27,7 @@ class Drug(IDMixin, TimestampsMixin):
     # dosages info
     dosages_fun_fact: Mapped[Optional[str]] = mapped_column(Text)
 
-    is_danger: Mapped[bool] = mapped_column(Boolean, comment="опасный ли препарат (наркотик, стероид и т.д.)")
+    is_danger: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false", comment="опасный ли препарат (наркотик, стероид и т.д.)")
 
     # pharmacokinetics
     absorption: Mapped[Optional[str]] = mapped_column(String(100))

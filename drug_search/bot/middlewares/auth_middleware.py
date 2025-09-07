@@ -15,16 +15,13 @@ class AuthMiddleware(BaseMiddleware):
             event: TelegramObject,
             data: Dict[str, Any]
     ) -> Any:
-        # 1. Пропускаем команды, не требующие авторизации
         if event.text in ['/start', '/help', '/login']:
             return await handler(event, data)
 
-        # 2. Получаем состояние пользователя
         state: FSMContext = data.get("state")
         if not state:
             return await event.answer("Системная ошибка. Попробуйте позже.")
 
-        # 3. обработка токена
         user_data = await state.get_data()
         access_token = user_data.get("access_token")
 

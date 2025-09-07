@@ -86,28 +86,7 @@ class DrugSearchAPIClient(BaseHttpClient):
         )
 
 
-# Фабрика для создания клиента
 async def get_api_client() -> DrugSearchAPIClient:
     API_BASE_URL = config.WEBHOOK_URL
     client = DrugSearchAPIClient(API_BASE_URL)
     return client
-
-
-# класс для контекстного менеджера
-class APIClientContext:
-    def __init__(self):
-        self.client = None
-
-    async def __aenter__(self) -> DrugSearchAPIClient:
-        self.client = await get_api_client()
-        return self.client
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        if self.client:
-            await self.client.close()
-
-
-# использование в dependency injection
-async def get_client() -> AsyncGenerator[DrugSearchAPIClient, Any]:
-    async with APIClientContext() as client:
-        yield client

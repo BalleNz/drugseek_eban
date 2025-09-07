@@ -6,6 +6,7 @@ from aiogram.filters.callback_data import CallbackData
 
 
 class DescribeTypes(str, Enum):
+    BRIEFLY = "Briefly"
     DOSAGES = "Dosages"
     PATHWAYS = "Pathways"
     COMBINATIONS = "Combinations"
@@ -29,5 +30,4 @@ class DrugListCallback(CallbackData, prefix="drug_list"):
 # Подробное описание препарата
 class DrugDescribeCallback(CallbackData, prefix="drug_describe"):
     drug_id: uuid.UUID
-    briefly: bool
     describe_type: Optional[DescribeTypes]

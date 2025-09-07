@@ -31,7 +31,7 @@ class Config(BaseSettings):
     # FastAPI
     WEBAPP_HOST: str = environ.get("WEBAPP_HOST", "0.0.0.0")
     WEBAPP_PORT: int = int(environ.get("WEBAPP_PORT", "8000"))
-    WEBHOOK_URL: str = environ.get("WEBHOOK_URL", "")  # Полный URL для вебхуков (если используется)
+    WEBHOOK_URL: str = environ.get("WEBHOOK_URL", "")  # URL like https://domain-name.ru/
 
     # JWT
     SECRET_KEY: str = "zallopppaaa"

@@ -21,4 +21,3 @@ class MessageText:
     DRUG_INFO_RESEARCHS = (
         ...
     )
-

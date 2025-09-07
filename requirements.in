@@ -10,3 +10,4 @@ openai
 pymed
 greenlet
 dotenv
+aiohttp

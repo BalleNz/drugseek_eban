@@ -1,0 +1,113 @@
+from typing import AsyncGenerator, Any
+from uuid import UUID
+
+from drug_search.bot.api_client.base_http_client import BaseHttpClient, HTTPMethod
+from drug_search.config import config
+from drug_search.core.schemas import UserTelegramDataSchema, UserSchema, DrugExistingResponse, DrugSchema
+from drug_search.core.schemas.telegram_schemas import AllowedDrugsSchema
+
+
+class DrugSearchAPIClient(BaseHttpClient):
+    """Универсальный клиент для DrugSearch API"""
+
+    # Auth endpoints
+    async def telegram_auth(self, telegram_user_data: UserTelegramDataSchema) -> dict:
+        return await self._request(
+            HTTPMethod.POST,
+            "/auth/",
+            request_body=telegram_user_data
+        )
+
+    # User endpoints
+    async def get_current_user(self, access_token: str) -> UserSchema:
+        """Получение текущего пользователя"""
+        return await self._request(
+            HTTPMethod.GET,
+            "/user/",
+            response_model=UserSchema,
+            access_token=access_token
+        )
+
+    async def get_allowed_drugs(self, access_token: str) -> AllowedDrugsSchema:
+        """Получение разрешенных препаратов"""
+        return await self._request(
+            HTTPMethod.GET,
+            "/user/allowed",
+            response_model=AllowedDrugsSchema,
+            access_token=access_token
+        )
+
+    async def add_tokens(self, access_token: str, tokens_amount: int) -> None:
+        """Добавление токенов"""
+        await self._request(
+            HTTPMethod.PUT,
+            "/user/tokens",
+            access_token=access_token,
+            json={"tokens_amount": tokens_amount}
+        )
+
+    # Drug endpoints
+    async def search_drug(
+            self,
+            user_query: str,
+            access_token: str
+    ) -> DrugExistingResponse:
+        """Поиск препарата"""
+        return await self._request(
+            HTTPMethod.POST,
+            f"/drugs/search/{user_query}",
+            response_model=DrugExistingResponse,
+            access_token=access_token
+        )
+
+    async def allow_drug(
+            self,
+            drug_id: UUID,
+            access_token: str
+    ) -> dict:
+        """Разрешение препарата"""
+        return await self._request(
+            HTTPMethod.POST,
+            f"/drugs/allow/{drug_id}",
+            access_token=access_token
+        )
+
+    async def update_drug_researchs(
+            self,
+            drug_id: UUID,
+            access_token: str
+    ) -> DrugSchema:
+        """Обновление исследований препарата"""
+        return await self._request(
+            HTTPMethod.POST,
+            f"/drugs/update/researchs/{drug_id}",
+            response_model=DrugSchema,
+            access_token=access_token
+        )
+
+
+# Фабрика для создания клиента
+async def get_api_client() -> DrugSearchAPIClient:
+    API_BASE_URL = config.WEBHOOK_URL
+    client = DrugSearchAPIClient(API_BASE_URL)
+    return client
+
+
+# класс для контекстного менеджера
+class APIClientContext:
+    def __init__(self):
+        self.client = None
+
+    async def __aenter__(self) -> DrugSearchAPIClient:
+        self.client = await get_api_client()
+        return self.client
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if self.client:
+            await self.client.close()
+
+
+# использование в dependency injection
+async def get_client() -> AsyncGenerator[DrugSearchAPIClient, Any]:
+    async with APIClientContext() as client:
+        yield client

@@ -22,7 +22,6 @@ async def get_me(
     return user
 
 
-# TODO: GET allowed drugs (list with name_ru)
 @user_router.get(
     path="/allowed",
     description="Получение всех разрешенных препаратов, а также общее количество препаратов в базе.",

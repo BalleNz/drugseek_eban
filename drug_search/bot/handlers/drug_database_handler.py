@@ -42,7 +42,6 @@ async def drug_list_handler(callback: CallbackQuery, callback_data: DrugListCall
     ...
 
 
-
 @router.callback_query(DrugDescribeCallback.filter(), States.DRUG_DATABASE_MENU)
 async def drug_describe_handler(callback: CallbackQuery, callback_data: DrugDescribeCallback, state: FSMContext):
     await state.set_state(States.DRUG_DATABASE_DESCRIBE)

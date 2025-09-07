@@ -12,6 +12,7 @@ from drug_search.infrastructure.database.models.relationships import AllowedDrug
 from drug_search.infrastructure.database.models.user import User
 from drug_search.infrastructure.database.repository.base_repo import BaseRepository
 from drug_search.core.schemas import UserTelegramDataSchema, UserSchema
+from drug_search.core.schemas.telegram_schemas import AllowedDrugsSchema, DrugBriefly
 
 logger = logging.getLogger("bot.core.repository")
 
@@ -82,7 +83,7 @@ class UserRepository(BaseRepository):
         Возвращает список имен разрешенных препаратов для юзера.
         """
         stmt = text(f"""
-            SELECT drugs.name_ru AS _drug_name
+            SELECT drugs.id, drugs.name_ru AS _drug_name
             FROM allowed_drugs
             JOIN drugs ON drugs.id = allowed_drugs.drug_id
             WHERE allowed_drugs.user_id = '{user_id}'
@@ -90,18 +91,36 @@ class UserRepository(BaseRepository):
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
-    async def get_allowed_drug_ids(self, user_id: uuid.UUID) -> Sequence[uuid.UUID]:
+    async def get_allowed_drugs_info(self, user_id: uuid.UUID) -> AllowedDrugsSchema:
         """
-        Возвращает список ID препаратов разрешенных для использования пользователю по user_id.
+        Возвращает информацию о разрешенных препаратах для юзера в формате AllowedDrugsSchema.
         """
+        total_drugs_stmt = text("SELECT COUNT(*) FROM drugs")
+        total_result = await self.session.execute(total_drugs_stmt)
+        drugs_count = total_result.scalar()
+
         stmt = text(f"""
-            SELECT allowed_drugs.drug_id
+            SELECT drugs.id, drugs.name, drugs.name_ru
             FROM allowed_drugs
             JOIN drugs ON drugs.id = allowed_drugs.drug_id
             WHERE allowed_drugs.user_id = '{user_id}'
         """)
         result = await self.session.execute(stmt)
-        return result.scalars().all()
+        allowed_drugs_rows = result.fetchall()
+
+        allowed_drugs = []
+        for row in allowed_drugs_rows:
+            drug_briefly = DrugBriefly(
+                drug_id=row.id,
+                drug_name_ru=row.name_ru
+            )
+            allowed_drugs.append(drug_briefly)
+
+        return AllowedDrugsSchema(
+            drugs_count=drugs_count,
+            allowed_drugs_count=len(allowed_drugs),
+            allowed_drugs=allowed_drugs if allowed_drugs else None
+        )
 
     async def update_user_description(self, description: str, user_id: uuid.UUID):
         stmt = text("""

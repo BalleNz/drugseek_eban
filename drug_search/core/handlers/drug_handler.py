@@ -16,11 +16,11 @@ drug_router = APIRouter(prefix="/drugs")
 
 
 @drug_router.post(
-    "/{user_query}",
+    "/search/{user_query}",
     description="Поиск препарата среди существующих. Создает новый препарат (после валидации), если его не было.",
     response_model=DrugExistingResponse
 )
-async def get_exist_drug(
+async def new_drug(
         user: Annotated[UserSchema, Depends(get_auth_user)],
         user_query: str = Path(),
         drug_service: DrugService = Depends(get_drug_service)
@@ -72,10 +72,10 @@ async def get_exist_drug(
 
 
 @drug_router.post(
-    path="/allowed/{drug_id}",
+    path="/allow/{drug_id}",
     description="Разрешает и возвращает существующий препарат"
 )
-async def get_drug(
+async def allow_drug(
         drug_service: Annotated[DrugService, Depends(get_drug_service)],
         user_service: Annotated[UserService, Depends(get_user_service)],
         user: Annotated[UserSchema, Depends(get_auth_user)],

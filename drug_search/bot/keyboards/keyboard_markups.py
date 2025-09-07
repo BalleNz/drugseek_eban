@@ -27,4 +27,6 @@ drug_database_get_full_list = InlineKeyboardMarkup = InlineKeyboardMarkup(
 def get_drugs_list_keyboard(drugs: list[dict], page: int):
     # Получаем клавиатуру с названиями препов и CallbackData=uuid.UUID
 
-    drug_pages = drugs[::9]  # по 9 препаратов
+    drug_pages = drugs[::6]  # по 6 препаратов
+
+

@@ -21,3 +21,4 @@ class RedisService():
             return fresh_data
         return cache
 
+redis_service = RedisService(redis_client=None)

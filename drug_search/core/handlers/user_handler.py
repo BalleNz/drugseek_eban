@@ -7,6 +7,7 @@ from drug_search.core.schemas import UserSchema
 from drug_search.core.schemas.API_schemas.api_requests import AddTokensRequest
 from drug_search.core.services.user_service import UserService, get_user_service
 from drug_search.core.utils.auth import get_auth_user
+from drug_search.core.schemas.telegram_schemas import AllowedDrugsSchema
 
 user_router = APIRouter(prefix="/user")
 
@@ -22,15 +23,19 @@ async def get_me(
 
 
 # TODO: GET allowed drugs (list with name_ru)
-@user_router.get(path="/allowed_drugs", description="Получение всех ID и drug_name_ru разрешенных пользователю")
-async def allowed_drug_ids_ru_names(
+@user_router.get(
+    path="/allowed",
+    description="Получение всех разрешенных препаратов, а также общее количество препаратов в базе.",
+    response_model=AllowedDrugsSchema
+)
+async def get_drugs(
         user: Annotated[UserSchema, Depends(get_auth_user)],
-
+        user_service: Annotated[UserService, Depends(get_user_service)],
 ):
-    ...
+    return await user_service.get_allowed_drugs_info(user_id=user.id)
 
 
-@user_router.put(path="/add_tokens", description="Добавление токенов")
+@user_router.put(path="/tokens", description="Добавление токенов")
 async def add_tokens(
         user: Annotated[UserSchema, Depends(get_auth_user)],
         user_service: Annotated[UserService, Depends(get_user_service)],

@@ -96,7 +96,8 @@ async def test_get_allowed_drug_ids(user_repo, drug_repo):
 
     await user_repo.allow_drug_to_user(drug_.id, user.id)
 
-    allowed_drug_ids = await user_repo.get_allowed_drug_ids(user.id)
+    allowed_drug_ids = ...
+    # TODO
 
     assert drug.id in allowed_drug_ids
 

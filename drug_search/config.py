@@ -38,8 +38,9 @@ class Config(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRES_MINUTES: int = 1200
 
-    # Redis (для хранения временных данных или кеша)
+    # Redis
     REDIS_URL: str = environ.get("REDIS_URL", "redis://localhost:6379/0")
+
 
     # AUTH ENDPOINT
     ACCESS_TOKEN_ENDPOINT: str = "v1/auth/"

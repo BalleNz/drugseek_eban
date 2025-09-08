@@ -21,16 +21,12 @@ auth_router = APIRouter(prefix="/auth")
                     "schema": {
                         "type": "object",
                         "properties": {
-                            "access_token": {
+                            "token": {
                                 "type": "string",
                                 "description": "The Telegram Access Token.",
-                            },
-                            "token_type": {
-                                "type": "string",
-                                "example": "bearer",
-                            },
+                            }
                         },
-                        "required": ["access_token"],
+                        "required": ["token"],
                     }
                 }
             },

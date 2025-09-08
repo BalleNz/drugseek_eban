@@ -10,12 +10,13 @@ class DrugSearchAPIClient(BaseHttpClient):
     """Универсальный клиент для DrugSearch API"""
 
     # Auth endpoints
-    async def telegram_auth(self, telegram_user_data: UserTelegramDataSchema) -> dict:
-        return await self._request(
+    async def telegram_auth(self, telegram_user_data: UserTelegramDataSchema) -> str:
+        response: dict = await self._request(
             HTTPMethod.POST,
             "/auth/",
             request_body=telegram_user_data
         )
+        return response["token"]
 
     # User endpoints
     async def get_current_user(self, access_token: str) -> UserSchema:
@@ -63,12 +64,12 @@ class DrugSearchAPIClient(BaseHttpClient):
             self,
             drug_id: UUID,
             access_token: str
-    ):
+    ) -> DrugSchema:
         """Получить препарат по его ID"""
         return await self._request(
             HTTPMethod.GET,
             endpoint=f"/drugs/{drug_id}",
-            response_model=,
+            response_model=DrugSchema,
             access_token=access_token
         )
 

@@ -12,6 +12,7 @@ from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.bot.states.states import States
 from drug_search.core.services.redis_service import redis_service
 from schemas.telegram_schemas import AllowedDrugsSchema
+from services.redis_service import RedisService
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
@@ -20,15 +21,17 @@ logger = logging.getLogger(name=__name__)
 @router.message(F.text == ButtonText.DRUG_DATABASE)
 async def drug_menu_handler(
         message: Message,
-        api_client: DrugSearchAPIClient,
+        redis_service: RedisService,
         state: FSMContext,
 ):
     await state.set_state(States.DRUG_DATABASE_MENU)
 
     user_id = message.from_user.id
 
-    redis_key = f"user:{user_id}:allowed_drugs_info"  # TODO там будет храниться массив из разрешенных + скока всего в базе
-    allowed_drugs_info: AllowedDrugsSchema = redis_service.get_cached_or_fetch(redis_key, api_client)
+    cache_key = f"user:{user_id}:allowed_drugs_info"  # TODO там будет храниться массив из разрешенных + скока всего в базе
+    allowed_drugs_info: AllowedDrugsSchema = await redis_service.get_cached_or_fetch(
+        cache_key=cache_key
+    )
 
     # TODO: сообщение со статистикой + клавиатура drug_database_get_full_list
     await message.answer(
@@ -40,13 +43,15 @@ async def drug_menu_handler(
 @router.callback_query(DrugListCallback.filter(), States.DRUG_DATABASE_MENU)
 async def drug_list_handler(
         callback: CallbackQuery,
-        api_client: DrugSearchAPIClient,
+        redis_service: RedisService,
         callback_data: DrugListCallback,
 ):
     user_id = callback.from_user.id
 
-    redis_key = f"user:{user_id}:allowed_drugs_info"
-    allowed_drugs_info: AllowedDrugsSchema = redis_service.get_cached_or_fetch(redis_key, api_client)
+    cache_key = f"user:{user_id}:allowed_drugs_info"
+    allowed_drugs_info: AllowedDrugsSchema = await redis_service.get_cached_or_fetch(
+        cache_key=cache_key
+    )
 
     # TODO: отправляем сообщение с клавиатурой
     await callback.message.edit_text(
@@ -61,7 +66,7 @@ async def drug_list_handler(
 @router.callback_query(DrugDescribeCallback.filter(), States.DRUG_DATABASE_MENU)
 async def drug_describe_handler(
         callback: CallbackQuery,
-        api_client: DrugSearchAPIClient,
+        redis_service: RedisService,
         callback_data: DrugDescribeCallback,
         state: FSMContext
 ):
@@ -73,8 +78,11 @@ async def drug_describe_handler(
     drug_id = callback_data.drug_id
 
     # redis
-    redis_key = f"user:{user_id}:drug_describe:{drug_id}"
-    drug_description = redis_service.get_cached_or_fetch(redis_key, api_client)
+    cache_key = f"user:{user_id}:drug_describe:{drug_id}"
+    drug_description = redis_service.get_cached_or_fetch(
+        cache_key=cache_key,
+        drug_id=drug_id
+    )
 
     # TODO: отправляем сообщение с описанием препарата и клавой (выбор описания)
     await callback.message.edit_text(

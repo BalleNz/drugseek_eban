@@ -1,4 +1,3 @@
-from typing import AsyncGenerator, Any
 from uuid import UUID
 
 from drug_search.bot.api_client.base_http_client import BaseHttpClient, HTTPMethod
@@ -57,6 +56,19 @@ class DrugSearchAPIClient(BaseHttpClient):
             HTTPMethod.POST,
             f"/drugs/search/{user_query}",
             response_model=DrugExistingResponse,
+            access_token=access_token
+        )
+
+    async def get_drug(
+            self,
+            drug_id: UUID,
+            access_token: str
+    ):
+        """Получить препарат по его ID"""
+        return await self._request(
+            HTTPMethod.GET,
+            endpoint=f"/drugs/{drug_id}",
+            response_model=,
             access_token=access_token
         )
 

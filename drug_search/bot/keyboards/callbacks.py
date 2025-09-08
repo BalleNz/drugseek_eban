@@ -19,7 +19,7 @@ class ArrowTypes(str, Enum):
 
 
 class DatabaseCallback(CallbackData, prefix="database"):
-    ...
+    pass
 
 
 class DrugListCallback(CallbackData, prefix="drug_list"):

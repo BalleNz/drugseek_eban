@@ -90,15 +90,15 @@ async def allow_drug(
             "is_allowed": bool
         }
     """
+    if not user.allowed_requests:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов.")
+
     drug: DrugSchema | None = await drug_service.repo.get(drug_id)
     if drug_id in user.allowed_drug_ids():
         return {
             "drug": drug,
             "is_allowed": True
         }
-
-    if not user.allowed_requests:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов.")
 
     try:
         await user_service.reduce_tokens(user_id=user.id, tokens_to_reduce=1)
@@ -115,6 +115,25 @@ async def allow_drug(
 
     except Exception as ex:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex)
+
+
+@drug_router.get(path="/{drug_id}", response_model=DrugSchema)
+async def get_drug(
+        user: Annotated[UserSchema, Depends(get_auth_user)],
+        drug_service: Annotated[DrugService, Depends(get_drug_service)],
+        user_service: Annotated[UserService, Depends(get_user_service)],
+        drug_id: UUID = Path(..., description="ID препарата в формате UUID")
+):
+    """Возвращает препарат по его ID"""
+    if not user.allowed_requests:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов.")
+
+    drug: DrugSchema | None = await drug_service.repo.get_with_all_relationships(drug_id)
+
+    return {
+        "drug": drug,
+        "is_allowed": True if drug_id in user.allowed_drug_ids() else False
+    }
 
 
 @drug_router.post(path="/update/researchs/{drug_id}", description="Обновляет исследования для препарата")

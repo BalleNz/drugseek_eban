@@ -81,8 +81,8 @@ class DrugRepository(BaseRepository):
 
         return self._convert_to_drug_schema(drug)
 
-    async def get_with_all_relationships(self, drug_id: uuid.UUID, need_model: bool = False) -> Union[
-        Drug, DrugSchema, None]:
+    async def get_with_all_relationships(self, drug_id: uuid.UUID, need_model: bool = False)\
+            -> Union[Drug, DrugSchema, None]:
         """
         Возращает модель или схему препарата в зависимости от флага need_model.
 
@@ -311,7 +311,6 @@ class DrugRepository(BaseRepository):
                     )
                 )
 
-
                 drug.researchs += new_researchs
 
                 await self.save(drug)
@@ -321,6 +320,7 @@ class DrugRepository(BaseRepository):
             raise ex
 
     async def get_drug(self, drug_id: uuid.UUID) -> DrugSchema:
+        """Возращает описание препарата без смежных таблиц"""
         drug_model: Drug = await self.session.get(self.model, drug_id)
         return DrugSchema.model_validate(drug_model)
 

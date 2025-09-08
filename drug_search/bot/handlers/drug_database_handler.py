@@ -31,7 +31,10 @@ async def drug_menu_handler(
     allowed_drugs_info: AllowedDrugsSchema = redis_service.get_cached_or_fetch(redis_key, api_client)
 
     # TODO: сообщение со статистикой + клавиатура drug_database_get_full_list
-    await message.answer(text=..., reply_markup=drug_database_get_full_list)
+    await message.answer(
+        text=...,
+        reply_markup=drug_database_get_full_list
+    )
 
 
 @router.callback_query(DrugListCallback.filter(), States.DRUG_DATABASE_MENU)
@@ -49,7 +52,7 @@ async def drug_list_handler(
     await callback.message.edit_text(
         text=...,
         reply_markup=get_drugs_list_keyboard(
-            drugs=cached_drugs_briefly.allowed_drugs,
+            drugs=allowed_drugs_info.allowed_drugs,
             page=callback_data.page
         )
     )
@@ -71,7 +74,10 @@ async def drug_describe_handler(
 
     # redis
     redis_key = f"user:{user_id}:drug_describe:{drug_id}"
-    cached_drugs_briefly = redis_service.get_cached_or_fetch(redis_key, api_client)
+    drug_description = redis_service.get_cached_or_fetch(redis_key, api_client)
 
     # TODO: отправляем сообщение с описанием препарата и клавой (выбор описания)
-    ...
+    await callback.message.edit_text(
+        text=...,
+        reply_markup=...
+    )

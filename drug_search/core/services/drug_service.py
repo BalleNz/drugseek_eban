@@ -38,7 +38,8 @@ class DrugService:
         Обновляет все поля препарата, кроме исследований.
         :param drug_id: ID препарата.
         """
-        drug_name = (await self.repo.get_drug(drug_id)).name
+        drug: DrugSchema = await self.repo.get_drug(drug_id)
+        drug_name: str = drug.name
         try:
             assistant_response_dosages: AssistantDosageDescriptionResponse = assistant.get_dosage(drug_name=drug_name)
             if not assistant_response_dosages:

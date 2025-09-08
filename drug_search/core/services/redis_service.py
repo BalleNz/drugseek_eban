@@ -21,5 +21,5 @@ class RedisService():
             return fresh_data
         return cache
 
-
+# TODO подумать сделать DI вместо синглтона (как лучше спросить у дипсик)
 redis_service = RedisService(redis_client=None)

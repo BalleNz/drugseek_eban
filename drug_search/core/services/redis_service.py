@@ -1,11 +1,10 @@
 from enum import Enum
-from typing import Union
 from uuid import UUID
 
 from redis.asyncio import Redis
 
-from drug_search.bot.api_client.drug_search_api import get_api_client
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
+from drug_search.bot.api_client.drug_search_api import get_api_client
 from drug_search.config import config
 from drug_search.core.schemas import DrugSchema, UserTelegramDataSchema
 from drug_search.core.schemas.telegram_schemas import AllowedDrugsSchema
@@ -21,48 +20,89 @@ class RedisService():
         self.redis = redis_client
         self.api_client = api_client
 
-    async def get_access_token(
+    @staticmethod
+    def _get_token_key(telegram_id: str) -> str:
+        return f"auth_{telegram_id}"
+
+    @staticmethod
+    def _get_allowed_drugs_key(telegram_id: str) -> str:
+        return f"user:{telegram_id}:{CacheKeys.ALLOWED_DRUGS}"
+
+    @staticmethod
+    def _get_drug_describe_key(telegram_id: str, drug_id: UUID) -> str:
+        return f"user:{telegram_id}:{CacheKeys.DRUG_DESCRIBE}:{drug_id}"
+
+    async def get_or_refresh_access_token(
             self,
             telegram_data: UserTelegramDataSchema
     ) -> str:
-        redis_key: str = f"auth_{telegram_data.telegram_id}"
-        access_token: str = await self.redis.get(redis_key)
+        redis_key = self._get_token_key(telegram_data.telegram_id)
+        access_token = await self.redis.get(redis_key)
+
         if not access_token:
-            access_token: str = await self.api_client.telegram_auth(telegram_user_data=telegram_data)
-            await self.redis.set(redis_key, access_token)
+            access_token = await self.api_client.telegram_auth(
+                telegram_user_data=telegram_data
+            )
+            token_expire = config.ACCESS_TOKEN_EXPIRES_MINUTES
+            await self.redis.set(redis_key, access_token, ex=token_expire)
+
         return access_token
 
-    async def get_cached_or_fetch(
+    async def get_allowed_drugs(
             self,
-            cache_key: str,  # user:{user_id}:drug_describe:{drug_id} | user:{user_id}:allowed_drugs_info
-            drug_id: UUID = None,
-            expiry: int = 4000,  # seconds
-    ):
-        """
-        Универсальная функция для получения данных из кэша или их загрузки.
-        Здесь используется только одномерный массив (одна ячейка).
-        """
-        # TODO разделить на две функции (посоветоваться с дипсиком)
-        # TODO брать ацес токен хз как  (с дипсиком посовет (дать ему весь код))
-        cache: Union[AllowedDrugsSchema, DrugSchema, None] = None
+            access_token: str,
+            telegram_id: str,
+            expiry: int = 3600  # seconds
+    ) -> AllowedDrugsSchema:
+        """Получение списка разрешенных лекарств с кэшированием"""
+        cache_key = self._get_allowed_drugs_key(telegram_id)
 
-        if CacheKeys.ALLOWED_DRUGS in cache_key:
-            cache: AllowedDrugsSchema = AllowedDrugsSchema.model_validate(
-                await self.redis.get(name=cache_key)
-            )
-            if not cache:
-                cache: AllowedDrugsSchema = await self.api_client.get_allowed_drugs(access_token=access_token)
+        # Пытаемся получить из кэша
+        cached_data = await self.redis.get(cache_key)
+        if cached_data:
+            return AllowedDrugsSchema.model_validate_json(cached_data)
 
-        elif CacheKeys.DRUG_DESCRIBE in cache_key:
-            cache: DrugSchema = DrugSchema.model_validate(
-                await self.redis.get(name=cache_key)
-            )
-            if not cache:
-                cache: DrugSchema = await self.api_client.get_drug(drug_id=drug_id, access_token=access_token)
+        # Если нет в кэше, запрашиваем из API
+        fresh_data = await self.api_client.get_allowed_drugs(access_token=access_token)
 
-        await self.redis.set(cache_key, cache.model_dump_json(), ex=expiry)
+        # Сохраняем в кэш
+        await self.redis.set(
+            cache_key,
+            fresh_data.model_dump_json(),
+            ex=expiry
+        )
 
-        return cache
+        return fresh_data
+
+    async def get_drug(
+            self,
+            access_token: str,
+            telegram_id: str,
+            drug_id: UUID,
+            expiry: int = 3600  # seconds
+    ) -> DrugSchema:
+        """Получение информации о лекарстве с кэшированием"""
+        cache_key = self._get_drug_describe_key(telegram_id, drug_id)
+
+        # Пытаемся получить из кэша
+        cached_data = await self.redis.get(cache_key)
+        if cached_data:
+            return DrugSchema.model_validate_json(cached_data)
+
+        # Если нет в кэше, запрашиваем из API
+        fresh_data = await self.api_client.get_drug(
+            drug_id=drug_id,
+            access_token=access_token
+        )
+
+        # Сохраняем в кэш
+        await self.redis.set(
+            cache_key,
+            fresh_data.model_dump_json(),
+            ex=expiry
+        )
+
+        return fresh_data
 
 
 async def get_redis_client() -> RedisService:

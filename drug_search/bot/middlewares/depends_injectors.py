@@ -1,11 +1,10 @@
-# middleware.py
 from typing import Any, Awaitable, Callable, Dict
 
 from aiogram import BaseMiddleware
-from aiogram.types import TelegramObject
+from aiogram.types import TelegramObject, User
 
-from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient, get_api_client
-from services.redis_service import RedisService, get_redis_client
+from drug_search.bot.api_client.drug_search_api import get_api_client
+from services.redis_service import get_redis_client
 
 handlers_that_use_api_client = [
     None
@@ -18,48 +17,42 @@ handlers_that_use_redis = [
 ]
 
 
-class APIClientMiddleware(BaseMiddleware):
+class DependencyInjectionMiddleware(BaseMiddleware):
     async def __call__(
             self,
             handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
             event: TelegramObject,
             data: Dict[str, Any]
     ) -> Any:
-        # skip if not in "handlers_that_uses_api_client"
-        if event.text not in handlers_that_use_api_client:
-            return await handler(event, data)
+        # Инициализируем клиенты
+        api_client = await get_api_client()
+        redis_service = await get_redis_client()
 
-        # Создаем клиент и добавляем в данные
-        client: DrugSearchAPIClient = await get_api_client()
-        data['api_client'] = client
-
-        try:
-            result = await handler(event, data)
-        finally:
-            # Закрываем клиент после работы хендлера и вроде как сборщик мусора заберет всю хуйню
-            await client.close()
-
-        return result
-
-
-class RedisServiceMiddleware(BaseMiddleware):
-    async def __call__(
-            self,
-            handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
-            event: TelegramObject,
-            data: Dict[str, Any]
-    ) -> Any:
-        if event.text not in handlers_that_use_redis:
-            return await handler(event, data)
-
-        # Создаем клиент и добавляем в данные
-        redis_service: RedisService = await get_redis_client()
+        # Добавляем в контекст
+        data['api_client'] = api_client
         data['redis_service'] = redis_service
 
         try:
+            # Получаем access token и сохраняем к контекст
+            user: User = data.get('event_from_user')
+            if user:
+                from drug_search.core.schemas import UserTelegramDataSchema
+
+                telegram_data = UserTelegramDataSchema(
+                    telegram_id=user.id,
+                    username=user.username,
+                    first_name=user.first_name,
+                    last_name=user.last_name
+                )
+
+                access_token = await redis_service.get_or_refresh_access_token(telegram_data)
+                data['access_token'] = access_token
+
             result = await handler(event, data)
+
         finally:
+            # Очистка ресурсов
+            await api_client.close()
             await redis_service.redis.close()
-            await redis_service.api_client.close()
 
         return result

@@ -76,7 +76,7 @@ class AssistantResponseDrugPathways(BaseModel):
                     "receptor": "α2A-адренорецептор",
                     "binding_affinity": "Ki = 2.1 нМ",
                     "affinity_description": "очень сильное связывание",
-                    "activation_type": "antagonist",
+                    "activation_type": "антагонист",
                     "pathway": "Gi/o protein cascade",
                     "effect": "повышение норадреналина"
                 }],

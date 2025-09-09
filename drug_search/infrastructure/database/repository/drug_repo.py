@@ -34,7 +34,7 @@ class DrugRepository(BaseRepository):
             "synonyms": [synonym.__dict__ for synonym in drug.synonyms],
             "analogs": [analog.__dict__ for analog in drug.analogs],
             "combinations": [combination.__dict__ for combination in drug.combinations],
-            "prices": [price.__dict__ for price in drug.prices],
+            # "prices": [price.__dict__ for price in drug.prices],
         }
         return DrugSchema.model_validate(drug_dict)
 

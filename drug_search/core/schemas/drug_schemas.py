@@ -91,7 +91,7 @@ class DrugPathwayResponse(BaseModel):
     receptor: str = Field(...)
     binding_affinity: Optional[str] = Field(default=None)
     affinity_description: str = Field(...)
-    activation_type: ActivationType
+    activation_type: str = Field(...)
     pathway: str = Field(...)
     effect: str = Field(...)
 

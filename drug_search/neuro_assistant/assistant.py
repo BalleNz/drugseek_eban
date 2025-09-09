@@ -17,11 +17,7 @@ from drug_search.core.schemas.pubmed_schema import ClearResearchsRequest
 from drug_search.core.utils.exceptions import AssistantResponseError
 from drug_search.neuro_assistant.prompts import Prompts
 
-load_dotenv()
-
-DEEPSEEK_API_KEY = environ.get("DEEPSEEK_API_KEY")
-
-logger = logging.getLogger("bot.assistant")
+logger = logging.getLogger(__name__)
 
 AssistantResponseModel = Union[
     AssistantResponseDrugPathways,
@@ -86,6 +82,9 @@ class Assistant(AssistantInterface):
                 # если нет Pydantic модели —> возращает строку.
                 return response.choices[0].message.content
             except ValidationError as e:
+                logger.error(f"Validation error: {e}")
+                logger.error(f"Raw response: {response.choices[0].message.content}\n\n"
+                             f"Model: {pydantic_model}")
                 raise ValueError(f"Invalid assistant response: {e}")
 
         except APIError as e:
@@ -151,6 +150,6 @@ class Assistant(AssistantInterface):
 
 assistant = Assistant(config.DEEPSEEK_API_KEY)
 
-if __name__ == "__main__":
-    print(assistant.get_pathways("парацетамол"))
-    print()
+
+async def get_assistant():
+    return Assistant(config.DEEPSEEK_API_KEY)

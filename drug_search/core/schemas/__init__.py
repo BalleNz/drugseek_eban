@@ -28,7 +28,6 @@ __all__ = [
     'Pathway',
     'MechanismSummary',
     'Pharmacokinetics',
-    'ActivationType',
     'CombinationType',
     'EXIST_STATUS',
     #  User Schema

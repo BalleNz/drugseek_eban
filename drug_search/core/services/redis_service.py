@@ -52,7 +52,7 @@ class RedisService():
             self,
             access_token: str,
             telegram_id: str,
-            expiry: int = 3600  # seconds
+            expiry: int = 86400  # 1 hour
     ) -> AllowedDrugsSchema:
         """Получение списка разрешенных лекарств с кэшированием"""
         cache_key = self._get_allowed_drugs_key(telegram_id)
@@ -79,7 +79,7 @@ class RedisService():
             access_token: str,
             telegram_id: str,
             drug_id: UUID,
-            expiry: int = 3600  # seconds
+            expiry: int = 86400  # 1 hour
     ) -> DrugSchema:
         """Получение информации о лекарстве с кэшированием"""
         cache_key = self._get_drug_describe_key(telegram_id, drug_id)
@@ -103,6 +103,20 @@ class RedisService():
         )
 
         return fresh_data
+
+    async def invalidate_allowed_drugs(self, telegram_id: str) -> None:
+        """Инвалидация кэша списка лекарств"""
+        # TODO: добавить при покупке препарата юзером
+        cache_key = self._get_allowed_drugs_key(telegram_id)
+        await self.redis.delete(cache_key)
+
+    async def invalidate_drug_describe(
+        self, telegram_id: str, drug_id: UUID
+    ) -> None:
+        # TODO: добавить при обновлении данных об исследованиях
+        """Инвалидация кэша информации о лекарстве"""
+        cache_key = self._get_drug_describe_key(telegram_id, drug_id)
+        await self.redis.delete(cache_key)
 
 
 async def get_redis_client() -> RedisService:

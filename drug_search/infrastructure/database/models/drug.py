@@ -104,6 +104,8 @@ class Drug(IDMixin, TimestampsMixin):
             classification=self.classification,
             dosages_fun_fact=self.dosages_fun_fact,
 
+            is_danger=self.is_danger,
+
             synonyms=[syn.get_schema() for syn in self.synonyms] if self.synonyms else [],
             dosages=[dosage.get_schema() for dosage in self.dosages] if self.dosages else [],
             pathways=[pathway.get_schema() for pathway in self.pathways] if self.pathways else [],

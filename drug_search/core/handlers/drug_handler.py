@@ -4,9 +4,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.params import Path
 
-from drug_search.core.schemas import UserSchema, DrugExistingResponse, EXIST_STATUS
-from drug_search.core.schemas.assistant_responses import AssistantResponseDrugValidation
-from drug_search.core.schemas.drug_schemas import DrugSchema
+from drug_search.core.schemas import (UserSchema, DrugExistingResponse,
+                                      EXIST_STATUS, AssistantResponseDrugValidation, DrugSchema)
 from drug_search.core.services.drug_service import DrugService, get_drug_service
 from drug_search.core.services.user_service import UserService, get_user_service
 from drug_search.core.utils.auth import get_auth_user
@@ -121,7 +120,6 @@ async def allow_drug(
 async def get_drug(
         user: Annotated[UserSchema, Depends(get_auth_user)],
         drug_service: Annotated[DrugService, Depends(get_drug_service)],
-        user_service: Annotated[UserService, Depends(get_user_service)],
         drug_id: UUID = Path(..., description="ID препарата в формате UUID")
 ):
     """Возвращает препарат по его ID"""

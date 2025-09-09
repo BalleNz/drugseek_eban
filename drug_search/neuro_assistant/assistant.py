@@ -91,7 +91,7 @@ class Assistant(AssistantInterface):
         except APIError as e:
             raise e
         except Exception as ex:
-            raise Exception
+            raise ex
 
     def get_dosage(self, drug_name: str) -> AssistantDosageDescriptionResponse:
         return self.get_response(input_query=drug_name, prompt=self.prompts.GET_DRUG_DESCRIPTION,

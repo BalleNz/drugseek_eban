@@ -45,18 +45,6 @@ async def test_create_from_telegram_data(user_repo):
 
 
 @pytest.mark.asyncio
-async def test_get_by_telegram_id(user_repo):
-    await user_repo.create(get_user())
-
-    user = await user_repo.get_by_telegram_id(get_user().telegram_id)
-    assert user.telegram_id == "1488221"
-    assert user.first_name == "Оззи"
-    assert user.last_name == "озборн"
-    assert user.username == "huesos"
-    assert user.allowed_requests == 3
-
-
-@pytest.mark.asyncio
 async def test_allow_drug_to_user(user_repo, drug_repo):
     drug = create_test_drug_model()
     drug_ = await drug_repo.create(drug)

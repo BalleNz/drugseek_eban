@@ -1,10 +1,10 @@
+import uuid
+
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
-from drug_search.bot.keyboards import DrugDescribeCallback, DrugListCallback
-from drug_search.bot.keyboards.callbacks import DescribeTypes
+from drug_search.bot.keyboards import DrugDescribeCallback, DrugListCallback, DescribeTypes, ArrowTypes
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.core.schemas.telegram_schemas import DrugBriefly
-from keyboards.callbacks import ArrowTypes
 
 # Reply
 main_menu_keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(
@@ -15,7 +15,7 @@ main_menu_keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(
 )
 
 # Inline
-drug_database_get_full_list = InlineKeyboardMarkup = InlineKeyboardMarkup(
+drug_database_list_keyboard = InlineKeyboardMarkup = InlineKeyboardMarkup(
     inline_keyboard=[
         [
             InlineKeyboardButton(
@@ -53,7 +53,7 @@ def get_drugs_list_keyboard(drugs: list[DrugBriefly], page: int) -> InlineKeyboa
                 text="<——",
                 callback_data=DrugListCallback(
                     arrow=ArrowTypes.BACK,
-                    page=page-1
+                    page=page - 1
                 ).pack()
             )
         )
@@ -68,3 +68,18 @@ def get_drugs_list_keyboard(drugs: list[DrugBriefly], page: int) -> InlineKeyboa
             )
         )
     return InlineKeyboardMarkup(*buttons)
+
+
+def get_drug_describe_menu_keyboard(drug_id: uuid.UUID) -> InlineKeyboardMarkup:
+    keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
+        [
+            InlineKeyboardButton(
+                text="<——",
+                callback_data=DrugDescribeCallback(
+                    drug_id=drug_id,
+                    describe_type=DescribeTypes.BRIEFLY
+                ).pack()
+            )
+        ]
+    )
+    return keyboard

@@ -6,13 +6,12 @@ from fastapi import Depends
 from sqlalchemy import select, text, Row, RowMapping, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
+from drug_search.core.schemas import UserTelegramDataSchema, UserSchema, AllowedDrugsSchema, DrugBriefly
 from drug_search.infrastructure.database.engine import get_async_session
-from drug_search.infrastructure.database.models.relationships import AllowedDrugs
-from drug_search.infrastructure.database.models.user import User
+from drug_search.infrastructure.database.models.user import AllowedDrugs, User
 from drug_search.infrastructure.database.repository.base_repo import BaseRepository
-from drug_search.core.schemas import UserTelegramDataSchema, UserSchema
-from drug_search.core.schemas.telegram_schemas import AllowedDrugsSchema, DrugBriefly
 
 logger = logging.getLogger("bot.core.repository")
 
@@ -21,21 +20,18 @@ class UserRepository(BaseRepository):
     def __init__(self, session: AsyncSession):
         super().__init__(model=User, session=session)
 
-    async def get_by_telegram_id(self, telegram_id: str) -> User | None:
-        """
-        Возвращает модель пользователя по телеграм айди.
-        """
+    async def get_user(self, user_id: uuid.UUID) -> UserSchema:
+        """Возвращает модель юзер со всеми смежными таблицами"""
         stmt = (
             select(User).where(
-                User.telegram_id == telegram_id
+                User.id == user_id
+            )
+            .options(
+                selectinload(User.allowed_drugs)
             )
         )
-
         result = await self.session.execute(stmt)
-        user: Optional[User] = result.scalar_one_or_none()
-        if not user:
-            return None
-        return user
+        return UserSchema.model_validate(result.scalar_one_or_none())
 
     async def get_or_create_from_telegram(self, telegram_user: UserTelegramDataSchema) -> UserSchema | None:
         """

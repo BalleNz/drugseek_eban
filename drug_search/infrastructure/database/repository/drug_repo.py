@@ -8,14 +8,13 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from drug_search.infrastructure.database.engine import get_async_session
-from drug_search.infrastructure.database.models.drug import Drug, DrugSynonym, DrugCombination, DrugPathway, DrugAnalog, \
-    DrugDosage, \
-    DrugResearch
-from drug_search.infrastructure.database.repository.base_repo import BaseRepository
-from drug_search.core.schemas import AssistantResponseCombinations, DrugSchema, AssistantDosageDescriptionResponse, \
-    AssistantResponseDrugPathways, AssistantResponseDrugResearch
+from drug_search.core.schemas import (AssistantResponseCombinations, DrugSchema, AssistantDosageDescriptionResponse,
+                                      AssistantResponseDrugPathways, AssistantResponseDrugResearch)
 from drug_search.core.utils.exceptions import AssistantResponseError, DrugNotFound
+from drug_search.infrastructure.database.engine import get_async_session
+from drug_search.infrastructure.database.models.drug import (Drug, DrugSynonym, DrugCombination, DrugPathway,
+                                                             DrugAnalog, DrugDosage, DrugResearch)
+from drug_search.infrastructure.database.repository.base_repo import BaseRepository
 
 logger = logging.getLogger("bot.core.repository.drug")
 
@@ -53,7 +52,7 @@ class DrugRepository(BaseRepository):
                 func.similarity(
                     func.lower(DrugSynonym.synonym),
                     func.lower(user_query)
-                ) > 0.2
+                ) > 0.5
             )
             .order_by(
                 func.similarity(

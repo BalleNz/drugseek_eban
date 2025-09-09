@@ -6,18 +6,6 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
-class ActivationType(str, Enum):
-    AGONIST = "agonist"
-    ANTAGONIST = "antagonist"
-    INVERSE_AGONIST = "inverse agonist"
-    PARTIAL_AGONIST = "partial agonist"
-    INHIBITOR = "inhibitor"
-    ACTIVATOR = "activator"
-    MODULATOR = "modulator"
-    BLOCKER = "blocker"
-    OTHER = "other"
-
-
 class CombinationType(str, Enum):
     GOOD = 'good'
     BAD = 'bad'
@@ -183,7 +171,7 @@ class Pathway(BaseModel):
     receptor: str = Field(...)
     binding_affinity: Optional[str] = None
     affinity_description: str = Field(...)
-    activation_type: ActivationType
+    activation_type: str = Field(...)
     pathway: str = Field(...)
     effect: str = Field(...)
 

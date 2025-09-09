@@ -67,5 +67,5 @@ async def get_auth_user(
     """
     user_id: UUID = await decode_jwt(token)
 
-    user_model = await user_service.repo.get(user_id)
-    return UserSchema.model_validate(user_model)
+    user: UserSchema = await user_service.repo.get_user(user_id)
+    return user

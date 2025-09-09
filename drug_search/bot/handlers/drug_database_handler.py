@@ -4,14 +4,13 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
-from drug_search.bot.keyboards import DrugDescribeCallback
-from drug_search.bot.keyboards import DrugListCallback
-from drug_search.bot.keyboards.keyboard_markups import drug_database_get_full_list, get_drugs_list_keyboard
+from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback,
+                                       drug_database_list_keyboard, get_drugs_list_keyboard,
+                                       get_drug_describe_menu_keyboard)
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.bot.states.states import States
-from schemas import DrugSchema
-from schemas.telegram_schemas import AllowedDrugsSchema
-from services.redis_service import RedisService
+from drug_search.core.schemas import DrugSchema, AllowedDrugsSchema
+from drug_search.core.services.redis_service import RedisService
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
@@ -36,7 +35,7 @@ async def drug_menu_handler(
     # TODO: сообщение со статистикой + клавиатура drug_database_get_full_list
     await message.answer(
         text=...,
-        reply_markup=drug_database_get_full_list
+        reply_markup=drug_database_list_keyboard
     )
 
 
@@ -88,5 +87,7 @@ async def drug_describe_handler(
     # TODO: отправляем сообщение с описанием препарата и клавой (выбор описания)
     await callback.message.edit_text(
         text=...,
-        reply_markup=...
+        reply_markup=get_drug_describe_menu_keyboard(
+            drug_id=drug_id
+        )
     )

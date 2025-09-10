@@ -19,7 +19,6 @@ config.set_main_option("sqlalchemy.url", app_config.DATABASE_URL + "?async_fallb
 from drug_search.infrastructure.database.models.base import *  # noqa
 from drug_search.infrastructure.database.models.drug import *  # noqa
 from drug_search.infrastructure.database.models.user import *  # noqa
-from drug_search.infrastructure.database.models.relationships import *  # noqa
 from drug_search.infrastructure.database import *  # noqa
 
 target_metadata = IDMixin.metadata

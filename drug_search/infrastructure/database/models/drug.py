@@ -324,9 +324,9 @@ class DrugResearch(IDMixin):
     url: Mapped[str] = mapped_column(String(255))
     summary: Mapped[Optional[str]] = mapped_column(Text)
     journal: Mapped[str] = mapped_column(String(100))
-    doi: Mapped[str] = mapped_column(String(50), unique=True)
+    doi: Mapped[str] = mapped_column(String(100), unique=True)
     authors: Mapped[Optional[str]] = mapped_column(Text)
-    study_type: Mapped[Optional[str]] = mapped_column(String(50))
+    study_type: Mapped[Optional[str]] = mapped_column(String(150))
     interest: Mapped[float] = mapped_column()
 
     __table_args__ = (

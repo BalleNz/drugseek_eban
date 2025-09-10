@@ -28,8 +28,8 @@ class AssistantResponseDrugValidation(BaseModel):
 
 
 class AssistantDosageDescriptionResponse(BaseModel):
-    """Формализованный ответ ассистента по дозировкам и описанию"""
-    drug_name: str = Field(..., description="одно возможное название для ДВ на ENG")
+    """Ответ ИИ по дозировкам и описанию препарата"""
+    drug_name: str = Field(..., description="одно возможное название для ДВ на англ.")
     latin_name: str = Field(...)
     drug_name_ru: str = Field(...)
 

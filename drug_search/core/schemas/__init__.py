@@ -4,6 +4,7 @@ from drug_search.core.schemas.assistant_responses import *
 from drug_search.core.schemas.drug_schemas import *
 from drug_search.core.schemas.telegram_schemas import *
 from drug_search.core.schemas.user_schemas import *
+from drug_search.core.schemas.pubmed_schema import ClearResearchesRequest
 
 __all__ = [
     #  Assistant Response
@@ -14,6 +15,7 @@ __all__ = [
     'AssistantResponseDrugResearch',
     'AssistantResponseDrugResearchs',
     'AssistantResponsePubmedQuery',
+    'ClearResearchesRequest',
     #  Drug Schema
     'DrugSchema',
     'DrugDosageResponse',

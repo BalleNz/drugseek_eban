@@ -11,3 +11,4 @@ pymed
 greenlet
 dotenv
 aiohttp
+redis

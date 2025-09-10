@@ -39,7 +39,7 @@ class Config(BaseSettings):
     ACCESS_TOKEN_EXPIRES_MINUTES: int = 1200
 
     # Redis
-    REDIS_URL: str = environ.get("REDIS_URL", "redis://localhost:6379/0")
+    REDIS_URL: str = environ.get("REDIS_URL", "redis_pool://localhost:6379/0")
 
 
     # AUTH ENDPOINT

@@ -23,21 +23,6 @@ class DrugRepository(BaseRepository):
     def __init__(self, session: AsyncSession):
         super().__init__(model=Drug, session=session)
 
-    # FUTURE: рефакторинг, схемы в моделях бд + методы преобразования из схемы в модель и наоборот
-    @staticmethod
-    def _convert_to_drug_schema(drug: Drug):
-        # Явное преобразование в словарь для вложенных объектов
-        drug_dict = {
-            **{k: v for k, v in drug.__dict__.items() if not k.startswith('_')},
-            "dosages": [dosage.__dict__ for dosage in drug.dosages],
-            "pathways": [pathway.__dict__ for pathway in drug.pathways],
-            "synonyms": [synonym.__dict__ for synonym in drug.synonyms],
-            "analogs": [analog.__dict__ for analog in drug.analogs],
-            "combinations": [combination.__dict__ for combination in drug.combinations],
-            # "prices": [price.__dict__ for price in drug.prices],
-        }
-        return DrugSchema.model_validate(drug_dict)
-
     async def find_drug_by_query(self, user_query: str) -> Optional[DrugSchema]:
         """
         Поиск препарата по триграммному сходству с синонимами (один запрос).
@@ -78,7 +63,7 @@ class DrugRepository(BaseRepository):
         if not drug:
             return None
 
-        return self._convert_to_drug_schema(drug)
+        return drug.get_schema()
 
     async def get_with_all_relationships(self, drug_id: uuid.UUID, need_model: bool = False)\
             -> Union[Drug, DrugSchema, None]:
@@ -114,7 +99,7 @@ class DrugRepository(BaseRepository):
         if need_model:
             return drug
 
-        return self._convert_to_drug_schema(drug)
+        return drug.get_schema()
 
     async def create_drug(self, drug_name: str) -> DrugSchema:
         """
@@ -299,7 +284,7 @@ class DrugRepository(BaseRepository):
                     DrugResearch(
                         name=research.name,
                         description=research.description,
-                        date=research.publication_date,
+                        publication_date=research.publication_date,
                         url=research.url,
                         summary=research.summary,
                         journal=research.journal,

@@ -7,7 +7,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.pool import NullPool
 
-import app
+from app import main
 from drug_search.config import config
 from drug_search.infrastructure.database.repository.drug_repo import DrugRepository  # Писать везде АБСОЛЮТНЫЕ ПУТИ обязательно.
 from drug_search.infrastructure.database.repository.user_repo import UserRepository

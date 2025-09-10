@@ -1,6 +1,6 @@
 import pytest
 
-from drug_search.neuro_assistant.assistant import assistant
+from services.assistant_service import assistant
 from drug_search.infrastructure.database.models.drug import Drug, DrugSynonym
 from drug_search.core.schemas import DrugSchema
 from test_repository.test_drug_repo import create_test_drug_model

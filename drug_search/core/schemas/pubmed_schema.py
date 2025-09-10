@@ -30,7 +30,7 @@ class PubmedResearchSchema(BaseModel):
     results: Optional[str] = Field(None, description="результаты исследования")
 
 
-class ClearResearchsRequest(BaseModel):
+class ClearResearchesRequest(BaseModel):
     """Схема для запроса к ассистенту для обработки исследований с парсера. Включает название препарата."""
     researchs: list[PubmedResearchSchema]
     drug_name: str = Field(..., description="Название действующего вещества")

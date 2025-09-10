@@ -3,10 +3,10 @@ from uuid import UUID
 
 from fastapi import Depends
 
+from drug_search.core.services.assistant_service import Assistant
 from drug_search.core.schemas.telegram_schemas import AllowedDrugsSchema
 from drug_search.core.schemas.user_schemas import UserSchema
 from drug_search.infrastructure.database.repository.user_repo import UserRepository, get_user_repository
-from drug_search.neuro_assistant.assistant import assistant
 
 
 class UserService:
@@ -17,12 +17,12 @@ class UserService:
         """Разрешает препарат юзеру."""
         return await self.repo.allow_drug_to_user(user_id=user_id, drug_id=drug_id)
 
-    async def update_user_description(self, user_id: UUID) -> None:
+    async def update_user_description(self, user_id: UUID, assistant_service: Assistant) -> None:
         """Обновляет информацию описания юзера."""
         user: UserSchema = await self.repo.get(user_id)
         user_drugs = await self.repo.get_allowed_drug_names(user_id=user.id)
 
-        user_description = assistant.get_user_description(
+        user_description = assistant_service.get_user_description(
             user_name=user.first_name + user.last_name,
             user_drug_names=user_drugs
         )

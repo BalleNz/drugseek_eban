@@ -41,12 +41,16 @@ class IDMixin(DeclarativeBase):
     def schema_class(cls) -> Type[S]:
         raise NotImplementedError
 
-    def get_schema(self) -> S:
-        return self.schema_class.model_validate(self)
-
     @classmethod
     def from_pydantic(cls: Type[M], schema: S, **kwargs: Any) -> M:
         """Создает SQLAlchemy модель из схемы Pydantic"""
         model_data: dict = schema.model_dump(exclude_unset=True)
         return cls(**model_data, **kwargs)
 
+    def get_schema(self) -> S:
+        model_data = {}
+        for column in self.__table__.columns:
+            model_data[column.name] = getattr(self, column.name)
+
+        # 2. Затем передаём словарь в Pydantic для валидации
+        return self.schema_class.model_validate(model_data)

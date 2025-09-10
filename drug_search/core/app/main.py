@@ -24,10 +24,3 @@ def get_app() -> FastAPI:
 
 
 fastapi_app: FastAPI = get_app()
-
-if __name__ == "__main__":
-    uvicorn.run(
-        app=fastapi_app,
-        host=config.WEBAPP_HOST,
-        port=config.WEBAPP_PORT,
-    )

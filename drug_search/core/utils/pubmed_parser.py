@@ -2,7 +2,7 @@ from typing import Optional
 
 from pymed import PubMed
 
-from drug_search.neuro_assistant.assistant import assistant
+from services.assistant_service import assistant
 from drug_search.core.schemas import AssistantResponsePubmedQuery
 from drug_search.core.schemas.pubmed_schema import PubmedResearchSchema
 

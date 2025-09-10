@@ -1,21 +1,19 @@
 import json
 import logging
 from abc import ABC, abstractmethod
-from os import environ
-from typing import Union, Type
+from contextlib import asynccontextmanager
+from typing import Union, Type, AsyncGenerator, Sequence
 
-from dotenv import load_dotenv
 from openai import OpenAI, APIError
 from pydantic import ValidationError
 
 from drug_search.config import config
-from drug_search.core.schemas import AssistantResponseDrugResearchs, AssistantResponsePubmedQuery
-from drug_search.core.schemas.assistant_responses import AssistantDosageDescriptionResponse, \
-    AssistantResponseCombinations, \
-    AssistantResponseDrugPathways, AssistantResponseDrugValidation
-from drug_search.core.schemas.pubmed_schema import ClearResearchsRequest
+from drug_search.core.schemas import (AssistantResponseDrugResearchs, AssistantResponsePubmedQuery,
+                                      AssistantDosageDescriptionResponse, AssistantResponseCombinations,
+                                      AssistantResponseDrugPathways, AssistantResponseDrugValidation,
+                                      ClearResearchesRequest)
 from drug_search.core.utils.exceptions import AssistantResponseError
-from drug_search.neuro_assistant.prompts import Prompts
+from drug_search.core.lexicon import Prompts
 
 logger = logging.getLogger(__name__)
 
@@ -50,15 +48,24 @@ class AssistantInterface(ABC):
 
 
 class Assistant(AssistantInterface):
-    def __init__(self, DEEPSEEK_API_KEY: str):
-        self.client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
+    def __init__(self):
         self.prompts = Prompts()
+        self.client = None
+
+    async def __aenter__(self):
+        self.client = OpenAI(api_key=config.DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if self.client:
+            await self.client.close()
 
     def get_response(
             self,
             input_query: str,
             prompt: str,
-            pydantic_model: Type[AssistantResponseModel]
+            pydantic_model: Type[AssistantResponseModel],
+            temperature: float = 0.3
     ):
         # TODO: обработка нулевого баланса (отдельный метод) + Обработка если дипсик не работает (server is busy)
         try:
@@ -69,7 +76,7 @@ class Assistant(AssistantInterface):
                     {"role": "user", "content": f"{input_query}"}
                 ],
                 response_format={"type": "json_object"},
-                temperature=0.3
+                temperature=temperature
             )
 
             if not response.choices:
@@ -104,18 +111,23 @@ class Assistant(AssistantInterface):
         return self.get_response(input_query=drug_name, prompt=self.prompts.GET_DRUG_COMBINATIONS,
                                  pydantic_model=AssistantResponseCombinations)
 
-    def get_user_description(self, user_name: str, user_drug_names: list[str]) -> ...:
+    def get_user_description(self, user_name: str, user_drug_names: Sequence[str]) -> ...:
         user_drug_names_text = ', '.join(user_drug_names)
         user_query = user_name + ' ' + user_drug_names_text
         return self.get_response(input_query=user_query, prompt=self.prompts.GET_USER_DESCRIPTION,
                                  pydantic_model=None)
 
     def get_user_query_validation(self, user_query: str) -> AssistantResponseDrugValidation:
+        """
+        ВАЛИДИРУЕТ ЗАПРОС ПОЛЬЗОВАТЕЛЯ НА РЕАЛЬНОСТЬ ПРЕПАРАТА.
+        :param user_query: Запрос пользователя, предполагаемое название препарата
+        :returns: AssistantResponseDrugValidation с правильным ДВ | с None
+        """
         return self.get_response(input_query=user_query, prompt=self.prompts.DRUG_SEARCH_VALIDATION,
                                  pydantic_model=AssistantResponseDrugValidation)
 
     def get_clear_researchs(self,
-                            pubmed_researchs_with_drug_name: ClearResearchsRequest) -> AssistantResponseDrugResearchs:
+                            pubmed_researchs_with_drug_name: ClearResearchesRequest) -> AssistantResponseDrugResearchs:
         """
         Возвращает отфильтрованные исследования в лаконичном виде.
         :param pubmed_researchs_with_drug_name: Схема с исследованиями и названием ДВ.
@@ -148,8 +160,10 @@ class Assistant(AssistantInterface):
                                  pydantic_model=AssistantResponsePubmedQuery)
 
 
-assistant = Assistant(config.DEEPSEEK_API_KEY)
-
-
-async def get_assistant():
-    return Assistant(config.DEEPSEEK_API_KEY)
+@asynccontextmanager
+async def get_assistant() -> AsyncGenerator[Assistant, None]:
+    assistant: Assistant = Assistant()
+    try:
+        yield assistant
+    finally:
+        assistant.client.close()

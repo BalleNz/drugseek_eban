@@ -1,13 +1,13 @@
+from contextlib import asynccontextmanager
 from enum import Enum
 from uuid import UUID
 
 from redis.asyncio import Redis
 
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
-from drug_search.bot.api_client.drug_search_api import get_api_client
 from drug_search.config import config
-from drug_search.core.schemas import DrugSchema, UserTelegramDataSchema
-from drug_search.core.schemas.telegram_schemas import AllowedDrugsSchema
+from drug_search.core.schemas import DrugSchema, UserTelegramDataSchema, AllowedDrugsSchema
+from drug_search.infrastructure.redis_config import REDIS_POOL
 
 
 class CacheKeys(str, Enum):
@@ -119,10 +119,11 @@ class RedisService():
         await self.redis.delete(cache_key)
 
 
-async def get_redis_client() -> RedisService:
-    redis_url: str = config.REDIS_URL
-    redis_service = RedisService(
-        redis_client=Redis.from_url(url=redis_url),
-        api_client=await get_api_client()
-    )
-    return redis_service
+@asynccontextmanager
+async def get_redis():
+    """Создает клиент из пула для каждого запроса"""
+    redis = Redis(connection_pool=REDIS_POOL)
+    try:
+        yield redis
+    finally:
+        await redis.close()  # Возвращает в пул, не закрывает соединение

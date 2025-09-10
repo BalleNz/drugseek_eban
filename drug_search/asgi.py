@@ -1,13 +1,15 @@
 import uvicorn
 
 from drug_search.config import config
-from drug_search.core.app import fastapi_app
+from app.main import fastapi_app
 
 # FASTAPI APP
 app = fastapi_app
 
 # TELEGRAM BOT
 bot = ...
+
+# REDIS SINGLETONE
 
 if __name__ == "__main__":
     uvicorn.run(

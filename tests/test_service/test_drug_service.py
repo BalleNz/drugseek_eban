@@ -1,6 +1,5 @@
 import pytest
 
-from services.assistant_service import assistant
 from drug_search.infrastructure.database.models.drug import Drug, DrugSynonym
 from drug_search.core.schemas import DrugSchema
 from test_repository.test_drug_repo import create_test_drug_model
@@ -112,11 +111,11 @@ async def test_update_combinations(drug_service):
 
 
 @pytest.mark.asyncio
-async def test_update_researchs(drug_service, drug_repo):
+async def test_update_researches(drug_service, drug_repo):
     drug = create_test_drug_model()
     drug = await drug_repo.create(drug)
 
-    await drug_service.update_drug_researchs(drug_id=drug.id, drug_name=drug.name)
+    await drug_service.update_drug_researches(drug_id=drug.id, drug_name=drug.name)
 
     refreshed_drug: DrugSchema = await drug_repo.get_with_all_relationships(drug.id)
 

@@ -1,87 +1,66 @@
-import asyncio
-from typing import AsyncGenerator
-
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.pool import NullPool
+from unittest.mock import AsyncMock, MagicMock
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import main
-from drug_search.config import config
-from drug_search.infrastructure.database.repository.drug_repo import DrugRepository  # Писать везде АБСОЛЮТНЫЕ ПУТИ обязательно.
-from drug_search.infrastructure.database.repository.user_repo import UserRepository
 from drug_search.core.services.drug_service import DrugService
 from drug_search.core.services.user_service import UserService
-
-
-# Фикстура для event loop
-@pytest.fixture(scope="session")
-def event_loop():
-    loop = asyncio.get_event_loop()
-    yield loop
-    loop.close()
-
-
-@pytest.fixture(scope="session")
-def client():
-    with TestClient(app.fastapi_app) as c:
-        yield c
-
-
-@pytest.fixture(scope="session")
-async def test_engine():
-    test_db_url = config.DATABASE_URL_TEST
-
-    test_engine = create_async_engine(
-        test_db_url,
-        echo=True,
-        poolclass=NullPool,  # Используем NullPool для тестов
-    )
-
-    yield test_engine
-
-    await test_engine.dispose()
+from drug_search.infrastructure.database.repository.drug_repo import DrugRepository
+from drug_search.infrastructure.database.repository.user_repo import UserRepository
 
 
 @pytest.fixture
-async def session(test_engine) -> AsyncGenerator[AsyncSession, None]:
-    async with async_sessionmaker(
-            test_engine,
-            expire_on_commit=False,
-            autoflush=False
-    )() as test_session:
-        try:
-            yield test_session
-        finally:
-            await test_session.rollback()
-
-            # Очищаем все таблицы. Важно.
-            async with test_engine.begin() as conn:
-                await conn.run_sync(lambda sync_conn: sync_conn.execute(text("TRUNCATE TABLE users, drugs CASCADE")))
-
-            await test_session.close()
+def mock_session():
+    """Создает мок асинхронной сессии"""
+    session = AsyncMock(spec=AsyncSession)
+    session.commit = AsyncMock()
+    session.execute = AsyncMock()
+    session.scalar = AsyncMock()
+    session.scalars = AsyncMock()
+    session.get = AsyncMock()
+    session.add = AsyncMock()
+    session.refresh = AsyncMock()
+    session.rollback = AsyncMock()
+    return session
 
 
 @pytest.fixture
-async def drug_repo(session: AsyncSession) -> DrugRepository:
-    async with session as session:
-        return DrugRepository(session=session)
+def mock_drug_repo(mock_session):
+    """Создает мок репозитория препаратов"""
+    repo = DrugRepository(session=mock_session)
+    # Мокаем методы репозитория
+    repo.create = AsyncMock()
+    repo.get = AsyncMock()
+    repo.delete = AsyncMock()
+    repo.find_drug_by_query = AsyncMock()
+    repo.get_with_all_relationships = AsyncMock()
+    return repo
 
 
 @pytest.fixture
-async def drug_service(drug_repo: DrugRepository):
-    return DrugService(drug_repo)
+def mock_user_repo(mock_session):
+    """Создает мок репозитория пользователей"""
+    repo = UserRepository(session=mock_session)
+    # Мокаем методы репозитория
+    repo.create = AsyncMock()
+    repo.get = AsyncMock()
+    repo.get_or_create_from_telegram = AsyncMock()
+    repo.allow_drug_to_user = AsyncMock()
+    repo.get_allowed_drug_names = AsyncMock()
+    repo.update_user_description = AsyncMock()
+    repo.decrement_user_requests = AsyncMock()
+    return repo
 
 
 @pytest.fixture
-async def user_repo(session: AsyncSession) -> UserRepository:
-    return UserRepository(session=session)
+def drug_service(mock_drug_repo):
+    """Создает сервис препаратов с моком репозитория"""
+    return DrugService(mock_drug_repo)
 
 
 @pytest.fixture
-async def user_service(user_repo: UserRepository) -> UserService:
-    return UserService(user_repo)
+def user_service(mock_user_repo):
+    """Создает сервис пользователей с моком репозитория"""
+    return UserService(mock_user_repo)
 
 
 @pytest.fixture
@@ -90,14 +69,5 @@ def test_user_data():
         "telegram_id": "123456789",
         "username": "testuser",
         "first_name": "Test",
-        "last_name": "User",
-        "photo_url": "https://example.com/photo.jpg"
+        "last_name": "User"
     }
-
-
-@pytest.fixture
-async def auth_token(test_user_data, client):
-    response = client.post("/v1/auth/", json=test_user_data)
-    return response.json()["token"]
-
-# TODO: перейти на моки

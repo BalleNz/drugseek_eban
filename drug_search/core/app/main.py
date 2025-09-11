@@ -10,6 +10,7 @@ from drug_search.core.schemas.API_schemas.O2AuthSchema import jwt_openapi
 def get_app() -> FastAPI:
     app: FastAPI = FastAPI(
         title="DrugSearch API",
+        lifespan=None
     )
 
     # routers

@@ -2,9 +2,9 @@ from typing import Optional
 
 from pymed import PubMed
 
-from services.assistant_service import assistant
 from drug_search.core.schemas import AssistantResponsePubmedQuery
 from drug_search.core.schemas.pubmed_schema import PubmedResearchSchema
+from drug_search.core.services import Assistant
 
 
 class PubmedParser:
@@ -26,19 +26,20 @@ class PubmedParser:
         return str_authors
 
     @staticmethod
-    def __get_pubmed_query(drug_name: str) -> str:
-        assistant_response: AssistantResponsePubmedQuery = assistant.get_pubmed_query(drug_name=drug_name)
+    def __get_pubmed_query(drug_name: str, assistant_service: Assistant) -> str:
+        assistant_response: AssistantResponsePubmedQuery = assistant_service.get_pubmed_query(drug_name=drug_name)
         return assistant_response.pubmed_query
 
-    def get_researchs(self, drug_name: str) -> list[Optional[PubmedResearchSchema]]:
+    def get_researchs(self, drug_name: str, assistant_service: Assistant) -> list[Optional[PubmedResearchSchema]]:
         """
         Возвращает исследования по препарату с помощью парсера PubMed.
 
         Сам оптимизирует запрос специфично для PubMed с помощью ассистента.
 
+        :param assistant_service: экземпляр сервиса ассистента
         :param drug_name: Действующее вещество препарата.
         """
-        pubmed_query: str = self.__get_pubmed_query(drug_name=drug_name)
+        pubmed_query: str = self.__get_pubmed_query(drug_name=drug_name, assistant_service=assistant_service)
         pubmed_articles = self.pubmed.query(query=pubmed_query, max_results=50)
 
         researchs: list[Optional[PubmedResearchSchema, None]] = []

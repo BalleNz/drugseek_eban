@@ -143,25 +143,25 @@ class DrugSchema(BaseModel):
     dosages_fun_fact: Optional[str] = Field(default=None)
 
     synonyms: Optional[list[DrugSynonymResponse]] = Field(default_factory=list)  # в планах не подгружать лишний раз таблицу , пока будет пустая
-    dosages: list[DrugDosageResponse] = Field(default_factory=list)
-    pathways: list[DrugPathwayResponse] = Field(default_factory=list)
-    analogs: list[DrugAnalogSchemaRequest] = Field(default_factory=list)
-    combinations: list[DrugCombinationResponse] = Field(default_factory=list)
-    researchs: list[DrugResearchResponse] = Field(default_factory=list)
+    dosages: Optional[list[DrugDosageResponse]] = Field(default_factory=list)
+    pathways: Optional[list[DrugPathwayResponse]] = Field(default_factory=list)
+    analogs: Optional[list[DrugAnalogSchemaRequest]] = Field(default_factory=list)
+    combinations: Optional[list[DrugCombinationResponse]] = Field(default_factory=list)
+    researches: Optional[list[DrugResearchResponse]] = Field(default_factory=list)
 
     drug_prices: Optional[list[DrugPriceSchema]] = Field(default=None)  # FUTURE
 
     pathways_sources: Optional[list[str]] = Field(default_factory=list)  # TODO удалить
     dosages_sources: Optional[list[str]] = Field(default_factory=list)
 
-    primary_action: Optional[str] = Field(...)
-    secondary_actions: Optional[str] = Field(...)
-    clinical_effects: Optional[str] = Field(...)
+    primary_action: Optional[str] = Field(default=None)
+    secondary_actions: Optional[str] = Field(default=None)
+    clinical_effects: Optional[str] = Field(default=None)
 
-    created_at: datetime = Field(...)
-    updated_at: datetime = Field(...)
+    created_at: Optional[datetime] = Field(default=None)
+    updated_at: Optional[datetime] = Field(default=None)
 
-    is_danger: bool = Field(..., description="Является ли препарат запрещенным")
+    is_danger: Optional[bool] = Field(default=None, description="Является ли препарат запрещенным")
 
     class Config:
         from_attributes = True

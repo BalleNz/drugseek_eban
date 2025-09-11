@@ -58,7 +58,7 @@ class Assistant(AssistantInterface):
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if self.client:
-            await self.client.close()
+            self.client.close()
 
     def get_response(
             self,
@@ -99,15 +99,15 @@ class Assistant(AssistantInterface):
         except Exception as ex:
             raise ex
 
-    def get_dosage(self, drug_name: str) -> AssistantDosageDescriptionResponse:
+    async def get_dosage(self, drug_name: str) -> AssistantDosageDescriptionResponse:
         return self.get_response(input_query=drug_name, prompt=self.prompts.GET_DRUG_DESCRIPTION,
                                  pydantic_model=AssistantDosageDescriptionResponse)
 
-    def get_pathways(self, drug_name: str) -> AssistantResponseDrugPathways:
+    async def get_pathways(self, drug_name: str) -> AssistantResponseDrugPathways:
         return self.get_response(input_query=drug_name, prompt=self.prompts.GET_DRUG_PATHWAYS,
                                  pydantic_model=AssistantResponseDrugPathways)
 
-    def get_synergists(self, drug_name: str) -> AssistantResponseCombinations:
+    async def get_synergists(self, drug_name: str) -> AssistantResponseCombinations:
         return self.get_response(input_query=drug_name, prompt=self.prompts.GET_DRUG_COMBINATIONS,
                                  pydantic_model=AssistantResponseCombinations)
 
@@ -152,7 +152,7 @@ class Assistant(AssistantInterface):
         return self.get_response(input_query=input_query, prompt=self.prompts.GET_DRUG_RESEARCHS,
                                  pydantic_model=AssistantResponseDrugResearchs)
 
-    def get_pubmed_query(self, drug_name: str) -> str:
+    def get_pubmed_query(self, drug_name: str) -> AssistantResponsePubmedQuery:
         """
         Возвращает оптимизированный поисковой запрос для Pubmed исходя из названия действующего вещества.
         """
@@ -162,8 +162,5 @@ class Assistant(AssistantInterface):
 
 @asynccontextmanager
 async def get_assistant() -> AsyncGenerator[Assistant, None]:
-    assistant: Assistant = Assistant()
-    try:
+    async with Assistant() as assistant:
         yield assistant
-    finally:
-        assistant.client.close()

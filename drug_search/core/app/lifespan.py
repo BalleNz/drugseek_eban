@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from redis.asyncio import ConnectionPool
 from redis.exceptions import RedisError
 
-from .redis_config import REDIS_URL
+from drug_search.infrastructure.redis_config import REDIS_URL
 
 
 @asynccontextmanager

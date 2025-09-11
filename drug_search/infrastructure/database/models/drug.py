@@ -111,7 +111,7 @@ class Drug(IDMixin, TimestampsMixin):
             pathways=[pathway.get_schema() for pathway in self.pathways] if self.pathways else [],
             analogs=[analog.get_schema() for analog in self.analogs] if self.analogs else [],
             combinations=[comb.get_schema() for comb in self.combinations] if self.combinations else [],
-            researchs=[research.get_schema() for research in self.researchs] if self.researchs else [],
+            researches=[research.get_schema() for research in self.researchs] if self.researchs else [],
 
             drug_prices=[price.get_schema() for price in self.prices] if self.prices else None,
 

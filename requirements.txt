@@ -11,7 +11,9 @@ aiogram==3.22.0
 aiohappyeyeballs==2.6.1
     # via aiohttp
 aiohttp==3.12.15
-    # via aiogram
+    # via
+    #   -r requirements.in
+    #   aiogram
 aiosignal==1.4.0
     # via aiohttp
 annotated-types==0.7.0
@@ -88,6 +90,12 @@ pydantic-settings==2.10.1
 pyjwt==2.10.1
     # via -r requirements.in
 pymed==0.8.9
+    # via -r requirements.in
+python-dotenv==1.1.1
+    # via
+    #   dotenv
+    #   pydantic-settings
+redis==6.4.0
     # via -r requirements.in
 requests==2.32.4
     # via pymed

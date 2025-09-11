@@ -1,7 +1,7 @@
 import uvicorn
 
 from drug_search.config import config
-from app.main import fastapi_app
+from drug_search.core.app.main import fastapi_app
 
 # FASTAPI APP
 app = fastapi_app

@@ -13,7 +13,7 @@ S = TypeVar("S", bound=BaseModel)
 
 class BaseRepository(Generic[M]):
     def __init__(self, model: Type[M], session: AsyncSession):
-        self.model = model  # table model
+        self.model = model
         self.session = session
 
     async def save(self, model: M) -> S:
@@ -23,8 +23,13 @@ class BaseRepository(Generic[M]):
         await self.session.refresh(model)
         return model.get_schema()
 
+    async def save_from_schema(self, schema: S) -> S:
+        """Saves all changes and refresh model."""
+        model: M = self.model.from_pydantic(schema)
+        return await self.save(model)
+
     async def get(self, id: UUID) -> Optional[S]:
-        """Get model by primary key ID."""
+        """Get schema by primary key ID."""
         model: M = await self.session.get(self.model, id)
         return model.get_schema()
 

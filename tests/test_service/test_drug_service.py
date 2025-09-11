@@ -120,7 +120,7 @@ async def test_update_researchs(drug_service, drug_repo):
 
     refreshed_drug: DrugSchema = await drug_repo.get_with_all_relationships(drug.id)
 
-    for research in refreshed_drug.researchs:
+    for research in refreshed_drug.researches:
         assert research.interest
         assert research.authors
         assert research.description

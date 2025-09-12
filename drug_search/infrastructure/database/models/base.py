@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from datetime import datetime
-from typing import Type, Any, TypeVar
+from typing import Type, Any, TypeVar, Optional, Union
 
 from pydantic import BaseModel
 from sqlalchemy.dialects.postgresql import UUID
@@ -45,12 +45,42 @@ class IDMixin(DeclarativeBase):
     def from_pydantic(cls: Type[M], schema: S, **kwargs: Any) -> M:
         """Создает SQLAlchemy модель из схемы Pydantic"""
         model_data: dict = schema.model_dump(exclude_unset=True)
-        return cls(**model_data, **kwargs)
 
-    def get_schema(self) -> S:
+        relationships = [rel.key for rel in cls.__mapper__.relationships]
+
+        rel_data: dict = dict()
+        for rel in relationships:
+            if rel in model_data:
+                rel_data[rel] = model_data.pop(rel)
+
+        model: M = cls(**model_data, **kwargs)
+
+        for rel_name, rel_items in rel_data.items():
+            if rel_items is not None:
+                # Получаем класс связанной модели из отношения
+                rel_property = getattr(cls, rel_name).property
+                rel_class = rel_property.mapper.class_
+
+                # Создаем объекты связанных моделей
+                related_objects = []
+                for item_data in rel_items:
+                    if isinstance(item_data, dict):
+                        # Если это словарь, создаем объект модели
+                        related_objects.append(rel_class(**item_data))
+                    else:
+                        # Если это Pydantic модель, конвертируем в SQLAlchemy
+                        related_objects.append(rel_class.from_pydantic(item_data))
+                setattr(model, rel_name, related_objects)
+        return model
+
+    def get_schema(self) -> Union[S, list[None]]:
         model_data = {}
-        for column in self.__table__.columns:
-            model_data[column.name] = getattr(self, column.name)
+        schema_fields = self.schema_class.model_fields.keys()
 
-        # 2. Затем передаём словарь в Pydantic для валидации
-        return self.schema_class.model_validate(model_data)
+        for column in self.__table__.columns:
+            # проверка, есть ли такой столбец в схеме
+            if column.name in schema_fields:
+                model_data[column.name] = getattr(self, column.name)
+        if model_data:
+            return self.schema_class.model_validate(model_data)
+        return []

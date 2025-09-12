@@ -8,8 +8,8 @@ from sqlalchemy.dialects.postgresql import UUID as PG_UUID  # Важно имп�
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from drug_search.infrastructure.database.models.base import TimestampsMixin, IDMixin
-from drug_search.core.schemas import DrugAnalogResponse, DrugCombinationResponse, DrugPathwayResponse, \
-    DrugResearchResponse, DrugSynonymResponse, DrugDosageResponse, DrugSchema
+from drug_search.core.schemas import DrugAnalogSchema, DrugCombinationSchema, DrugPathwaySchema, \
+    DrugResearchSchema, DrugSynonymSchema, DrugDosageSchema, DrugSchema
 
 M = TypeVar("M", bound=IDMixin)
 S = TypeVar("S", bound=BaseModel)
@@ -80,7 +80,7 @@ class Drug(IDMixin, TimestampsMixin):
         lazy="selectin"
     )
 
-    researchs: Mapped[list["DrugResearch"]] = relationship(
+    researches: Mapped[list["DrugResearch"]] = relationship(
         back_populates="drug",
         cascade="all, delete-orphan",
         lazy="selectin"
@@ -95,6 +95,8 @@ class Drug(IDMixin, TimestampsMixin):
         return DrugSchema
 
     def get_schema(self) -> DrugSchema:
+        def _map_schemas(items):
+            return [item_schema for item in items if (item_schema := item.get_schema())] if items else []
         return DrugSchema(
             id=self.id,
             name=self.name,
@@ -106,14 +108,14 @@ class Drug(IDMixin, TimestampsMixin):
 
             is_danger=self.is_danger,
 
-            synonyms=[syn.get_schema() for syn in self.synonyms] if self.synonyms else [],
-            dosages=[dosage.get_schema() for dosage in self.dosages] if self.dosages else [],
-            pathways=[pathway.get_schema() for pathway in self.pathways] if self.pathways else [],
-            analogs=[analog.get_schema() for analog in self.analogs] if self.analogs else [],
-            combinations=[comb.get_schema() for comb in self.combinations] if self.combinations else [],
-            researches=[research.get_schema() for research in self.researchs] if self.researchs else [],
+            synonyms=_map_schemas(self.synonyms),
+            dosages=_map_schemas(self.dosages),
+            pathways=_map_schemas(self.pathways),
+            analogs=_map_schemas(self.analogs),
+            combinations=_map_schemas(self.combinations),
+            researches=_map_schemas(self.researches),
 
-            drug_prices=[price.get_schema() for price in self.prices] if self.prices else None,
+            drug_prices=None,
 
             pathways_sources=self.pathways_sources if self.pathways_sources else [],
             dosages_sources=self.dosages_sources if self.dosages_sources else [],
@@ -124,7 +126,7 @@ class Drug(IDMixin, TimestampsMixin):
 
             created_at=self.created_at,
             updated_at=self.updated_at
-        )
+        )  # TODO сделать в базовой модели
 
 
 class DrugAnalog(IDMixin):
@@ -144,7 +146,7 @@ class DrugAnalog(IDMixin):
 
     @property
     def schema_class(cls) -> Type[S]:
-        return DrugAnalogResponse
+        return DrugAnalogSchema
 
 
 class DrugSynonym(IDMixin):
@@ -181,7 +183,7 @@ class DrugSynonym(IDMixin):
 
     @property
     def schema_class(cls) -> Type[S]:
-        return DrugSynonymResponse
+        return DrugSynonymSchema
 
 
 class DrugCombination(IDMixin):
@@ -203,7 +205,7 @@ class DrugCombination(IDMixin):
 
     @property
     def schema_class(cls) -> Type[S]:
-        return DrugCombinationResponse
+        return DrugCombinationSchema
 
 
 class DrugPathway(IDMixin):
@@ -217,18 +219,14 @@ class DrugPathway(IDMixin):
     drug: Mapped["Drug"] = relationship(back_populates="pathways")
 
     # Основные поля для хранения данных о путях активации
-    receptor: Mapped[str] = mapped_column(String(100),
-                                          nullable=False)  # Название рецептора (например, "α2A-адренорецептор")
-    binding_affinity: Mapped[Optional[str]] = mapped_column(String(50))  # Ki/IC50/EC50 (например, "Ki = 2.1 нМ")
-    affinity_description: Mapped[Optional[str]] = mapped_column(
-        String(100))  # Описание силы связывания (например, "очень сильное связывание")
-    activation_type: Mapped[str] = mapped_column(String(50), nullable=False)  # Тип активации (например, "antagonist")
-    pathway: Mapped[Optional[str]] = mapped_column(String(100))  # Сигнальный путь (например, "Gi/o protein cascade")
-    effect: Mapped[Optional[str]] = mapped_column(
-        String(100))  # Физиологический эффект (например, "повышение норадреналина")
+    receptor: Mapped[str] = mapped_column(String(100), nullable=False)  # название рецептора
+    binding_affinity: Mapped[Optional[str]] = mapped_column(String(50))  # сила связывания
+    affinity_description: Mapped[Optional[str]] = mapped_column(String(100))  # сила связывания
+    activation_type: Mapped[str] = mapped_column(String(50), nullable=False)  # тип активации
+    pathway: Mapped[Optional[str]] = mapped_column(String(100))  # сигнальный путь
+    effect: Mapped[Optional[str]] = mapped_column(String(100))  # физиологический эффект
 
-    # Дополнительные технические поля
-    note: Mapped[Optional[str]] = mapped_column(Text)  # Дополнительные примечания
+    note: Mapped[Optional[str]] = mapped_column(Text)  # дополнительные примечания
 
     __table_args__ = (
         UniqueConstraint('drug_id', 'receptor', 'activation_type', name='uq_drug_pathway'),
@@ -236,7 +234,7 @@ class DrugPathway(IDMixin):
 
     @property
     def schema_class(cls) -> Type[S]:
-        return DrugPathwayResponse
+        return DrugPathwaySchema
 
 
 class DrugPrice(IDMixin, TimestampsMixin):
@@ -304,7 +302,7 @@ class DrugDosage(IDMixin):
 
     @property
     def schema_class(cls) -> Type[S]:
-        return DrugDosageResponse
+        return DrugDosageSchema
 
 
 class DrugResearch(IDMixin):
@@ -312,11 +310,11 @@ class DrugResearch(IDMixin):
 
     drug_id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True),
-        ForeignKey("drugs.id", ondelete="CASCADE", name="fk_drug_researchs_drug_id"),
+        ForeignKey("drugs.id", ondelete="CASCADE", name="fk_drug_researches_drug_id"),
         nullable=False,
         index=True
     )
-    drug: Mapped["Drug"] = relationship(back_populates="researchs")
+    drug: Mapped["Drug"] = relationship(back_populates="researches")
 
     name: Mapped[str] = mapped_column(String(255))
     description: Mapped[str] = mapped_column(Text)
@@ -330,9 +328,9 @@ class DrugResearch(IDMixin):
     interest: Mapped[float] = mapped_column()
 
     __table_args__ = (
-        Index('idx_drug_researchs_doi', doi, unique=True),
+        Index('idx_drug_researches_doi', doi, unique=True),
     )
 
     @property
     def schema_class(cls) -> Type[S]:
-        return DrugResearchResponse
+        return DrugResearchSchema

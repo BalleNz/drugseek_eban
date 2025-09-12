@@ -18,9 +18,7 @@ class Pharmacokinetics(BaseModel):
     time_to_peak: Optional[str] = Field(default=None, description="время до достижения Cmax")
 
 
-class DrugSynonymResponse(BaseModel):
-    id: UUID
-    drug_id: UUID
+class DrugSynonymSchema(BaseModel):
     synonym: str
 
     class Config:
@@ -36,9 +34,7 @@ class DrugAnalogSchemaRequest(BaseModel):
         from_attributes = True
 
 
-class DrugAnalogResponse(BaseModel):
-    id: UUID
-    drug_id: UUID
+class DrugAnalogSchema(BaseModel):
     analog_name: str = Field(...)
     percent: float = Field(...)
     difference: str = Field(...)
@@ -47,9 +43,7 @@ class DrugAnalogResponse(BaseModel):
         from_attributes = True
 
 
-class DrugCombinationResponse(BaseModel):
-    id: UUID = Field(...)
-    drug_id: UUID
+class DrugCombinationSchema(BaseModel):
     combination_type: CombinationType
     substance: str
     effect: str
@@ -61,11 +55,8 @@ class DrugCombinationResponse(BaseModel):
         from_attributes = True
 
 
-class DrugDosageResponse(BaseModel):
+class DrugDosageSchema(BaseModel):
     """Схема дозировки препарата из таблицы drug_dosages."""
-    id: UUID = Field(...)
-    drug_id: UUID = Field(...)
-
     route: str = Field(...)
     method: Optional[str] = Field(default=None)
 
@@ -84,10 +75,8 @@ class DrugDosageResponse(BaseModel):
         from_attributes = True
 
 
-class DrugPathwayResponse(BaseModel):
+class DrugPathwaySchema(BaseModel):
     """Схема одной записи из таблицы drug_pathways"""
-    id: UUID = Field(...)
-    drug_id: UUID
     receptor: str = Field(...)
     binding_affinity: Optional[str] = Field(default=None)
     affinity_description: str = Field(...)
@@ -114,9 +103,7 @@ class DrugPriceSchema(BaseModel):
         from_attributes = True
 
 
-class DrugResearchResponse(BaseModel):
-    id: UUID
-    drug_id: UUID
+class DrugResearchSchema(BaseModel):
     name: str = Field(..., description="название исследования")
     description: str = Field(..., description="описание исследования")
     publication_date: date = Field(..., description="дата публикации")
@@ -142,14 +129,14 @@ class DrugSchema(BaseModel):
     classification: Optional[str] = Field(default=None)
     dosages_fun_fact: Optional[str] = Field(default=None)
 
-    synonyms: Optional[list[DrugSynonymResponse]] = Field(default_factory=list)  # в планах не подгружать лишний раз таблицу , пока будет пустая
-    dosages: Optional[list[DrugDosageResponse]] = Field(default_factory=list)
-    pathways: Optional[list[DrugPathwayResponse]] = Field(default_factory=list)
+    synonyms: Optional[list[DrugSynonymSchema]] = Field(default_factory=list)  # в планах не подгружать лишний раз таблицу , пока будет пустая
+    dosages: Optional[list[DrugDosageSchema]] = Field(default_factory=list)
+    pathways: Optional[list[DrugPathwaySchema]] = Field(default_factory=list)
     analogs: Optional[list[DrugAnalogSchemaRequest]] = Field(default_factory=list)
-    combinations: Optional[list[DrugCombinationResponse]] = Field(default_factory=list)
-    researches: Optional[list[DrugResearchResponse]] = Field(default_factory=list)
+    combinations: Optional[list[DrugCombinationSchema]] = Field(default_factory=list)
+    researches: Optional[list[DrugResearchSchema]] = Field(default_factory=list)
 
-    drug_prices: Optional[list[DrugPriceSchema]] = Field(default=None)  # FUTURE
+    prices: Optional[list[DrugPriceSchema]] = Field(default=None)  # FUTURE
 
     pathways_sources: Optional[list[str]] = Field(default_factory=list)  # TODO удалить
     dosages_sources: Optional[list[str]] = Field(default_factory=list)

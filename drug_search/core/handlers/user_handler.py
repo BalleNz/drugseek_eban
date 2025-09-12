@@ -3,11 +3,10 @@ from typing import Annotated
 from fastapi import APIRouter
 from fastapi.params import Depends
 
-from drug_search.core.schemas import UserSchema
+from drug_search.core.schemas import UserSchema, AllowedDrugsSchema
 from drug_search.core.schemas.API_schemas.api_requests import AddTokensRequest
 from drug_search.core.services.user_service import UserService, get_user_service
 from drug_search.core.utils.auth import get_auth_user
-from drug_search.core.schemas.telegram_schemas import AllowedDrugsSchema
 
 user_router = APIRouter(prefix="/user")
 

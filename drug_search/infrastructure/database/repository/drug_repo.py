@@ -56,7 +56,7 @@ class DrugRepository(BaseRepository):
                 selectinload(Drug.synonyms),
                 selectinload(Drug.combinations),
                 selectinload(Drug.prices),
-                selectinload(Drug.researchs)
+                selectinload(Drug.researches)
             )
         )
 
@@ -91,7 +91,7 @@ class DrugRepository(BaseRepository):
                 selectinload(Drug.synonyms),
                 selectinload(Drug.combinations),
                 selectinload(Drug.prices),
-                selectinload(Drug.researchs)
+                selectinload(Drug.researches)
             )
         )
 
@@ -134,7 +134,7 @@ class DrugRepository(BaseRepository):
             drug.time_to_peak = assistant_response.pharmacokinetics.time_to_peak
             dosages_data = []
             for route, methods in assistant_response.dosages.items():
-                if methods:
+                if methods and route:
                     for method, params in methods.items():
                         if params:
                             dosage = DrugDosage(
@@ -245,8 +245,8 @@ class DrugRepository(BaseRepository):
         if not drug:
             raise DrugNotFound
         try:
-            old_researches_doi = [res.doi for res in drug.researchs]
-            new_researches = drug.researchs.copy()
+            old_researches_doi = [res.doi for res in drug.researches]
+            new_researches = drug.researches.copy()
             for research in researches:
                 if research.doi in old_researches_doi:
                     continue
@@ -264,7 +264,7 @@ class DrugRepository(BaseRepository):
                         interest=research.interest
                     )
                 )
-                drug.researchs += new_researches
+                drug.researches += new_researches
         except Exception as ex:
             logger.error(f"Error while updating researches model: {ex}")
             raise ex

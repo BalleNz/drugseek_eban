@@ -8,7 +8,7 @@ from openai import OpenAI, APIError
 from pydantic import ValidationError
 
 from drug_search.config import config
-from drug_search.core.schemas import (AssistantResponseDrugResearchs, AssistantResponsePubmedQuery,
+from drug_search.core.schemas import (AssistantResponseDrugResearches, AssistantResponsePubmedQuery,
                                       AssistantDosageDescriptionResponse, AssistantResponseCombinations,
                                       AssistantResponseDrugPathways, AssistantResponseDrugValidation,
                                       ClearResearchesRequest)
@@ -22,7 +22,7 @@ AssistantResponseModel = Union[
     AssistantDosageDescriptionResponse,
     AssistantResponseCombinations,
     AssistantResponseDrugValidation,
-    AssistantResponseDrugResearchs,
+    AssistantResponseDrugResearches,
     None,
 ]
 
@@ -90,6 +90,7 @@ class Assistant(AssistantInterface):
                 return response.choices[0].message.content
             except ValidationError as e:
                 logger.error(f"Validation error: {e}")
+                logger.error(f"Input Query: {input_query}")
                 logger.error(f"Raw response: {response.choices[0].message.content}\n\n"
                              f"Model: {pydantic_model}")
                 raise ValueError(f"Invalid assistant response: {e}")
@@ -124,33 +125,33 @@ class Assistant(AssistantInterface):
         :returns: AssistantResponseDrugValidation с правильным ДВ | с None
         """
         return self.get_response(input_query=user_query, prompt=self.prompts.DRUG_SEARCH_VALIDATION,
-                                 pydantic_model=AssistantResponseDrugValidation)
+                                 pydantic_model=AssistantResponseDrugValidation, temperature=0.7)
 
-    def get_clear_researchs(self,
-                            pubmed_researchs_with_drug_name: ClearResearchesRequest) -> AssistantResponseDrugResearchs:
+    def get_clear_researches(self,
+                             pubmed_researches_with_drug_name: ClearResearchesRequest) -> AssistantResponseDrugResearches:
         """
         Возвращает отфильтрованные исследования в лаконичном виде.
-        :param pubmed_researchs_with_drug_name: Схема с исследованиями и названием ДВ.
+        :param pubmed_researches_with_drug_name: Схема с исследованиями и названием ДВ.
         :return: Схема с лаконичным видом исследований.
         """
 
         def get_raw_researchs_request_from_pydantic() -> str:
             """Превращение Pydantic схемы в строку"""
             json_query = {
-                "drug_name": pubmed_researchs_with_drug_name.drug_name,
-                "researchs": [
+                "drug_name": pubmed_researches_with_drug_name.drug_name,
+                "researches": [
                     {
                         **research.model_dump(exclude_none=True),
                         "publication_date": research.publication_date.isoformat()
                     }
-                    for research in pubmed_researchs_with_drug_name.researchs
+                    for research in pubmed_researches_with_drug_name.researches
                 ]
             }
             return json.dumps(json_query, indent=4, ensure_ascii=False)
 
         input_query = get_raw_researchs_request_from_pydantic()
-        return self.get_response(input_query=input_query, prompt=self.prompts.GET_DRUG_RESEARCHS,
-                                 pydantic_model=AssistantResponseDrugResearchs)
+        return self.get_response(input_query=input_query, prompt=self.prompts.GET_DRUG_RESEARCHES,
+                                 pydantic_model=AssistantResponseDrugResearches)
 
     def get_pubmed_query(self, drug_name: str) -> AssistantResponsePubmedQuery:
         """

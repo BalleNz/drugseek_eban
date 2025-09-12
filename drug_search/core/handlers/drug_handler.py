@@ -144,10 +144,10 @@ async def get_drug(
 
 
 @drug_router.post(
-    path="/update/researchs/{drug_id}",
+    path="/update/researches/{drug_id}",
     description="Обновляет исследования для препарата"
 )
-async def update_drug_researchs(
+async def update_drug_researches(
         user: Annotated[UserSchema, Depends(get_auth_user)],
         drug_service: Annotated[DrugService, Depends(get_drug_service)],
         user_service: Annotated[UserService, Depends(get_user_service)],
@@ -159,6 +159,6 @@ async def update_drug_researchs(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов.")
 
     await user_service.reduce_tokens(user.id, 1)
-    await drug_service.update_drug_researchs(drug_id, assistant_service=assistant_service)
+    await drug_service.update_drug_researches(drug_id, assistant_service=assistant_service)
 
     return await drug_service.repo.get(drug_id)

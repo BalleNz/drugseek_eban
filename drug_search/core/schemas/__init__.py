@@ -4,7 +4,7 @@ from drug_search.core.schemas.assistant_responses import *
 from drug_search.core.schemas.drug_schemas import *
 from drug_search.core.schemas.telegram_schemas import *
 from drug_search.core.schemas.user_schemas import *
-from drug_search.core.schemas.pubmed_schema import ClearResearchesRequest
+from drug_search.core.schemas.pubmed_schema import ClearResearchesRequest, PubmedResearchSchema
 
 __all__ = [
     #  Assistant Response
@@ -13,25 +13,26 @@ __all__ = [
     'AssistantResponseCombinations',
     'AssistantResponseDrugPathways',
     'AssistantResponseDrugResearch',
-    'AssistantResponseDrugResearchs',
+    'AssistantResponseDrugResearches',
     'AssistantResponsePubmedQuery',
     'ClearResearchesRequest',
     #  Drug Schema
     'DrugSchema',
-    'DrugDosageResponse',
-    'DrugPathwayResponse',
-    'DrugSynonymResponse',
+    'DrugDosageSchema',
+    'DrugPathwaySchema',
+    'DrugSynonymSchema',
     'DrugAnalogSchemaRequest',
-    'DrugAnalogResponse',
-    'DrugResearchResponse',
+    'DrugAnalogSchema',
+    'DrugResearchSchema',
     'DrugPriceSchema',
     'DrugExistingResponse',
-    'DrugCombinationResponse',
+    'DrugCombinationSchema',
     'Pathway',
     'MechanismSummary',
     'Pharmacokinetics',
     'CombinationType',
     'EXIST_STATUS',
+    'PubmedResearchSchema',
     #  User Schema
     'UserSchema',
     'UserTelegramDataSchema',

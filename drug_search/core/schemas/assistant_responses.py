@@ -104,8 +104,8 @@ class AssistantResponseDrugResearch(BaseModel):
                             description="насколько исследование интересно <число с плавающей точкой, где 1.00 — максимально интересное>")
 
 
-class AssistantResponseDrugResearchs(BaseModel):
-    researchs: list[AssistantResponseDrugResearch]
+class AssistantResponseDrugResearches(BaseModel):
+    researches: list[AssistantResponseDrugResearch]
 
 
 class AssistantResponsePubmedQuery(BaseModel):

@@ -20,7 +20,7 @@ class UserRepository(BaseRepository):
     def __init__(self, session: AsyncSession):
         super().__init__(model=User, session=session)
 
-    async def get_user(self, user_id: uuid.UUID) -> UserSchema:
+    async def get_user(self, user_id: uuid.UUID) -> UserSchema | None:
         """Возвращает модель юзер со всеми смежными таблицами"""
         stmt = (
             select(User).where(
@@ -31,7 +31,10 @@ class UserRepository(BaseRepository):
             )
         )
         result = await self.session.execute(stmt)
-        return UserSchema.model_validate(result.scalar_one_or_none())
+        user: User | None = result.scalar_one_or_none()
+        if user:
+            return user.get_schema()
+        return None
 
     async def get_or_create_from_telegram(self, telegram_user: UserTelegramDataSchema) -> UserSchema | None:
         """

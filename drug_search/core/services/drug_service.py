@@ -6,9 +6,8 @@ from typing import Optional
 from fastapi import Depends
 from pydantic import ValidationError
 
-from drug_search.core.schemas import AssistantResponseDrugResearch
-from drug_search.core.schemas.drug_schemas import DrugSchema
-from drug_search.core.schemas.pubmed_schema import PubmedResearchSchema, ClearResearchesRequest
+from drug_search.core.schemas import (AssistantResponseDrugResearch, DrugSchema,
+                                      PubmedResearchSchema, ClearResearchesRequest)
 from drug_search.core.services.assistant_service import Assistant
 from drug_search.core.utils.pubmed_parser import get_pubmed_parser, PubmedParser
 from drug_search.infrastructure.database.repository.drug_repo import DrugRepository, get_drug_repository
@@ -28,7 +27,11 @@ class DrugService:
         drug: DrugSchema = await self.repo.find_drug_by_query(user_query=user_query)
         return drug
 
-    async def update_drug(self, drug_in_process: DrugSchema, assistant_service: Assistant) -> DrugSchema:
+    async def update_drug(
+            self,
+            drug_in_process: DrugSchema,
+            assistant_service: Assistant
+    ) -> DrugSchema:
         """
         Обновляет все поля препарата, кроме исследований.
 
@@ -58,8 +61,8 @@ class DrugService:
 
             await self.repo.save_from_schema(drug)
 
-            # Отдельный метод для исследований, тк исследования будут обновляться с выходом новых версий модели Deepseek.
-            # Изначально список исследований не будет доступен и будет за доп плату в виде N токенов.
+            # Отдельный метод для исследований, тк исследования будут обновляться с выходом новых версий модели
+            # Deepseek. Изначально список исследований не будет доступен и будет за доп плату в виде N токенов.
 
         except Exception as ex:
             logger.error(f"Ошибка при обновлении препарата.")
@@ -85,7 +88,7 @@ class DrugService:
             logger.error(f"Ошибка при создании препарата: {ex}")
             raise ex
 
-    async def update_drug_researchs(self, drug_id: uuid.UUID, assistant_service: Assistant) -> None:
+    async def update_drug_researches(self, drug_id: uuid.UUID, assistant_service: Assistant) -> None:
         """
         Обновляет таблицу с исследованиями препарата. Можно отдельно обновлять без обновления всего препарата целиком.
         """
@@ -95,7 +98,7 @@ class DrugService:
 
             try:
                 pubmed_parser: PubmedParser = get_pubmed_parser()
-                pubmed_researches: list[Optional[PubmedResearchSchema]] = pubmed_parser.get_researchs(
+                pubmed_researches: list[Optional[PubmedResearchSchema]] = pubmed_parser.get_researches(
                     drug_name=drug_name,
                     assistant_service=assistant_service
                 )
@@ -105,7 +108,7 @@ class DrugService:
 
             try:
                 pubmed_researches_with_drug_name = ClearResearchesRequest(
-                    researchs=pubmed_researches,
+                    researches=pubmed_researches,
                     drug_name=drug_name
                 )
             except ValidationError as ex:
@@ -113,8 +116,8 @@ class DrugService:
                 raise ex
 
             try:
-                drug_researches: list[AssistantResponseDrugResearch] = assistant_service.get_clear_researchs(
-                    pubmed_researchs_with_drug_name=pubmed_researches_with_drug_name
+                drug_researches: list[AssistantResponseDrugResearch] = assistant_service.get_clear_researches(
+                    pubmed_researches_with_drug_name=pubmed_researches_with_drug_name
                 ).researches
             except Exception as ex:
                 logger.error(f"Ошибка при получении исследований ассистентом: {ex}")

@@ -12,3 +12,4 @@ greenlet
 dotenv
 aiohttp
 redis
+pytest

@@ -47,7 +47,6 @@ class User(IDMixin, TimestampsMixin):
 
     __table_args__ = (
         Index('uq_users_telegram_id', 'telegram_id', unique=True),
-        Index('uq_users_username', 'username', unique=True),
     )
 
     @property

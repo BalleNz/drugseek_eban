@@ -85,7 +85,7 @@ class DrugSearchAPIClient(BaseHttpClient):
             access_token=access_token
         )
 
-    async def update_drug_researchs(
+    async def update_drug_researches(
             self,
             drug_id: UUID,
             access_token: str

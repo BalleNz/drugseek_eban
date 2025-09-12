@@ -30,7 +30,7 @@ class PubmedParser:
         assistant_response: AssistantResponsePubmedQuery = assistant_service.get_pubmed_query(drug_name=drug_name)
         return assistant_response.pubmed_query
 
-    def get_researchs(self, drug_name: str, assistant_service: Assistant) -> list[Optional[PubmedResearchSchema]]:
+    def get_researches(self, drug_name: str, assistant_service: Assistant) -> list[Optional[PubmedResearchSchema]]:
         """
         Возвращает исследования по препарату с помощью парсера PubMed.
 
@@ -42,7 +42,7 @@ class PubmedParser:
         pubmed_query: str = self.__get_pubmed_query(drug_name=drug_name, assistant_service=assistant_service)
         pubmed_articles = self.pubmed.query(query=pubmed_query, max_results=50)
 
-        researchs: list[Optional[PubmedResearchSchema, None]] = []
+        researches: list[Optional[PubmedResearchSchema, None]] = []
 
         for pubmed_article in pubmed_articles:
             # пропуск артиклей с несколькими doi и pubmed_id
@@ -53,7 +53,7 @@ class PubmedParser:
                 # Заканчивает цикл, если итерация пустая
                 break
 
-            researchs.append(
+            researches.append(
                 PubmedResearchSchema(
                     title=pubmed_article.title,
                     abstract=pubmed_article.abstract,
@@ -66,9 +66,9 @@ class PubmedParser:
                     results=pubmed_article.results
                 )
             )
-        if len(researchs) > 20:
-            researchs = [research for research in researchs if research.conclusion]
-        return researchs[:10]  # первые 10 исследований, чтобы не перегружать нейронку
+        if len(researches) > 20:
+            researches = [research for research in researches if research.conclusion]
+        return researches[:10]  # первые 10 исследований, чтобы не перегружать нейронку
 
 
 pubmed_parser = PubmedParser()

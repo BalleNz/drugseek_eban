@@ -40,7 +40,7 @@ class PubmedParser:
         :param drug_name: Действующее вещество препарата.
         """
         pubmed_query: str = self.__get_pubmed_query(drug_name=drug_name, assistant_service=assistant_service)
-        pubmed_articles = self.pubmed.query(query=pubmed_query, max_results=50)
+        pubmed_articles = self.pubmed.query(query=pubmed_query, max_results=100)
 
         researches: list[Optional[PubmedResearchSchema, None]] = []
 
@@ -66,8 +66,6 @@ class PubmedParser:
                     results=pubmed_article.results
                 )
             )
-        if len(researches) > 20:
-            researches = [research for research in researches if research.conclusion]
         return researches[:10]  # первые 10 исследований, чтобы не перегружать нейронку
 
 

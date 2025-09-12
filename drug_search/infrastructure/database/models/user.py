@@ -28,7 +28,6 @@ class User(IDMixin, TimestampsMixin):
     allowed_requests: Mapped[int] = mapped_column(Integer, default=3, comment="Количество разрешенных запросов")
     used_requests: Mapped[int] = mapped_column(Integer, default=0, comment="Количество использованных запросов")
 
-    # TODO: prompt + if not used_requests % 10: user_service.user_description_update(user)
     description: Mapped[Optional[str]] = mapped_column(
         Text,
         default=None,

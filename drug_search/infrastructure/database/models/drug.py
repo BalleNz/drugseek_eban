@@ -321,7 +321,7 @@ class DrugResearch(IDMixin):
     publication_date: Mapped[date] = mapped_column(Date)
     url: Mapped[str] = mapped_column(String(255))
     summary: Mapped[Optional[str]] = mapped_column(Text)
-    journal: Mapped[str] = mapped_column(String(100))
+    journal: Mapped[str] = mapped_column(String(255))
     doi: Mapped[str] = mapped_column(String(100), unique=True)
     authors: Mapped[Optional[str]] = mapped_column(Text)
     study_type: Mapped[Optional[str]] = mapped_column(String(150))

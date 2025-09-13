@@ -49,7 +49,6 @@ class DrugCombinationSchema(BaseModel):
     effect: str
     products: Optional[List[str]] = Field(default=None)  # only for good
     risks: Optional[str] = Field(default=None)  # only for bad
-    sources: List[str]
 
     class Config:
         from_attributes = True

@@ -50,15 +50,22 @@ async def new_drug(
                 # Запись нового препарата
                 # TODO: rabbitmq, Celery to workflow
 
-                drug: DrugSchema = await drug_service.new_drug(drug_name=assistant_response.drug_name, assistant_service=assistant_service)
-
-                # Когда создастся -> отправить сообщение в боте юзеру через воркфлоу с инлайн клавиатурой: (купить/отменить)
-
-                return DrugExistingResponse(
-                    drug_exist=True,
-                    is_allowed=False,
-                    drug=None
+                # пытаемся найти по ДВ
+                drug: DrugSchema | None = await drug_service.find_drug_by_query(
+                    user_query=assistant_response.drug_name
                 )
+
+
+                if not drug:
+                    drug: DrugSchema = await drug_service.new_drug(drug_name=assistant_response.drug_name, assistant_service=assistant_service)
+
+                    # Когда создастся -> отправить сообщение в боте юзеру через воркфлоу с инлайн клавиатурой: (купить/отменить)
+
+                    return DrugExistingResponse(
+                        drug_exist=True,
+                        is_allowed=False,
+                        drug=None
+                    )
             else:
                 drug_exist = False
 

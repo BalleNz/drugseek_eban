@@ -142,7 +142,7 @@ class DrugAnalog(IDMixin):
 
     analog_name: Mapped[str] = mapped_column(String(100), comment="аналог к основному drug")
     percent: Mapped[float] = mapped_column(Float, comment="процент схожести")
-    difference: Mapped[str] = mapped_column(String(100), comment="отличие от основного препа")
+    difference: Mapped[str] = mapped_column(Text, comment="отличие от основного препа")
 
     @property
     def schema_class(cls) -> Type[S]:
@@ -201,7 +201,6 @@ class DrugCombination(IDMixin):
     effect: Mapped[str] = mapped_column(Text)
     risks: Mapped[Optional[str]] = mapped_column(Text)  # Только для bad
     products: Mapped[Optional[list[str]]] = mapped_column(ARRAY(String))  # название препаратов с этим ДВ
-    sources: Mapped[list[str]] = mapped_column(ARRAY(String))
 
     @property
     def schema_class(cls) -> Type[S]:
@@ -294,7 +293,7 @@ class DrugDosage(IDMixin):
     half_life: Mapped[Optional[str]] = mapped_column(String(100), comment="период полувыведения")
     duration: Mapped[Optional[str]] = mapped_column(String(100), comment="продолжительность действия")
 
-    notes: Mapped[Optional[str]] = mapped_column(String(100))
+    notes: Mapped[Optional[str]] = mapped_column(Text)
 
     __table_args__ = (
         UniqueConstraint('drug_id', 'route', 'method', name='uq_drug_dosage'),

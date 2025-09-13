@@ -57,7 +57,6 @@ class AssistantResponseDrugCombinationSchema(BaseModel):
     effect: str
     products: Optional[list[str]] = Field(default=None)  # only for good
     risks: Optional[str] = Field(default=None)  # only for bad
-    sources: list[str]
 
 
 class AssistantResponseCombinations(BaseModel):

@@ -40,7 +40,7 @@ class DrugRepository(BaseRepository):
                 func.similarity(
                     func.lower(DrugSynonym.synonym),
                     func.lower(user_query)
-                ) > 0.5
+                ) > 0.35
             )
             .order_by(
                 func.similarity(
@@ -224,7 +224,6 @@ class DrugRepository(BaseRepository):
                     effect=combination.effect,
                     risks=combination.risks,
                     products=combination.products,
-                    sources=combination.sources
                 ))
             drug.combinations = new_combinations
         except Exception as ex:

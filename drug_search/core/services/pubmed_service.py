@@ -1,15 +1,30 @@
+import threading
 from typing import Optional
 
 from pymed import PubMed
 
-from drug_search.core.schemas import AssistantResponsePubmedQuery
-from drug_search.core.schemas.pubmed_schema import PubmedResearchSchema
-from drug_search.core.services import Assistant
+from drug_search.core.schemas import (AssistantResponsePubmedQuery, ClearResearchesRequest,
+                                      AssistantResponseDrugResearches, PubmedResearchSchema, AssistantResponseDrugResearch)
+from drug_search.core.services.assistant_service import AssistantService
 
 
-class PubmedParser:
-    def __init__(self):
-        self.pubmed = PubMed()
+class PubmedService:
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls, *args, **kwargs):
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super().__new__(cls)
+                cls._instance._initialized = False
+        return cls._instance
+
+    def __init__(self, assistant_service: AssistantService):
+        with self._lock:
+            if not self._initialized:
+                self.pubmed = PubMed()
+                self.assistant_service = assistant_service
+                self._initialized = True
 
     @staticmethod
     def __parse_authors(authors: dict) -> list[str]:
@@ -25,21 +40,19 @@ class PubmedParser:
             str_authors.append(f'{firstname} {lastname}')
         return str_authors
 
-    @staticmethod
-    def __get_pubmed_query(drug_name: str, assistant_service: Assistant) -> str:
-        assistant_response: AssistantResponsePubmedQuery = assistant_service.get_pubmed_query(drug_name=drug_name)
+    async def get_pubmed_query(self, drug_name: str) -> str:
+        assistant_response: AssistantResponsePubmedQuery = await self.assistant_service.get_pubmed_query(
+            drug_name=drug_name)
         return assistant_response.pubmed_query
 
-    def get_researches(self, drug_name: str, assistant_service: Assistant) -> list[Optional[PubmedResearchSchema]]:
+    async def get_researches_dirty(self, drug_name: str) -> list[Optional[PubmedResearchSchema]]:
         """
         Возвращает исследования по препарату с помощью парсера PubMed.
 
         Сам оптимизирует запрос специфично для PubMed с помощью ассистента.
-
-        :param assistant_service: экземпляр сервиса ассистента
         :param drug_name: Действующее вещество препарата.
         """
-        pubmed_query: str = self.__get_pubmed_query(drug_name=drug_name, assistant_service=assistant_service)
+        pubmed_query: str = await self.get_pubmed_query(drug_name=drug_name)
         pubmed_articles = self.pubmed.query(query=pubmed_query, max_results=100)
 
         researches: list[Optional[PubmedResearchSchema, None]] = []
@@ -68,10 +81,16 @@ class PubmedParser:
             )
         return researches[:10]  # первые 10 исследований, чтобы не перегружать нейронку
 
+    async def get_researches_clearly(self, drug_name: str) -> list[AssistantResponseDrugResearch]:
+        """Возвращает исследования в красивом виде после обработки ИИ"""
+        researches: list[Optional[PubmedResearchSchema]] = await self.get_researches_dirty(
+            drug_name=drug_name
+        )
+        researches_request_to_assistant = ClearResearchesRequest(
+            researches=researches,
+            drug_name=drug_name
+        )
 
-pubmed_parser = PubmedParser()
-
-
-def get_pubmed_parser():
-    """Return singletone object"""
-    return pubmed_parser
+        clear_researches: AssistantResponseDrugResearches = await self.assistant_service.get_clear_researches(
+            researches_request_to_assistant)
+        return clear_researches.researches

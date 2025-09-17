@@ -3,7 +3,8 @@ from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 
 from drug_search.core.schemas.API_schemas.api_requests import UserTelegramDataSchema
-from drug_search.core.services.user_service import UserService, get_user_service
+from drug_search.core.services.user_service import UserService
+from drug_search.core.dependencies.user_service_dep import get_user_service
 from drug_search.core.utils import auth
 
 auth_router = APIRouter(prefix="/auth")

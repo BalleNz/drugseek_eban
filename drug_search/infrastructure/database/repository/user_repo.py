@@ -1,15 +1,13 @@
 import logging
 import uuid
-from typing import Optional, Any, Sequence, AsyncGenerator
+from typing import Any, Sequence
 
-from fastapi import Depends
 from sqlalchemy import select, text, Row, RowMapping, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from drug_search.core.schemas import UserTelegramDataSchema, UserSchema, AllowedDrugsSchema, DrugBriefly
-from drug_search.infrastructure.database.engine import get_async_session
 from drug_search.infrastructure.database.models.user import AllowedDrugs, User
 from drug_search.infrastructure.database.repository.base_repo import BaseRepository
 
@@ -147,13 +145,3 @@ class UserRepository(BaseRepository):
 
     def __del__(self):
         logger.info("USER REPO IS COLLECTED BY GARBAGE COLLECTOR")
-
-
-async def get_user_repository(
-        session_generator: AsyncGenerator[AsyncSession, None] = Depends(get_async_session)
-) -> UserRepository:
-    """
-    :return: UserRepository obj with AsyncSession for onion service layer
-    """
-    async with session_generator as session:
-        return UserRepository(session=session)

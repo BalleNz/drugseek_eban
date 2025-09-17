@@ -4,10 +4,14 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.params import Path
 
+from drug_search.core.dependencies.assistant_service_dep import get_assistant_service
+from drug_search.core.dependencies.drug_service_dep import get_drug_service_with_deps, get_drug_service
+from drug_search.core.dependencies.user_service_dep import get_user_service
 from drug_search.core.schemas import (UserSchema, DrugExistingResponse,
                                       EXIST_STATUS, AssistantResponseDrugValidation, DrugSchema)
-from drug_search.core.services import (DrugService, get_drug_service, UserService,
-                                       get_user_service, Assistant, get_assistant)
+from drug_search.core.services.assistant_service import AssistantService
+from drug_search.core.services.drug_service import DrugService
+from drug_search.core.services.user_service import UserService
 from drug_search.core.utils.auth import get_auth_user
 
 drug_router = APIRouter(prefix="/drugs")
@@ -20,8 +24,8 @@ drug_router = APIRouter(prefix="/drugs")
 )
 async def new_drug(
         user: Annotated[UserSchema, Depends(get_auth_user)],
-        drug_service: Annotated[DrugService, Depends(get_drug_service)],
-        assistant_service: Annotated[Assistant, Depends(get_assistant)],
+        drug_service: Annotated[DrugService, Depends(get_drug_service_with_deps)],
+        assistant_service: Annotated[AssistantService, Depends(get_assistant_service)],
         user_query: str = Path(),
 ):
     """
@@ -43,31 +47,30 @@ async def new_drug(
 
     drug_exist = bool(drug)
     if not drug_exist:
-        async with assistant_service as assistant_service:
+        assistant_response: AssistantResponseDrugValidation = await assistant_service.get_user_query_validation(
+            user_query=user_query
+        )
+        if assistant_response.status == EXIST_STATUS.EXIST:
+            # Запись нового препарата
+            # TODO: rabbitmq, Celery to workflow
 
-            assistant_response: AssistantResponseDrugValidation = assistant_service.get_user_query_validation(user_query=user_query)
-            if assistant_response.status == EXIST_STATUS.EXIST:
-                # Запись нового препарата
-                # TODO: rabbitmq, Celery to workflow
+            # пытаемся найти по ДВ
+            drug: DrugSchema | None = await drug_service.find_drug_by_query(
+                user_query=assistant_response.drug_name
+            )
 
-                # пытаемся найти по ДВ
-                drug: DrugSchema | None = await drug_service.find_drug_by_query(
-                    user_query=assistant_response.drug_name
+            if not drug:
+                drug: DrugSchema = await drug_service.new_drug(drug_name=assistant_response.drug_name)
+
+                # Когда создастся -> отправить сообщение в боте юзеру через воркфлоу с инлайн клавиатурой: (купить/отменить)
+
+                return DrugExistingResponse(
+                    drug_exist=True,
+                    is_allowed=False,
+                    drug=None
                 )
-
-
-                if not drug:
-                    drug: DrugSchema = await drug_service.new_drug(drug_name=assistant_response.drug_name, assistant_service=assistant_service)
-
-                    # Когда создастся -> отправить сообщение в боте юзеру через воркфлоу с инлайн клавиатурой: (купить/отменить)
-
-                    return DrugExistingResponse(
-                        drug_exist=True,
-                        is_allowed=False,
-                        drug=None
-                    )
-            else:
-                drug_exist = False
+        else:
+            drug_exist = False
 
     is_allowed = False
     if drug:
@@ -85,10 +88,10 @@ async def new_drug(
     description="Разрешает и возвращает существующий препарат"
 )
 async def allow_drug(
+        user: Annotated[UserSchema, Depends(get_auth_user)],
         drug_service: Annotated[DrugService, Depends(get_drug_service)],
         user_service: Annotated[UserService, Depends(get_user_service)],
-        user: Annotated[UserSchema, Depends(get_auth_user)],
-        drug_id: UUID = Path(..., description="ID препарата в формате UUID")
+        drug_id: UUID = Path(..., description="ID препарата в формате UUID"),
 ):
     """
     Разрешает препарат, который существует в БД
@@ -113,13 +116,6 @@ async def allow_drug(
         await user_service.reduce_tokens(user_id=user.id, tokens_to_reduce=1)
         await user_service.allow_drug_to_user(user_id=user.id, drug_id=drug_id)
 
-        # Возможное обновление описание пользователя
-        if not (user.used_requests + 1) % 10:
-            async with get_assistant() as assistant_service:
-                await user_service.update_user_description(
-                    user_id=user.id,
-                    assistant_service=assistant_service
-                )
         return {
             "drug": drug,
             "is_allowed": True
@@ -156,9 +152,8 @@ async def get_drug(
 )
 async def update_drug_researches(
         user: Annotated[UserSchema, Depends(get_auth_user)],
-        drug_service: Annotated[DrugService, Depends(get_drug_service)],
+        drug_service: Annotated[DrugService, Depends(get_drug_service_with_deps)],
         user_service: Annotated[UserService, Depends(get_user_service)],
-        assistant_service: Annotated[Assistant, Depends(get_assistant)],
         drug_id: UUID = Path(..., description="ID препарата в формате UUID")
 ):
     """Обновляет таблицу с исследованиями препарата. Возвращает схему препарата."""
@@ -166,6 +161,6 @@ async def update_drug_researches(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов.")
 
     await user_service.reduce_tokens(user.id, 1)
-    await drug_service.update_drug_researches(drug_id, assistant_service=assistant_service)
+    await drug_service.update_drug_researches(drug_id)
 
     return await drug_service.repo.get(drug_id)

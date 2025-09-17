@@ -219,11 +219,11 @@ class DrugPathway(IDMixin):
 
     # Основные поля для хранения данных о путях активации
     receptor: Mapped[str] = mapped_column(String(100), nullable=False)  # название рецептора
-    binding_affinity: Mapped[Optional[str]] = mapped_column(String(50))  # сила связывания
-    affinity_description: Mapped[Optional[str]] = mapped_column(String(100))  # сила связывания
-    activation_type: Mapped[str] = mapped_column(String(50), nullable=False)  # тип активации
-    pathway: Mapped[Optional[str]] = mapped_column(String(100))  # сигнальный путь
-    effect: Mapped[Optional[str]] = mapped_column(String(100))  # физиологический эффект
+    binding_affinity: Mapped[Optional[str]] = mapped_column(String(200))  # сила связывания
+    affinity_description: Mapped[Optional[str]] = mapped_column(String(200))  # сила связывания
+    activation_type: Mapped[str] = mapped_column(String(200), nullable=False)  # тип активации
+    pathway: Mapped[Optional[str]] = mapped_column(String(200))  # сигнальный путь
+    effect: Mapped[Optional[str]] = mapped_column(String(200))  # физиологический эффект
 
     note: Mapped[Optional[str]] = mapped_column(Text)  # дополнительные примечания
 
@@ -266,11 +266,11 @@ class DrugDosage(IDMixin):
     drug: Mapped["Drug"] = relationship(back_populates="dosages")
 
     route: Mapped[Optional[str]] = mapped_column(
-        String(30),
+        String(50),
         comment="parental/topical/other"
     )
     method: Mapped[Optional[str]] = mapped_column(
-        String(30),
+        String(50),
         comment="intravenous/intramuscular/eye_drops/skin/nasal/peroral/inhalation/rectal/vaginal"
     )
 
@@ -290,8 +290,8 @@ class DrugDosage(IDMixin):
         String(100),
         comment="<Время начала действия (например, 'немедленно'). Только для intramuscular/intravenous/peroral>"
     )
-    half_life: Mapped[Optional[str]] = mapped_column(String(100), comment="период полувыведения")
-    duration: Mapped[Optional[str]] = mapped_column(String(100), comment="продолжительность действия")
+    half_life: Mapped[Optional[str]] = mapped_column(String(150), comment="период полувыведения")
+    duration: Mapped[Optional[str]] = mapped_column(String(150), comment="продолжительность действия")
 
     notes: Mapped[Optional[str]] = mapped_column(Text)
 

@@ -3,7 +3,7 @@ version: '3.8'
 services:
   db:
     image: postgres:latest
-    container_name: drug_search_db
+    container_name: db
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
@@ -20,7 +20,7 @@ services:
     restart: always
   fastapi:
     build: .  # Использует Dockerfile из текущей директории
-    container_name: drug_search_api
+    container_name: api
     ports:
       - "8000:8000"
     command: python3 asgi.py
@@ -30,8 +30,21 @@ services:
       db:
         condition: service_healthy
     restart: unless-stopped
-
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: always
 
 volumes:
   pg_data:
-  pg_test_data:
+  redis_data:

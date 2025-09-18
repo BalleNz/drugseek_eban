@@ -16,7 +16,7 @@ from drug_search.infrastructure.database.models.drug import (Drug, DrugSynonym, 
                                                              DrugAnalog, DrugDosage, DrugResearch)
 from drug_search.infrastructure.database.repository.base_repo import BaseRepository
 
-logger = logging.getLogger("bot.core.repository.drug")
+logger = logging.getLogger(__name__)
 
 
 class DrugRepository(BaseRepository):

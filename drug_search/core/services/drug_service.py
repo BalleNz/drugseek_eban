@@ -8,7 +8,7 @@ from drug_search.core.services.assistant_service import AssistantService
 from drug_search.core.services.pubmed_service import PubmedService
 from drug_search.infrastructure.database.repository.drug_repo import DrugRepository
 
-logger = logging.getLogger("bot.core.drug_service")  # TODO __name__ in all project
+logger = logging.getLogger(__name__)
 
 
 class DrugService:

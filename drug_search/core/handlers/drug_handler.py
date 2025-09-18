@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated
 from uuid import UUID
 
@@ -14,6 +15,7 @@ from drug_search.core.services.drug_service import DrugService
 from drug_search.core.services.user_service import UserService
 from drug_search.core.utils.auth import get_auth_user
 
+logger = logging.getLogger(__name__)
 drug_router = APIRouter(prefix="/drugs")
 
 

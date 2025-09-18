@@ -26,7 +26,7 @@ class Config(BaseSettings):
     DATABASE_TEST_URL: ClassVar[str] = environ.get("DATABASE_URL_TEST", "")
 
     # Telegram Bot
-    BOT_TOKEN: ClassVar[str]
+    BOT_TOKEN: ClassVar[str] = environ.get("BOT_TOKEN", "")
 
     # FastAPI
     WEBAPP_HOST: str = environ.get("WEBAPP_HOST", "0.0.0.0")

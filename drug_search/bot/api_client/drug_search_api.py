@@ -1,7 +1,6 @@
 from uuid import UUID
 
 from drug_search.bot.api_client.base_http_client import BaseHttpClient, HTTPMethod
-from drug_search.config import config
 from drug_search.core.schemas import UserTelegramDataSchema, UserSchema, DrugExistingResponse, DrugSchema
 from drug_search.core.schemas.telegram_schemas import AllowedDrugsSchema
 
@@ -13,8 +12,8 @@ class DrugSearchAPIClient(BaseHttpClient):
     async def telegram_auth(self, telegram_user_data: UserTelegramDataSchema) -> str:
         response: dict = await self._request(
             HTTPMethod.POST,
-            "/auth/",
-            request_body=telegram_user_data
+            "/v1/auth/",
+            request_body=telegram_user_data.model_dump()
         )
         return response["token"]
 
@@ -23,7 +22,7 @@ class DrugSearchAPIClient(BaseHttpClient):
         """Получение текущего пользователя"""
         return await self._request(
             HTTPMethod.GET,
-            "/user/",
+            "/v1/user/",
             response_model=UserSchema,
             access_token=access_token
         )
@@ -32,7 +31,7 @@ class DrugSearchAPIClient(BaseHttpClient):
         """Получение разрешенных препаратов"""
         return await self._request(
             HTTPMethod.GET,
-            "/user/allowed",
+            "/v1/user/allowed",
             response_model=AllowedDrugsSchema,
             access_token=access_token
         )
@@ -41,9 +40,9 @@ class DrugSearchAPIClient(BaseHttpClient):
         """Добавление токенов"""
         await self._request(
             HTTPMethod.PUT,
-            "/user/tokens",
+            "/v1/user/tokens",
             access_token=access_token,
-            json={"tokens_amount": tokens_amount}
+            request_body={"tokens_amount": tokens_amount}
         )
 
     # Drug endpoints
@@ -55,7 +54,7 @@ class DrugSearchAPIClient(BaseHttpClient):
         """Поиск препарата"""
         return await self._request(
             HTTPMethod.POST,
-            f"/drugs/search/{user_query}",
+            f"/v1/drugs/search/{user_query}",
             response_model=DrugExistingResponse,
             access_token=access_token
         )
@@ -68,7 +67,7 @@ class DrugSearchAPIClient(BaseHttpClient):
         """Получить препарат по его ID"""
         return await self._request(
             HTTPMethod.GET,
-            endpoint=f"/drugs/{drug_id}",
+            endpoint=f"/v1/drugs/{drug_id}",
             response_model=DrugSchema,
             access_token=access_token
         )
@@ -81,7 +80,7 @@ class DrugSearchAPIClient(BaseHttpClient):
         """Разрешение препарата"""
         return await self._request(
             HTTPMethod.POST,
-            f"/drugs/allow/{drug_id}",
+            f"/v1/drugs/allow/{drug_id}",
             access_token=access_token
         )
 
@@ -93,13 +92,7 @@ class DrugSearchAPIClient(BaseHttpClient):
         """Обновление исследований препарата"""
         return await self._request(
             HTTPMethod.POST,
-            f"/drugs/update/researchs/{drug_id}",
+            f"/v1/drugs/update/researchs/{drug_id}",
             response_model=DrugSchema,
             access_token=access_token
         )
-
-
-async def get_api_client() -> DrugSearchAPIClient:
-    API_BASE_URL = config.WEBHOOK_URL
-    client = DrugSearchAPIClient(API_BASE_URL)
-    return client

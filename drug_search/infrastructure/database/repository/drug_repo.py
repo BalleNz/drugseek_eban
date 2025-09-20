@@ -177,7 +177,6 @@ class DrugRepository(BaseRepository):
         drug: Drug = self.model.from_pydantic(drug)
         try:
             if assistant_response.mechanism_summary:
-                drug.pathways_sources = assistant_response.mechanism_summary.sources
                 drug.primary_action = assistant_response.mechanism_summary.primary_action
                 drug.secondary_actions = assistant_response.mechanism_summary.secondary_actions
                 drug.clinical_effects = assistant_response.mechanism_summary.clinical_effects
@@ -199,6 +198,7 @@ class DrugRepository(BaseRepository):
                     note=pathway_data.note,
                 ))
             drug.pathways = new_pathways
+            drug.pathways_sources = assistant_response.pathway_sources
         except Exception as ex:
             logger.error(f"Failed to update pathways for {drug.name}: {str(ex)}")
             raise ex

@@ -160,7 +160,6 @@ class MechanismSummary(BaseModel):
     primary_action: str = Field(...)
     secondary_actions: Optional[str] = Field(None, )
     clinical_effects: str = Field(...)
-    sources: list[str] = Field(...)
 
     class Config:
         from_attributes = True

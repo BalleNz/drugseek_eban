@@ -69,27 +69,10 @@ class AssistantResponseCombinations(BaseModel):
 class AssistantResponseDrugPathways(BaseModel):
     pathways: list[Pathway]
     mechanism_summary: MechanismSummary
+    pathway_sources: list[str] = Field(...)
 
     class Config:
         use_enum_values = True
-        json_schema_extra = {
-            "example": {
-                "pathways": [{
-                    "receptor": "α2A-адренорецептор",
-                    "binding_affinity": "Ki = 2.1 нМ",
-                    "affinity_description": "очень сильное связывание",
-                    "activation_type": "антагонист",
-                    "pathway": "Gi/o protein cascade",
-                    "effect": "повышение норадреналина"
-                }],
-                "mechanism_summary": {
-                    "primary_action": "блокада α2-адренорецепторов",
-                    "secondary_actions": ["агонизм 5-HT1A", "антагонизм D2"],
-                    "clinical_effects": ["усиление либидо", "повышение АД", "тревожность"]
-                },
-                "sources": ["DrugBank", "PubChem", "IUPHAR"]
-            }
-        }
 
 
 class AssistantResponseDrugResearch(BaseModel):

@@ -22,7 +22,7 @@ class Drug(IDMixin, TimestampsMixin):
     name_ru: Mapped[Optional[str]] = mapped_column(String(100))  # ДВ на русском
     latin_name: Mapped[Optional[str]] = mapped_column(String(100))
     description: Mapped[Optional[str]] = mapped_column(Text)
-    classification: Mapped[Optional[str]] = mapped_column(String(100))
+    classification: Mapped[Optional[str]] = mapped_column(Text)
 
     # dosages info
     dosages_fun_fact: Mapped[Optional[str]] = mapped_column(Text)

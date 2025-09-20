@@ -31,3 +31,6 @@ class DrugListCallback(CallbackData, prefix="drug_list"):
 class DrugDescribeCallback(CallbackData, prefix="drug_describe"):
     drug_id: uuid.UUID
     describe_type: Optional[DescribeTypes]
+    page: int  # страница с прошлого меню
+
+

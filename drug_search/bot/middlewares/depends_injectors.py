@@ -3,8 +3,8 @@ from typing import Any, Awaitable, Callable, Dict
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, User
 
-from drug_search.bot.api_client.drug_search_api import get_api_client
-from services.redis_service import get_redis_client
+from drug_search.core.dependencies.cache_bot_service_dep import get_cache_service
+from drug_search.core.services.cache_bot_service import CacheService
 
 handlers_that_use_api_client = [
     None
@@ -25,12 +25,10 @@ class DependencyInjectionMiddleware(BaseMiddleware):
             data: Dict[str, Any]
     ) -> Any:
         # Инициализируем клиенты
-        api_client = await get_api_client()
-        redis_service = await get_redis_client()
+        cache_service: CacheService = await get_cache_service()
 
         # Добавляем в контекст
-        data['api_client'] = api_client
-        data['redis_service'] = redis_service
+        data['cache_service'] = cache_service
 
         try:
             # Получаем access token и сохраняем к контекст
@@ -39,20 +37,20 @@ class DependencyInjectionMiddleware(BaseMiddleware):
                 from drug_search.core.schemas import UserTelegramDataSchema
 
                 telegram_data = UserTelegramDataSchema(
-                    telegram_id=user.id,
+                    telegram_id=str(user.id),
                     username=user.username,
                     first_name=user.first_name,
                     last_name=user.last_name
                 )
 
-                access_token = await redis_service.get_or_refresh_access_token(telegram_data)
+                access_token = await cache_service.get_or_refresh_access_token(telegram_data)
                 data['access_token'] = access_token
 
             result = await handler(event, data)
 
         finally:
             # Очистка ресурсов
-            await api_client.close()
-            await redis_service.redis.close()
+            await cache_service.api_client.close()
+            await cache_service.redis_service.redis.close()
 
         return result

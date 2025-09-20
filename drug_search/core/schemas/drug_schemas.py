@@ -11,24 +11,8 @@ class CombinationType(str, Enum):
     BAD = 'bad'
 
 
-class Pharmacokinetics(BaseModel):
-    absorption: Optional[str] = Field(default=None, description="процент биодоступности")
-    metabolism: Optional[str] = Field(default=None, description="основные пути метаболизма")
-    elimination: Optional[str] = Field(default=None, description="ТОП 3 (примерно) путей выведения...")
-    time_to_peak: Optional[str] = Field(default=None, description="время до достижения Cmax")
-
-
 class DrugSynonymSchema(BaseModel):
     synonym: str
-
-    class Config:
-        from_attributes = True
-
-
-class DrugAnalogSchemaRequest(BaseModel):
-    analog_name: str = Field(...)
-    percent: float = Field(...)
-    difference: str = Field(...)
 
     class Config:
         from_attributes = True
@@ -128,10 +112,15 @@ class DrugSchema(BaseModel):
     classification: Optional[str] = Field(default=None)
     dosages_fun_fact: Optional[str] = Field(default=None)
 
+    absorption: Optional[str] = Field(default=None, description="процент биодоступности")
+    metabolism: Optional[str] = Field(default=None, description="основные пути метаболизма")
+    elimination: Optional[str] = Field(default=None, description="ТОП 3 (примерно) путей выведения...")
+    time_to_peak: Optional[str] = Field(default=None, description="время до достижения Cmax")
+
     synonyms: Optional[list[DrugSynonymSchema]] = Field(default_factory=list)  # в планах не подгружать лишний раз таблицу , пока будет пустая
     dosages: Optional[list[DrugDosageSchema]] = Field(default_factory=list)
     pathways: Optional[list[DrugPathwaySchema]] = Field(default_factory=list)
-    analogs: Optional[list[DrugAnalogSchemaRequest]] = Field(default_factory=list)
+    analogs: Optional[list[DrugAnalogSchema]] = Field(default_factory=list)
     combinations: Optional[list[DrugCombinationSchema]] = Field(default_factory=list)
     researches: Optional[list[DrugResearchSchema]] = Field(default_factory=list)
 
@@ -169,7 +158,7 @@ class Pathway(BaseModel):
 
 class MechanismSummary(BaseModel):
     primary_action: str = Field(...)
-    secondary_actions: Optional[str] = Field(None)
+    secondary_actions: Optional[str] = Field(None, )
     clinical_effects: str = Field(...)
     sources: list[str] = Field(...)
 

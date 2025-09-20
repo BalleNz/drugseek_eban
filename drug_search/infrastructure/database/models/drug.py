@@ -106,6 +106,11 @@ class Drug(IDMixin, TimestampsMixin):
             classification=self.classification,
             dosages_fun_fact=self.dosages_fun_fact,
 
+            absorption=self.absorption,
+            metabolism=self.metabolism,
+            elimination=self.elimination,
+            time_to_peak=self.time_to_peak,
+
             is_danger=self.is_danger,
 
             synonyms=_map_schemas(self.synonyms),
@@ -115,7 +120,7 @@ class Drug(IDMixin, TimestampsMixin):
             combinations=_map_schemas(self.combinations),
             researches=_map_schemas(self.researches),
 
-            drug_prices=None,
+            prices=None,
 
             pathways_sources=self.pathways_sources if self.pathways_sources else [],
             dosages_sources=self.dosages_sources if self.dosages_sources else [],
@@ -167,8 +172,6 @@ class DrugSynonym(IDMixin):
     )
 
     __table_args__ = (
-        UniqueConstraint("drug_id", "synonym", name="uq_drug_synonym"),
-
         # B-tree индекс для точного совпадения
         Index("idx_drug_synonyms_lower", func.lower(synonym), postgresql_using="btree"),
 

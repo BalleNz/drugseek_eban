@@ -4,7 +4,7 @@ from typing import Optional, Dict
 
 from pydantic import BaseModel, Field
 
-from drug_search.core.schemas.drug_schemas import DrugAnalogSchemaRequest, Pharmacokinetics, Pathway, MechanismSummary, \
+from drug_search.core.schemas.drug_schemas import DrugAnalogSchema, Pathway, MechanismSummary, \
     CombinationType
 
 
@@ -35,13 +35,16 @@ class AssistantDosageDescriptionResponse(BaseModel):
 
     synonyms: Optional[list[str]] = Field(None, description="все возможные названия для препарата на RU")
 
-    analogs: Optional[list[DrugAnalogSchemaRequest]] = Field(None, description="аналоги препарата")
+    analogs: Optional[list[DrugAnalogSchema]] = Field(None, description="аналоги препарата")
     dosages_fun_fact: Optional[str] = Field(default=None)
     description: str = Field(...)
     classification: str = Field(...)
     sources: list[str] = Field(...)
 
-    pharmacokinetics: Pharmacokinetics
+    absorption: Optional[str] = Field(default=None, description="процент биодоступности")
+    metabolism: Optional[str] = Field(default=None, description="основные пути метаболизма")
+    elimination: Optional[str] = Field(default=None, description="ТОП 3 (примерно) путей выведения...")
+    time_to_peak: Optional[str] = Field(default=None, description="время до достижения Cmax")
 
     is_danger: bool = Field(...)
 

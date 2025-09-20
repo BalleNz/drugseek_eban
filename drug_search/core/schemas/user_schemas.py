@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -26,6 +27,12 @@ class UserSchema(BaseModel):
         default_factory=list,
         description="Список разрешенных препаратов"
     )
+
+    drug_subscription: bool = Field(False, )
+    drug_subscription_end: Optional[datetime] = Field(None, description="когда конец подписки на запрещенку")
+
+    created_at: datetime = Field(..., description="когда создан юзер")
+    updated_at: Optional[datetime] = Field(None, description="когда посл обн столбца у юзера")
 
     def allowed_drug_ids(self):
         return [allowed_drug.drug_id for allowed_drug in self.allowed_drugs]

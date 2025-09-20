@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Optional, Type, TypeVar
+from typing import Optional, Type, TypeVar, Union
 
 from pydantic import BaseModel
 from sqlalchemy import String, ForeignKey, Text, Index, func, DateTime, Boolean, Integer, UUID as PG_UUID
@@ -41,8 +41,22 @@ class User(IDMixin, TimestampsMixin):
     )
 
     @property
-    def allowed_drug_ids(self) -> list[uuid.UUID]:
-        return [ad.drug_id for ad in self.allowed_drugs]
+    def get_schema(self) -> Union[S, list[None]]:
+        return UserSchema(
+            id=self.id,
+            telegram_id=self.telegram_id,
+            username=self.username,
+            first_name=self.first_name,
+            last_name=self.last_name,
+            drug_subscription=self.drug_subscription,
+            drug_subscription_end=self.drug_subscription_end,
+            allowed_requests=self.allowed_requests,
+            used_requests=self.used_requests,
+            description=self.description,
+            allowed_drugs=[al for al in self.allowed_drugs],
+            created_at=self.created_at,
+            updated_at=self.updated_at
+        )
 
     __table_args__ = (
         Index('uq_users_telegram_id', 'telegram_id', unique=True),
@@ -87,5 +101,6 @@ class AllowedDrugs(IDMixin):
         Index('ix_allowed_drugs_user_id_drug_id', 'user_id', 'drug_id'),
     )
 
+    @property
     def schema_class(cls) -> Type[S]:
         return AllowedDrugSchema

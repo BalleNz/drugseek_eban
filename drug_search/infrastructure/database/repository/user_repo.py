@@ -31,7 +31,7 @@ class UserRepository(BaseRepository):
         result = await self.session.execute(stmt)
         user: User | None = result.scalar_one_or_none()
         if user:
-            return user.get_schema()
+            return user.get_schema
         return None
 
     async def get_or_create_from_telegram(self, telegram_user: UserTelegramDataSchema) -> UserSchema | None:

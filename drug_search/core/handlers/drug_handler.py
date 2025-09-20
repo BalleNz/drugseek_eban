@@ -87,7 +87,8 @@ async def new_drug(
 
 @drug_router.post(
     path="/allow/{drug_id}",
-    description="Разрешает и возвращает существующий препарат"
+    description="Разрешает и возвращает существующий препарат",
+    response_model=DrugExistingResponse
 )
 async def allow_drug(
         user: Annotated[UserSchema, Depends(get_auth_user)],
@@ -109,19 +110,21 @@ async def allow_drug(
 
     drug: DrugSchema | None = await drug_service.repo.get(drug_id)
     if drug_id in user.allowed_drug_ids():
-        return {
-            "drug": drug,
-            "is_allowed": True
-        }
+        return DrugExistingResponse(
+            drug=drug,
+            is_allowed=True,
+            drug_exist=True
+        )
 
     try:
         await user_service.reduce_tokens(user_id=user.id, tokens_to_reduce=1)
         await user_service.allow_drug_to_user(user_id=user.id, drug_id=drug_id)
 
-        return {
-            "drug": drug,
-            "is_allowed": True
-        }
+        return DrugExistingResponse(
+            drug=drug,
+            is_allowed=True,
+            drug_exist=True
+        )
 
     except Exception as ex:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex)
@@ -142,10 +145,7 @@ async def get_drug(
 
     drug: DrugSchema | None = await drug_service.repo.get_with_all_relationships(drug_id)
 
-    return {
-        "drug": drug,
-        "is_allowed": True if drug_id in user.allowed_drug_ids() else False
-    }
+    return drug
 
 
 @drug_router.post(

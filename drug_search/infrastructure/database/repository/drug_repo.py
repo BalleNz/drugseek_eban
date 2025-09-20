@@ -128,10 +128,10 @@ class DrugRepository(BaseRepository):
             drug.dosages_fun_fact = assistant_response.dosages_fun_fact
             drug.dosages_sources = assistant_response.sources
             drug.is_danger = assistant_response.is_danger
-            drug.absorption = assistant_response.pharmacokinetics.absorption
-            drug.metabolism = assistant_response.pharmacokinetics.metabolism
-            drug.elimination = assistant_response.pharmacokinetics.elimination
-            drug.time_to_peak = assistant_response.pharmacokinetics.time_to_peak
+            drug.absorption = assistant_response.absorption
+            drug.metabolism = assistant_response.metabolism
+            drug.elimination = assistant_response.elimination
+            drug.time_to_peak = assistant_response.time_to_peak
             dosages_data = []
             for route, methods in assistant_response.dosages.items():
                 if methods and route:

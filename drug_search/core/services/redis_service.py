@@ -1,19 +1,18 @@
-from contextlib import asynccontextmanager
 from enum import Enum
 from typing import Optional
 from uuid import UUID
 
 from redis.asyncio import Redis
 
-from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
 from drug_search.config import config
-from drug_search.core.schemas import DrugSchema, UserTelegramDataSchema, AllowedDrugsSchema
-from drug_search.infrastructure.redis_config import REDIS_POOL
+from drug_search.core.schemas import DrugSchema, AllowedDrugsSchema
+from schemas import UserSchema
 
 
 class CacheKeys(str, Enum):
     ALLOWED_DRUGS = "allowed_drugs_info"
     DRUG_DESCRIBE = "drug_describe"
+    USER_PROFILE = "user_profile"
 
 
 class RedisService:
@@ -31,6 +30,10 @@ class RedisService:
     @staticmethod
     def _get_drug_describe_key(telegram_id: str, drug_id: UUID) -> str:
         return f"user:{telegram_id}:{CacheKeys.DRUG_DESCRIBE}:{drug_id}"
+
+    @staticmethod
+    def _get_user_profile_key(telegram_id: str):
+        return f"user:{telegram_id}:{CacheKeys.USER_PROFILE}"
 
     async def get_access_token(self, telegram_id: str) -> Optional[str]:
         """Получение access token из кэша"""
@@ -92,12 +95,44 @@ class RedisService:
             ex=expire_seconds
         )
 
+    async def get_user_profile(
+            self,
+            telegram_id: str
+    ) -> Optional[UserSchema]:
+        """Получение юзера"""
+        cache_key = self._get_user_profile_key(telegram_id)
+        cache_data: Optional[str] = await self.redis.get(
+            cache_key
+        )
+        if cache_data:
+            return UserSchema.model_validate_json(cache_data)
+        return None
+
+    async def set_user_profile(
+            self,
+            telegram_id: str,
+            data: UserSchema,
+            expire_seconds: int = 86400
+    ):
+        """Сохранение информации о профиле юзера"""
+        cache_key: str = self._get_user_profile_key(telegram_id)
+        await self.redis.set(
+            cache_key,
+            data.model_dump_json(),
+            ex=expire_seconds
+        )
+
     async def invalidate_allowed_drugs(self, telegram_id: str) -> None:
         """Инвалидация кэша списка лекарств"""
-        cache_key = self._get_allowed_drugs_key(telegram_id)
+        cache_key: str = self._get_allowed_drugs_key(telegram_id)
         await self.redis.delete(cache_key)
 
     async def invalidate_drug_describe(self, telegram_id: str, drug_id: UUID) -> None:
         """Инвалидация кэша информации о лекарстве"""
-        cache_key = self._get_drug_describe_key(telegram_id, drug_id)
+        cache_key: str = self._get_drug_describe_key(telegram_id, drug_id)
+        await self.redis.delete(cache_key)
+
+    async def invalidate_user_profile(self, telegram_id: str) -> None:
+        """Инвалидация кэша профиля юзера"""
+        cache_key: str = self._get_user_profile_key(telegram_id)
         await self.redis.delete(cache_key)

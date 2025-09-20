@@ -4,7 +4,7 @@ import pytest
 
 from drug_search.core.schemas import DrugSchema
 from drug_search.infrastructure.database.models.drug import *
-from schemas import DrugAnalogSchemaRequest, CombinationType
+from schemas import DrugAnalogSchema, CombinationType
 
 
 def create_test_drug_model():
@@ -127,7 +127,7 @@ async def test_get_with_all_relationships(mock_drug_repo):
             )
         ],
         analogs=[
-            DrugAnalogSchemaRequest(
+            DrugAnalogSchema(
                 analog_name="сперма",
                 percent=22.8,
                 difference="другой цвет"

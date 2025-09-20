@@ -1,8 +1,10 @@
+from typing import Optional
 from uuid import UUID
 
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
 from drug_search.core.schemas import UserTelegramDataSchema, AllowedDrugsSchema, DrugSchema
 from drug_search.core.services.redis_service import RedisService
+from schemas import UserSchema
 
 
 class CacheService:
@@ -20,17 +22,14 @@ class CacheService:
             telegram_data: UserTelegramDataSchema
     ) -> str:
         """Получение или обновление access token"""
-        # Пытаемся получить из кэша
-        cached_token = await self.redis_service.get_access_token(telegram_data.telegram_id)
+        cached_token: Optional[str] = await self.redis_service.get_access_token(telegram_data.telegram_id)
         if cached_token:
             return cached_token
 
-        # Если нет в кэше, запрашиваем из API
         access_token = await self.api_client.telegram_auth(
             telegram_user_data=telegram_data
         )
 
-        # Сохраняем в кэш
         await self.redis_service.set_access_token(
             telegram_data.telegram_id,
             access_token
@@ -45,15 +44,12 @@ class CacheService:
             expiry: int = 86400
     ) -> AllowedDrugsSchema:
         """Получение списка разрешенных лекарств с кэшированием"""
-        # Пытаемся получить из кэша
-        cached_data = await self.redis_service.get_allowed_drugs(telegram_id)
+        cached_data: Optional[AllowedDrugsSchema] = await self.redis_service.get_allowed_drugs(telegram_id)
         if cached_data:
             return cached_data
 
-        # Если нет в кэше, запрашиваем из API
         fresh_data = await self.api_client.get_allowed_drugs(access_token=access_token)
 
-        # Сохраняем в кэш
         await self.redis_service.set_allowed_drugs(
             telegram_id,
             fresh_data,
@@ -70,18 +66,15 @@ class CacheService:
             expiry: int = 86400
     ) -> DrugSchema:
         """Получение информации о лекарстве с кэшированием"""
-        # Пытаемся получить из кэша
-        cached_data = await self.redis_service.get_drug(telegram_id, drug_id)
+        cached_data: Optional[DrugSchema] = await self.redis_service.get_drug(telegram_id, drug_id)
         if cached_data:
             return cached_data
 
-        # Если нет в кэше, запрашиваем из API
-        fresh_data = await self.api_client.get_drug(
+        fresh_data: DrugSchema = await self.api_client.get_drug(
             drug_id=drug_id,
             access_token=access_token
         )
 
-        # Сохраняем в кэш
         await self.redis_service.set_drug(
             telegram_id,
             drug_id,
@@ -90,3 +83,27 @@ class CacheService:
         )
 
         return fresh_data
+
+    async def get_user_profile(
+            self,
+            access_token: str,
+            telegram_id: str,
+            expiry: int = 86400
+    ) -> UserSchema:
+        """Получение информации о юзере"""
+        cache_data: Optional[UserSchema] = await self.redis_service.get_user_profile(telegram_id)
+        if cache_data:
+            return cache_data
+
+        fresh_data: UserSchema = await self.api_client.get_current_user(access_token)
+
+        await self.redis_service.set_user_profile(
+            telegram_id,
+            fresh_data,
+            expiry
+        )
+
+        return fresh_data
+
+
+    # TODO invalidate methods, вызывать с хендлеров при обновлении препарата, юзер профиля (покупка подписки, препарата)

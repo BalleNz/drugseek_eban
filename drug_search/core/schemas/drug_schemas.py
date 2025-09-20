@@ -41,7 +41,7 @@ class DrugCombinationSchema(BaseModel):
 class DrugDosageSchema(BaseModel):
     """Схема дозировки препарата из таблицы drug_dosages."""
     route: str = Field(...)
-    method: Optional[str] = Field(default=None)
+    method: Optional[str] = Field(default=None, description="например, внутримышечно")
 
     per_time: Optional[str] = Field(default=None)
     max_day: Optional[str] = Field(default=None)

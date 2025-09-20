@@ -69,7 +69,7 @@ class AssistantResponseCombinations(BaseModel):
 class AssistantResponseDrugPathways(BaseModel):
     pathways: list[Pathway]
     mechanism_summary: MechanismSummary
-    pathway_sources: list[str] = Field(...)
+    pathway_sources: list[str] = Field(..., description="источники по путям активации")
 
     class Config:
         use_enum_values = True

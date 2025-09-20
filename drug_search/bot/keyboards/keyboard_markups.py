@@ -29,8 +29,8 @@ drug_database_list_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
 )
 
 
-def get_drugs_list_keyboard(drugs: list[DrugBriefly], page: int) -> InlineKeyboardMarkup:
-    # Получаем клавиатуру с названиями препов и CallbackData=uuid.UUID
+def get_drug_list_keyboard(drugs: list[DrugBriefly], page: int) -> InlineKeyboardMarkup:
+    """Клавиатура с названиями препов и CallbackData"""
 
     if drugs is None:
         return InlineKeyboardMarkup(inline_keyboard=[])
@@ -55,6 +55,7 @@ def get_drugs_list_keyboard(drugs: list[DrugBriefly], page: int) -> InlineKeyboa
         )
 
     buttons.append([])
+
     # arrows logic
     if page > 0:
         buttons[-1].append(
@@ -158,10 +159,13 @@ def drug_describe_types_keyboard(
     return keyboard
 
 
-def get_drug_describe_menu_keyboard(
+def drug_describe_menu_keyboard(
         drug_id: uuid.UUID,
         page: int
 ):
+    """Клавиатура во время просмотра одного из разделов препарата.
+    Имеет только стрелку возвращения в листинг.
+    """
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [

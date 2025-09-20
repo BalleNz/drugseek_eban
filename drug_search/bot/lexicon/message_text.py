@@ -11,7 +11,6 @@ class MessageText:
     DRUG_INFO_BRIEFLY = (
         "<b>💊 {drug_name_ru} ({drug_name}, {latin_name})</b>\n\n"
         "<b>Классификация:</b> {classification}\n\n"
-        "{secondary_actions_section}"
         "<b>Клинические эффекты:</b>\n{clinical_effects}\n\n"
         "<b>Описание:</b>\n{description}\n\n"
         "{fun_fact_section}"
@@ -20,6 +19,7 @@ class MessageText:
     DRUG_INFO_PATHWAYS = (
         "<b>🔬 Механизм действия {name}:</b>\n\n"
         "<b>Основное действие:</b>\n{primary_action}\n\n"
+        "{secondary_actions_section}\n\n"
         "{pathways_list}\n"
         "<b>Источники для этого раздела:</b>\n{pathway_sources}"
     )
@@ -32,9 +32,9 @@ class MessageText:
 
     DRUG_INFO_DOSAGES = (
         "<b>💉 Дозировки {drug_name_ru}</b>\n\n"
-        "{dosages_list}\n\n"
+        "{dosages_list}\n"
         "<b>Фармакокинетика:</b>\n{pharmacokinetics}\n\n"
-        "<b>Источники:</b> {sources}"
+        "<b>Источники для этого раздела:</b>\n{dosage_sources}"
     )
 
     DRUG_INFO_RESEARCHES = (
@@ -64,14 +64,12 @@ class MessageText:
         # TODO
 
         fun_fact_section = f"<b>Интересный факт:</b>\n{drug.dosages_fun_fact}\n\n" if drug.dosages_fun_fact else ""
-        secondary_actions_section = f"<b>Вторичные действия:</b>\n{drug.secondary_actions}\n\n" if drug.secondary_actions else ""
 
         return MessageText.DRUG_INFO_BRIEFLY.format(
             drug_name_ru=drug.name_ru,
             drug_name=drug.name,
             latin_name=drug.latin_name,
             classification=drug.classification,
-            secondary_actions_section=secondary_actions_section,
             description=drug.description,
             fun_fact_section=fun_fact_section,
             clinical_effects=drug.clinical_effects,
@@ -83,7 +81,7 @@ class MessageText:
         pathways_list: str = ""
         for i, drug_pathway in enumerate(drug.pathways, start=1):
             pathway_info: str = ""
-            pathway_info += f"  <b>{i}) <u>{drug_pathway.receptor}</u></b> ({drug_pathway.pathway})\n"
+            pathway_info += f"  <b>{i}) <u>{drug_pathway.receptor}</u> ({drug_pathway.pathway})</b>\n"
             pathway_info += f"      <b>Эффект:</b> {drug_pathway.effect}\n"
             pathway_info += f"      <b>Тип активации:</b> {drug_pathway.activation_type}\n"
             pathway_info += f"      <b>Сила связывания:</b> {drug_pathway.affinity_description} ({drug_pathway.binding_affinity})\n"
@@ -95,8 +93,11 @@ class MessageText:
         for source in drug.pathways_sources:
             pathway_sources += f"— {source}\n"
 
+        secondary_actions_section = f"<b>Вторичные действия:</b>\n{drug.secondary_actions}\n\n" if drug.secondary_actions else ""
+
         return MessageText.DRUG_INFO_PATHWAYS.format(
             primary_action=drug.primary_action,
+            secondary_actions_section=secondary_actions_section,
             name=drug.name,
             pathways_list=pathways_list,
             pathway_sources=pathway_sources
@@ -137,37 +138,38 @@ class MessageText:
     def format_dosages(drug: DrugSchema) -> str:
         """Форматирование информации о дозировках"""
         dosages_list = ""
+
+        # routes: set = {dosage.route for dosage in drug.dosages}  # все уникальные методы для препа
+
         for dosage in drug.dosages:
-            route_method = f"{dosage.route} {dosage.method}".strip()
-            per_time = dosage.per_time
-            max_day = dosage.max_day
-            notes = dosage.notes
+            # проходит по списку дозировок и делает красивую строку
+            dosage_info: str = ""
+            dosage_info += f"<b>1) Способ приёма: {dosage.method}</b>\n"
+            per_time_weight: str = f"({dosage.per_time_weight_based})" if dosage.per_time_weight_based else ""
+            max_day_weight: str = f"({dosage.max_day_weight_based})" if dosage.max_day_weight_based else ""
+            dosage_info += f"   — <b>Разовая дозировка:</b> {dosage.per_time} <i>{per_time_weight}</i>\n" if dosage.per_time else ""
+            dosage_info += f"   — <b>Макс. в сутки:</b> {dosage.max_day} <i>{max_day_weight}</i>\n" if dosage.max_day else ""
+            dosage_info += f"   — <b>Время начала действия:</b> {dosage.onset}\n" if dosage.onset else ""
+            dosage_info += f"   — <b>Период полувыведения:</b> {dosage.half_life}\n" if dosage.half_life else ""
+            dosage_info += f"   — <b>Продолжительность действия:</b> {dosage.duration}\n" if dosage.duration else ""
+            dosage_info += f"   — <b>Примечания:</b> {dosage.notes}\n" if dosage.notes else ""
 
-            dosages_list += f"• <b>{route_method}</b>: {per_time} (макс. в сутки: {max_day})"
-            if notes:
-                dosages_list += f" | <i>Примечание: {notes}</i>"
-            dosages_list += "\n"
-        route
-        method
-        per_time
-        max_day
-        per_time_weight_based
-        max_day_weight_based
-        onset
-        half_life
-        duration
-        notes
+            dosages_list += dosage_info
 
-        pharmacokinetics = f"Биодоступность: {drug.pharmacokinetics.absorption}\n"
-        pharmacokinetics += f"Метаболизм: {drug.pharmacokinetics.metabolism}\n"
-        pharmacokinetics += f"Выведение: {drug.pharmacokinetics.elimination}\n"
-        pharmacokinetics += f"Tmax: {drug.pharmacokinetics.time_to_peak}"
+        pharmacokinetics = f"Биодоступность: {drug.absorption}\n"
+        pharmacokinetics += f"Метаболизм: {drug.metabolism}\n"
+        pharmacokinetics += f"Выведение: {drug.elimination}\n"
+        pharmacokinetics += f"Tmax: {drug.time_to_peak}"
+
+        dosage_sources: str = ""
+        for source in drug.dosages_sources:
+            dosage_sources += f"— {source}\n"
 
         return MessageText.DRUG_INFO_DOSAGES.format(
-            drug_name_ru=dosages_data.get('drug_name_ru', 'Нет названия'),
-            dosages_list=dosages_list or "Нет данных",
+            drug_name_ru=drug.name_ru,
+            dosages_list=dosages_list,
             pharmacokinetics=pharmacokinetics,
-            sources=", ".join(dosages_data.get('sources', [])) or "Нет данных"
+            dosage_sources=dosage_sources
         )
 
     @staticmethod

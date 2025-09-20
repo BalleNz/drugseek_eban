@@ -167,7 +167,7 @@ class DrugSynonym(IDMixin):
 
     synonym: Mapped[str] = mapped_column(
         String(100),
-        unique=True,
+        unique=False,
         comment="одно из названий препарата на русском"
     )
 

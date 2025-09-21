@@ -1,7 +1,7 @@
 from redis.asyncio import Redis
 
 from drug_search.core.services.redis_service import RedisService
-from redis_config import REDIS_POOL
+from drug_search.infrastructure.redis_config import REDIS_POOL
 
 redis_service = RedisService(
     redis_client=Redis(connection_pool=REDIS_POOL)

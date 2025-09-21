@@ -5,8 +5,7 @@ from uuid import UUID
 from redis.asyncio import Redis
 
 from drug_search.config import config
-from drug_search.core.schemas import DrugSchema, AllowedDrugsSchema
-from schemas import UserSchema
+from drug_search.core.schemas import DrugSchema, AllowedDrugsSchema, UserSchema
 
 
 class CacheKeys(str, Enum):

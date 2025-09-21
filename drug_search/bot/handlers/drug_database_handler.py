@@ -3,7 +3,7 @@ from uuid import UUID
 
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, LinkPreviewOptions
 
 from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback,
                                        drug_database_list_keyboard, get_drug_list_keyboard)
@@ -107,5 +107,6 @@ async def drug_describe_handler(
             drug_id=drug_id,
             page=page,
             describe_type=describe_type
-        )
+        ),
+        link_preview_options=LinkPreviewOptions(is_disabled=True)
     )

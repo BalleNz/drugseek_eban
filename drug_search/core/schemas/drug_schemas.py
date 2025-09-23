@@ -111,6 +111,7 @@ class DrugSchema(BaseModel):
     description: Optional[str] = Field(default=None)
     classification: Optional[str] = Field(default=None)
     dosages_fun_fact: Optional[str] = Field(default=None)
+    fun_fact: Optional[str] = Field(default=None)
 
     absorption: Optional[str] = Field(default=None, description="процент биодоступности")
     metabolism: Optional[str] = Field(default=None, description="основные пути метаболизма")
@@ -127,7 +128,7 @@ class DrugSchema(BaseModel):
     prices: Optional[list[DrugPriceSchema]] = Field(default=None)  # FUTURE
 
     pathways_sources: Optional[list[str]] = Field(default_factory=list)  # TODO удалить
-    dosages_sources: Optional[list[str]] = Field(default_factory=list)
+    dosage_sources: Optional[list[str]] = Field(default_factory=list)
 
     primary_action: Optional[str] = Field(default=None)
     secondary_actions: Optional[str] = Field(default=None)

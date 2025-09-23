@@ -130,6 +130,18 @@ async def allow_drug(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex)
 
 
+@drug_router.post(
+    path="/update/{drug_id}"
+)
+async def update_old_drug(
+        user: Annotated[UserSchema, Depends(get_auth_user)],
+        drug_service: Annotated[DrugService, Depends(get_drug_service)],
+        drug_id: UUID = Path(..., description="ID препарата в формате UUID")
+):
+    """Обновляет препарат"""
+    pass
+
+
 @drug_router.get(
     path="/{drug_id}",
     response_model=DrugSchema

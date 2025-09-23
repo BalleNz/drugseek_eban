@@ -11,7 +11,7 @@ def create_test_drug_model():
     return Drug(
         name="Acetaminophen",
         name_ru="Парацетамол",
-        dosages_sources="",
+        dosage_sources="",
         pathways_sources="",
         primary_action="sosi",
         secondary_actions="sosi",

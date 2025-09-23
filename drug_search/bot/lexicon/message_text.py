@@ -1,54 +1,59 @@
-from pydantic import BaseModel
-
 from drug_search.bot.keyboards import DescribeTypes
 from drug_search.core.schemas import AllowedDrugsSchema, UserSchema, DrugSchema, CombinationType
 
+SYMBOLS = ["▤", "▥", "▨", "▧", "▦", "▩"] * 2
 
-def make_google_sources(sources: list[str]) -> list[str]:
+
+def make_google_sources(sources: list[str]) -> list[dict]:
     """Возвращает ссылки на поиск гугл различных источников,
     например, Articles, DrugbankID..
     """
-    return [f"https://www.google.com/search?q={source}" for source in sources]
+    return [
+        {
+            "source_name": source,
+            "google_url": f'https://www.google.com/search?q={source}'
+        }
+        for source in sources
+    ]
 
 
 class MessageText:
     HELLO = "💊 Привет! Напиши любой препарат, а я тебе пришлю его характеристику."
 
     DRUG_INFO_BRIEFLY = (
-        "<b>💊 {drug_name_ru} ({drug_name}, {latin_name})</b>\n\n"
+        "<b>{drug_name_ru} ({drug_name}, {latin_name})</b>\n\n"
         "<b>Классификация:</b> {classification}\n\n"
-        "<b>Клинические эффекты:</b>\n{clinical_effects}\n\n"
         "<b>Описание:</b>\n{description}\n\n"
-        "{fun_fact_section}"
+        "<b>Основное действие:</b>\n{primary_action}\n\n"
+        "{secondary_actions_section}\n\n"
+        "<b>Клинические эффекты:</b>\n{clinical_effects}\n\n"
     )
 
     DRUG_INFO_PATHWAYS = (
-        "<b>🔬 Механизм действия {name}:</b>\n\n"
-        "<b>Основное действие:</b>\n{primary_action}\n\n"
-        "{secondary_actions_section}\n\n"
+        "<b>Пути активации {name} {sources_section}</b>\n"
         "{pathways_list}\n"
-        #"<b>Источники для этого раздела:</b>\n{pathway_sources}"
     )
 
     DRUG_INFO_COMBINATIONS = (
-        "<b>⚗️ Взаимодействия {drug_name_ru}</b>\n\n"
+        "<b>Взаимодействия {drug_name_ru}</b>\n\n"
         "<b>Полезные комбинации:</b>\n{good_combinations}\n"
         "<b>Опасные комбинации:</b>\n{bad_combinations}"
     )
 
     DRUG_INFO_DOSAGES = (
-        "<b>💉 Дозировки {drug_name_ru}</b>\n\n"
-        "{dosages_list}\n"
+        "<b>Дозировки {drug_name_ru}</b> {sources_section}\n\n"
+        "{dosages_list}"
         "{pharmacokinetics}\n\n"
+        "{dosage_fun_fact_section}"
     )
 
     DRUG_INFO_RESEARCHES = (
-        "<b>📊 Исследования {drug_name_ru}</b>\n\n"
+        "<b>Исследования {drug_name_ru}</b>\n\n"
         "{researches_list}"
     )
 
     USER_PROFILE = (
-        "<b>👤 Профиль пользователя</b>\n"
+        "<b>Профиль пользователя</b>\n"
         "@{username}\n\n"
         "<b>Статистика запросов:</b>\n"
         "• Использовано: {used_requests}\n"
@@ -58,7 +63,7 @@ class MessageText:
     )
 
     DRUGS_INFO = (
-        "<b>Все ваши купленные препараты расположенны на этой странице!</b>\n\n"
+        "<b>Все ваши купленные препараты расположены на этой странице!</b>\n\n"
         "Всего купленных препаратов: <b>{len_allowed_drugs}</b>\n"
         "Всего препаратов в БАЗЕ: <b>{len_drugs}</b>"
     )
@@ -66,9 +71,7 @@ class MessageText:
     @staticmethod
     def format_drug_briefly(drug: DrugSchema) -> str:
         """Форматирование краткой информации о препарате"""
-        # TODO
-
-        fun_fact_section = f"<b>Интересный факт:</b>\n{drug.dosages_fun_fact}\n\n" if drug.dosages_fun_fact else ""
+        secondary_actions_section = f"<b>Вторичные действия:\n</b>{drug.secondary_actions}" if drug.secondary_actions else ""
 
         return MessageText.DRUG_INFO_BRIEFLY.format(
             drug_name_ru=drug.name_ru,
@@ -76,8 +79,10 @@ class MessageText:
             latin_name=drug.latin_name,
             classification=drug.classification,
             description=drug.description,
-            fun_fact_section=fun_fact_section,
             clinical_effects=drug.clinical_effects,
+            primary_action=drug.primary_action,
+            secondary_actions_section=secondary_actions_section,
+
         )
 
     @staticmethod
@@ -85,33 +90,32 @@ class MessageText:
         """Форматирование информации о путях воздействия"""
         pathways_list: str = ""
 
-        google_sources: list[str] = make_google_sources(drug.pathways_sources)  # TODO
-        sources_num: list = [f"<a href='{source}'>[{i}]</a>" for i, source in enumerate(google_sources, start=1)]
-
         pathways: set = {pathway.pathway for pathway in
                          drug.pathways}  # все пути (например, Androgen receptor signaling pathway)
-        # TODO отформатировать по pathways
-        for i, drug_pathway in enumerate(drug.pathways, start=1):
+
+        google_sources: list[dict] = make_google_sources(drug.pathways_sources)
+        num_symbols = "¹²³⁴⁵⁶⁷⁸⁹"
+        sources_num: list = [f"<a href='{source["google_url"]}'><b>{num_symbols[i]}</b></a>" for i, source in enumerate(google_sources)]
+        sources_section: str = ' '.join(sources_num)
+
+        for i, drug_pathway in enumerate(drug.pathways):
             pathway_info: str = ""
             if (signaling_pathway := drug_pathway.pathway) in pathways:
-                pathway_info += f"<b>1) {signaling_pathway}</b>\n"
+                pathway_info += f"\n<b>{SYMBOLS[i]} {signaling_pathway}</b>\n"
                 pathways.remove(signaling_pathway)
 
-            pathway_info += f"<b>{i}) <u>{drug_pathway.receptor}</u> ({drug_pathway.pathway})</b>\n"
-            pathway_info += f"      <b>Эффект:</b> {drug_pathway.effect}\n"
-            pathway_info += f"      <b>Тип активации:</b> {drug_pathway.activation_type}\n"
-            pathway_info += f"      <b>Сила связывания:</b> {drug_pathway.affinity_description} ({drug_pathway.binding_affinity})\n"
-            pathway_info += f"      <b>Что делает:</b> {drug_pathway.note}\n\n"
+            pathway_info += f"<b>     ▻ <u>{drug_pathway.receptor}</u></b>\n"
+            pathway_info += f"        <b>Тип:</b> {drug_pathway.activation_type}\n"
+            pathway_info += f"        <b>Эффект:</b> {drug_pathway.effect}\n"
+            pathway_info += f"        <b>Сила связи:</b> {drug_pathway.affinity_description} | {drug_pathway.binding_affinity}\n"
+            pathway_info += f"        <b>Что делает:</b> {drug_pathway.note}\n"
 
             pathways_list += pathway_info
 
-        secondary_actions_section = f"<b>Вторичные действия:</b>\n{drug.secondary_actions}\n" if drug.secondary_actions else ""
-
         return MessageText.DRUG_INFO_PATHWAYS.format(
-            primary_action=drug.primary_action,
-            secondary_actions_section=secondary_actions_section,
+            sources_section=sources_section,
             name=drug.name,
-            pathways_list=pathways_list
+            pathways_list=pathways_list,
         )
 
     @staticmethod
@@ -150,34 +154,40 @@ class MessageText:
         """Форматирование информации о дозировках"""
         dosages_list = ""
 
-        google_sources: list[str] = make_google_sources(drug.dosages_sources)
-        sources_num: list = [f"<a href='{source}'>[{i}]</a>" for i, source in enumerate(google_sources, start=1)]
+        google_sources: list[dict] = make_google_sources(drug.pathways_sources)
+        num_symbols = "¹²³⁴⁵⁶⁷⁸⁹"
+        sources_num: list = [f"<a href='{source["google_url"]}'><b>{num_symbols[i]}</b></a>" for i, source in enumerate(google_sources)]
+        sources_section: str = ' '.join(sources_num)
 
-        for dosage in drug.dosages:
+        for i, dosage in enumerate(drug.dosages):
             # проходит по списку дозировок и делает красивую строку
             dosage_info: str = ""
-            dosage_info += f"<b>1) Способ приёма: {dosage.method}</b>\n"
+            dosage_info += f"<b> {SYMBOLS[i]} <u>{dosage.method.capitalize()}</u></b>\n"
 
             per_time_weight: str = f"({dosage.per_time_weight_based})" if dosage.per_time_weight_based else ""
             max_day_weight: str = f"({dosage.max_day_weight_based})" if dosage.max_day_weight_based else ""
-            dosage_info += f"<b>Разовая дозировка:</b> {dosage.per_time} <i>{per_time_weight}</i>\n" if dosage.per_time else ""
-            dosage_info += f"<b>Макс. в сутки:</b> {dosage.max_day} <i>{max_day_weight}</i>\n" if dosage.max_day else ""
-            dosage_info += f"<b>Время начала действия:</b> {dosage.onset}\n" if dosage.onset else ""
-            dosage_info += f"<b>Период полувыведения:</b> {dosage.half_life}\n" if dosage.half_life else ""
-            dosage_info += f"<b>Продолжительность действия:</b> {dosage.duration}\n" if dosage.duration else ""
-            dosage_info += f"<b>Примечания:</b> {dosage.notes} {sources_num.pop(0) if sources_num else ""}\n" if dosage.notes else ""
+            dosage_info += f"      <b>Разовая дозировка:</b> {dosage.per_time} <i>  {per_time_weight}</i>\n" if dosage.per_time else ""
+            dosage_info += f"      <b>Макс. в сутки:</b> {dosage.max_day} <i>  {max_day_weight}</i>\n" if dosage.max_day else ""
+            dosage_info += f"      <b>Время начала действия:</b> {dosage.onset}\n" if dosage.onset else ""
+            dosage_info += f"      <b>Период полувыведения:</b> {dosage.half_life}\n" if dosage.half_life else ""
+            dosage_info += f"      <b>Продолжительность действия:</b> {dosage.duration}\n" if dosage.duration else ""
+            dosage_info += f"      <b>Примечания:</b> {dosage.notes}\n" if dosage.notes else "\n"
 
-            dosages_list += dosage_info
+            dosages_list += dosage_info + "\n"
 
-        pharmacokinetics = f"<b>Биодоступность:</b> {drug.absorption}\n"
-        pharmacokinetics += f"<b>Метаболизм:</b> {drug.metabolism} {sources_num.pop(0) if sources_num else ""}\n"
-        pharmacokinetics += f"<b>Выведение:</b> {drug.elimination} {sources_num.pop(0) if sources_num else ""}\n"
-        pharmacokinetics += f"<b>Максимальная концентрация в крови через:</b> {drug.time_to_peak}"
+        pharmacokinetics = f"<b>Биодоступность:</b> \n{drug.absorption}\n\n" if drug.absorption else ""
+        pharmacokinetics += f"<b>Метаболизм:</b> \n{drug.metabolism}\n\n" if drug.metabolism else ""
+        pharmacokinetics += f"<b>Выведение:</b> \n{drug.elimination}\n\n" if drug.elimination else ""
+        pharmacokinetics += f"<b>Максимальная концентрация в крови через:</b> <u>{drug.time_to_peak}</u>" if drug.time_to_peak else ""
+
+        dosage_fun_fact_section = f"{drug.dosages_fun_fact}\n\n" if drug.dosages_fun_fact else ""
 
         return MessageText.DRUG_INFO_DOSAGES.format(
             drug_name_ru=drug.name_ru,
             dosages_list=dosages_list,
+            sources_section=sources_section,
             pharmacokinetics=pharmacokinetics,
+            dosage_fun_fact_section=dosage_fun_fact_section
         )
 
     @staticmethod
@@ -229,7 +239,7 @@ class MessageText:
         )
 
     @staticmethod
-    def format_by_type(describe_type: DescribeTypes, drug_data: BaseModel) -> str:
+    def format_by_type(describe_type: DescribeTypes, drug: DrugSchema) -> str:
         """Форматирование информации в зависимости от типа описания"""
         format_methods = {
             DescribeTypes.BRIEFLY: MessageText.format_drug_briefly,
@@ -241,6 +251,6 @@ class MessageText:
 
         method = format_methods.get(describe_type)
         if method:
-            return method(drug_data)
+            return method(drug)
         else:
-            return "Неизвестный тип описания"
+            raise "Неизвестный тип описания"

@@ -37,9 +37,10 @@ class AssistantDosageDescriptionResponse(BaseModel):
 
     analogs: Optional[list[DrugAnalogSchema]] = Field(None, description="аналоги препарата")
     dosages_fun_fact: Optional[str] = Field(default=None)
+    fun_fact: Optional[str] = Field(default=None)
     description: str = Field(...)
     classification: str = Field(...)
-    dosages_sources: list[str] = Field(...)
+    dosage_sources: list[str] = Field(...)
 
     absorption: Optional[str] = Field(default=None, description="процент биодоступности")
     metabolism: Optional[str] = Field(default=None, description="основные пути метаболизма")

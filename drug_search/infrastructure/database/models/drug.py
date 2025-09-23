@@ -23,6 +23,7 @@ class Drug(IDMixin, TimestampsMixin):
     latin_name: Mapped[Optional[str]] = mapped_column(String(100))
     description: Mapped[Optional[str]] = mapped_column(Text)
     classification: Mapped[Optional[str]] = mapped_column(Text)
+    fun_fact: Mapped[Optional[str]] = mapped_column(Text)
 
     # dosages info
     dosages_fun_fact: Mapped[Optional[str]] = mapped_column(Text)
@@ -41,7 +42,7 @@ class Drug(IDMixin, TimestampsMixin):
     clinical_effects: Mapped[Optional[str]] = mapped_column(Text)
 
     pathways_sources: Mapped[Optional[list[str]]] = mapped_column(ARRAY(String))
-    dosages_sources: Mapped[Optional[list[str]]] = mapped_column(ARRAY(String))
+    dosage_sources: Mapped[Optional[list[str]]] = mapped_column(ARRAY(String))
 
     # Отношение к DrugDosage
     dosages: Mapped[list["DrugDosage"]] = relationship(
@@ -123,7 +124,7 @@ class Drug(IDMixin, TimestampsMixin):
             prices=None,
 
             pathways_sources=self.pathways_sources if self.pathways_sources else [],
-            dosages_sources=self.dosages_sources if self.dosages_sources else [],
+            dosage_sources=self.dosage_sources if self.dosage_sources else [],
 
             primary_action=self.primary_action,
             secondary_actions=self.secondary_actions,

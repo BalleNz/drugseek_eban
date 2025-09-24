@@ -4,7 +4,9 @@ import aiogram
 from aiogram import Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+from aiogram.fsm.storage.redis import RedisStorage
 
+from dependencies.redis_service_dep import redis_client
 from drug_search.bot.handlers.start_handler import router as router0
 from drug_search.bot.handlers.drug_database_handler import router as router1
 from drug_search.bot.handlers.profile_handler import router as router2
@@ -29,7 +31,9 @@ async def start_polling(dp: Dispatcher):
     await dp.start_polling(bot)
 
 
-dp = Dispatcher()
+storage = RedisStorage(redis_client)
+dp = Dispatcher(storage=storage)
+
 bot = aiogram.Bot(
     token=config.BOT_TOKEN,
     default=DefaultBotProperties(

@@ -39,6 +39,8 @@ class AssistantDosageDescriptionResponse(BaseModel):
     dosages_fun_fact: Optional[str] = Field(default=None)
     fun_fact: Optional[str] = Field(default=None)
     description: str = Field(...)
+    analogs_description: Optional[str] = Field(None, description="эффективны ли аналоги")
+    metabolism_description: Optional[str] = Field(default=None)
     classification: str = Field(...)
     dosage_sources: list[str] = Field(...)
 
@@ -81,7 +83,7 @@ class AssistantResponseDrugResearch(BaseModel):
     description: str = Field(..., description="описание исследования")
     publication_date: date = Field(..., description="дата публикации (YYYY-MM-DD)")
     url: str = Field(..., description="ссылка на исследование <https://doi.org/ + ‘doi’>")
-    summary: Optional[str] = Field(None, description="вывод <что исследовали/изучили/открыли> если нет — строго <None>")
+    summary: Optional[str] = Field(None, description="вывод <что исследовали/изучили/открыли>")
     journal: str = Field(..., description="журнал")
     doi: str = Field(..., description="DOI")
     authors: Optional[str] = Field(None, description="несколько самых популярных участвующих в исследовании авторов")

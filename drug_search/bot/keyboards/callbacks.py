@@ -11,6 +11,8 @@ class DescribeTypes(str, Enum):
     PATHWAYS = "Pathways"
     COMBINATIONS = "Combinations"
     RESEARCHES = "Researches"
+    ANALOGS = "Analogs"
+    METABOLISM = "Metabolism"
 
 
 class ArrowTypes(str, Enum):

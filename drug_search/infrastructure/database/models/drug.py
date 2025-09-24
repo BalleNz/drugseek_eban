@@ -25,6 +25,9 @@ class Drug(IDMixin, TimestampsMixin):
     classification: Mapped[Optional[str]] = mapped_column(Text)
     fun_fact: Mapped[Optional[str]] = mapped_column(Text)
 
+    # analogs
+    analogs_description: Mapped[Optional[str]] = mapped_column(Text)
+
     # dosages info
     dosages_fun_fact: Mapped[Optional[str]] = mapped_column(Text)
 
@@ -35,6 +38,7 @@ class Drug(IDMixin, TimestampsMixin):
     metabolism: Mapped[Optional[str]] = mapped_column(Text)
     elimination: Mapped[Optional[str]] = mapped_column(Text)
     time_to_peak: Mapped[Optional[str]] = mapped_column(String(100))
+    metabolism_description: Mapped[Optional[str]] = mapped_column(Text)
 
     # pathways generation
     primary_action: Mapped[Optional[str]] = mapped_column(Text)
@@ -147,7 +151,7 @@ class DrugAnalog(IDMixin):
     drug: Mapped["Drug"] = relationship(back_populates="analogs")
 
     analog_name: Mapped[str] = mapped_column(String(100), comment="аналог к основному drug")
-    percent: Mapped[float] = mapped_column(Float, comment="процент схожести")
+    percent: Mapped[float] = mapped_column(String(10), comment="процент схожести")
     difference: Mapped[str] = mapped_column(Text, comment="отличие от основного препа")
 
     @property

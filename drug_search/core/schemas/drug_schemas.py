@@ -113,6 +113,9 @@ class DrugSchema(BaseModel):
     dosages_fun_fact: Optional[str] = Field(default=None)
     fun_fact: Optional[str] = Field(default=None)
 
+    analogs_description: Optional[str] = Field(default=None)
+    metabolism_description: Optional[str] = Field(default=None)
+
     absorption: Optional[str] = Field(default=None, description="процент биодоступности")
     metabolism: Optional[str] = Field(default=None, description="основные пути метаболизма")
     elimination: Optional[str] = Field(default=None, description="ТОП 3 (примерно) путей выведения...")

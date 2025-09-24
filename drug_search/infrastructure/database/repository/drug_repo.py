@@ -127,6 +127,8 @@ class DrugRepository(BaseRepository):
             drug.classification = assistant_response.classification
             drug.dosages_fun_fact = assistant_response.dosages_fun_fact
             drug.fun_fact = assistant_response.fun_fact
+            drug.analogs_description = assistant_response.analogs_description
+            drug.metabolism_description = assistant_response.metabolism_description
             drug.dosage_sources = assistant_response.dosage_sources
             drug.is_danger = assistant_response.is_danger
             drug.absorption = assistant_response.absorption

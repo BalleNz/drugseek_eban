@@ -6,14 +6,13 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, LinkPreviewOptions
 
 from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback,
-                                       drug_database_list_keyboard, get_drug_list_keyboard)
+                                       drug_database_list_keyboard, get_drug_list_keyboard,
+                                       DescribeTypes, drug_describe_types_keyboard)
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.bot.states.states import States
 from drug_search.core.schemas import DrugSchema, AllowedDrugsSchema
-from keyboards import DescribeTypes
-from keyboards.keyboard_markups import drug_describe_types_keyboard
-from lexicon import MessageText
-from services.cache_bot_service import CacheService
+from drug_search.bot.lexicon import MessageText
+from drug_search.core.services.cache_bot_service import CacheService
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)

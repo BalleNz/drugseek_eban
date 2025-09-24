@@ -114,13 +114,11 @@ def drug_describe_types_keyboard(
                         drug_id=drug_id,
                         page=page
                     ).pack()
-                )
-            ],
-            [
+                ),
                 InlineKeyboardButton(
-                    text="Пути активации",
+                    text="Метаболизм",
                     callback_data=DrugDescribeCallback(
-                        describe_type=DescribeTypes.PATHWAYS,
+                        describe_type=DescribeTypes.METABOLISM,
                         drug_id=drug_id,
                         page=page
                     ).pack()
@@ -131,6 +129,24 @@ def drug_describe_types_keyboard(
                     text="Комбинации",
                     callback_data=DrugDescribeCallback(
                         describe_type=DescribeTypes.COMBINATIONS,
+                        drug_id=drug_id,
+                        page=page
+                    ).pack()
+                ),
+                InlineKeyboardButton(
+                    text="Аналоги",
+                    callback_data=DrugDescribeCallback(
+                        describe_type=DescribeTypes.ANALOGS,
+                        drug_id=drug_id,
+                        page=page
+                    ).pack()
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="Пути активации",
+                    callback_data=DrugDescribeCallback(
+                        describe_type=DescribeTypes.PATHWAYS,
                         drug_id=drug_id,
                         page=page
                     ).pack()

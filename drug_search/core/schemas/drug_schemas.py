@@ -20,7 +20,7 @@ class DrugSynonymSchema(BaseModel):
 
 class DrugAnalogSchema(BaseModel):
     analog_name: str = Field(...)
-    percent: float = Field(...)
+    percent: str = Field(...)
     difference: str = Field(...)
 
     class Config:

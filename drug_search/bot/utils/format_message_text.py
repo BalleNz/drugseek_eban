@@ -1,7 +1,6 @@
-import re
 from drug_search.bot.keyboards import DescribeTypes
-from drug_search.core.schemas import AllowedDrugsSchema, UserSchema, DrugSchema, CombinationType
 from drug_search.bot.lexicon.message_text import MessageTemplates
+from drug_search.core.schemas import AllowedDrugsSchema, UserSchema, DrugSchema, CombinationType
 
 SYMBOLS = ["▤", "▥", "▨", "▧", "▦", "▩"] * 2
 
@@ -46,8 +45,10 @@ class DrugMessageFormatter:
                          drug.pathways}  # все пути (например, Androgen receptor signaling pathway)
 
         google_sources: list[dict] = make_google_sources(drug.pathways_sources)
-        num_symbols = "¹²³⁴⁵⁶⁷⁸⁹"
-        sources_num: list = [f"<a href='{source["google_url"]}'><b>{num_symbols[i]}</b></a>" for i, source in enumerate(google_sources)]
+        sources_num: list = [
+            f"<a href='{source["google_url"]}'><b>{i}</b></a>"
+            for i, source in enumerate(google_sources, start=1)
+        ]
         sources_section: str = ' '.join(sources_num)
 
         for i, drug_pathway in enumerate(drug.pathways):
@@ -66,7 +67,7 @@ class DrugMessageFormatter:
 
         return MessageTemplates.DRUG_INFO_PATHWAYS.format(
             sources_section=sources_section,
-            name=drug.name,
+            drug_name_ru=drug.name_ru,
             pathways_list=pathways_list,
         )
 
@@ -104,8 +105,10 @@ class DrugMessageFormatter:
         dosages_list = ""
 
         google_sources: list[dict] = make_google_sources(drug.pathways_sources)
-        num_symbols = "¹²³⁴⁵⁶⁷⁸⁹"
-        sources_num: list = [f"<a href='{source["google_url"]}'><b>{num_symbols[i]}</b></a>" for i, source in enumerate(google_sources)]
+        sources_num: list = [
+            f"<a href='{source["google_url"]}'><b>{i}</b></a>" for i, source in
+            enumerate(google_sources, start=1)
+        ]
         sources_section: str = ' '.join(sources_num)
 
         for i, dosage in enumerate(drug.dosages):

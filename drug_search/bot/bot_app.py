@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 import aiogram
 from aiogram import Dispatcher
@@ -41,6 +42,16 @@ bot = aiogram.Bot(
     )
 )
 
+
+def logging_cfg():
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+
+
 if __name__ == "__main__":
+    logging_cfg()
+
     setup_auth(dp)
     asyncio.run(start_polling(dp))

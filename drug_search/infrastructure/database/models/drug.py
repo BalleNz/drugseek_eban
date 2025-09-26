@@ -34,7 +34,7 @@ class Drug(IDMixin, TimestampsMixin):
     is_danger: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false", comment="опасный ли препарат (наркотик, стероид и т.д.)")
 
     # pharmacokinetics
-    absorption: Mapped[Optional[str]] = mapped_column(String(100))
+    absorption: Mapped[Optional[str]] = mapped_column(Text)
     metabolism: Mapped[Optional[str]] = mapped_column(Text)
     elimination: Mapped[Optional[str]] = mapped_column(Text)
     time_to_peak: Mapped[Optional[str]] = mapped_column(String(100))
@@ -110,6 +110,10 @@ class Drug(IDMixin, TimestampsMixin):
             description=self.description,
             classification=self.classification,
             dosages_fun_fact=self.dosages_fun_fact,
+
+            fun_fact=self.fun_fact,
+            analogs_description=self.analogs_description,
+            metabolism_description=self.metabolism_description,
 
             absorption=self.absorption,
             metabolism=self.metabolism,

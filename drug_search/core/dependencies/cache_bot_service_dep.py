@@ -1,6 +1,6 @@
 from drug_search.core.dependencies.api_client_dep import get_api_client
 from drug_search.core.dependencies.redis_service_dep import get_redis
-from drug_search.core.services.cache_bot_service import CacheService
+from drug_search.core.services.cache_service import CacheService
 
 cache_service = CacheService(
     redis_service=get_redis(),

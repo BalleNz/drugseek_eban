@@ -11,7 +11,7 @@ from drug_search.core.schemas import UserTelegramDataSchema, UserSchema, Allowed
 from drug_search.infrastructure.database.models.user import AllowedDrugs, User
 from drug_search.infrastructure.database.repository.base_repo import BaseRepository
 
-logger = logging.getLogger("bot.core.repository")
+logger = logging.getLogger(__name__)
 
 
 class UserRepository(BaseRepository):

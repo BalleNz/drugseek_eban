@@ -12,7 +12,7 @@ from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.bot.states.states import States
 from drug_search.core.schemas import DrugSchema, AllowedDrugsSchema
 from drug_search.bot.lexicon import MessageText
-from drug_search.core.services.cache_bot_service import CacheService
+from drug_search.core.services.cache_service import CacheService
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)

@@ -18,16 +18,18 @@ class MessageTemplates:
     HELLO = "💊 Привет! Напиши любой препарат, а я тебе пришлю его характеристику."
 
     DRUG_INFO_BRIEFLY = (
-        "<b>{drug_name_ru}, {drug_name}, {latin_name}.</b>\n\n"
+        "<b>{drug_name_ru} ({drug_name}, {latin_name})</b>\n\n"
         "<b>Классификация:</b> {classification}\n\n"
         "<b>Описание:</b>\n{description}\n\n"
-        "<b>Основное действие:</b>\n{primary_action}\n\n"
-        "{secondary_actions_section}"
         "<b>Клинические эффекты:</b>\n{clinical_effects}\n\n"
+        "{fun_fact}"
     )
 
     DRUG_INFO_PATHWAYS = (
-        "<b>{drug_name_ru} пути активации. {sources_section}</b>\n"
+        "<b>{drug_name_ru} механизм действия {sources_section}</b>\n\n"
+        "<b>Основное действие: </b>\n{primary_action}\n\n"
+        "{secondary_actions_section}"
+        "<b>Пути активации:</b> \n"
         "{pathways_list}\n"
     )
 
@@ -38,7 +40,7 @@ class MessageTemplates:
     )
 
     DRUG_INFO_DOSAGES = (
-        "<b>{drug_name_ru} дозировки.</b> {sources_section}\n\n"
+        "<b>{drug_name_ru} дозировки {sources_section}</b>\n\n"
         "{dosages_list}"
         "{dosage_fun_fact_section}"
     )
@@ -56,8 +58,8 @@ class MessageTemplates:
 
     DRUGS_ANALOGS: str = (
         "<b>{drug_name_ru} аналоги.</b>\n\n"
-        "{analogs_section}"
         "{analogs_description}\n\n"
+        "{analogs_section}"
     )
 
     USER_PROFILE = (

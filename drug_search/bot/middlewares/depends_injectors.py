@@ -4,7 +4,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, User
 
 from drug_search.core.dependencies.cache_bot_service_dep import get_cache_service
-from drug_search.core.services.cache_bot_service import CacheService
+from drug_search.core.services.cache_service import CacheService
 
 handlers_that_use_api_client = [
     None

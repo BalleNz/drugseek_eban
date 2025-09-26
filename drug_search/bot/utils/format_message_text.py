@@ -10,7 +10,7 @@ def make_google_sources(sources: list[str]) -> list[dict]:
     return [
         {
             "source_name": source,
-            "google_url": f'https://www.google.com/search?q={source}'
+            "google_url": f'https://www.google.com/search?q={source.replace("'", "").replace('"', "")}'
         }
         for source in sources
     ]
@@ -22,8 +22,6 @@ class DrugMessageFormatter:
     @staticmethod
     def format_drug_briefly(drug: DrugSchema) -> str:
         """Форматирование краткой информации о препарате"""
-        secondary_actions_section = f"<b>Вторичные действия:\n</b>{drug.secondary_actions}\n\n" if drug.secondary_actions else ""
-
         return MessageTemplates.DRUG_INFO_BRIEFLY.format(
             drug_name_ru=drug.name_ru,
             drug_name=drug.name,
@@ -31,9 +29,7 @@ class DrugMessageFormatter:
             classification=drug.classification,
             description=drug.description,
             clinical_effects=drug.clinical_effects,
-            primary_action=drug.primary_action,
-            secondary_actions_section=secondary_actions_section,
-
+            fun_fact=drug.fun_fact or ""
         )
 
     @staticmethod
@@ -65,10 +61,15 @@ class DrugMessageFormatter:
 
             pathways_list += pathway_info
 
+        secondary_actions_section = f"<b>Вторичные действия:\n</b>{drug.secondary_actions}\n\n" if drug.secondary_actions else ""
+
         return MessageTemplates.DRUG_INFO_PATHWAYS.format(
             sources_section=sources_section,
             drug_name_ru=drug.name_ru,
             pathways_list=pathways_list,
+            primary_action=drug.primary_action,
+            secondary_actions_section=secondary_actions_section,
+
         )
 
     @staticmethod
@@ -104,7 +105,7 @@ class DrugMessageFormatter:
         """Форматирование информации о дозировках"""
         dosages_list = ""
 
-        google_sources: list[dict] = make_google_sources(drug.pathways_sources)
+        google_sources: list[dict] = make_google_sources(drug.dosage_sources)
         sources_num: list = [
             f"<a href='{source["google_url"]}'><b>{i}</b></a>" for i, source in
             enumerate(google_sources, start=1)
@@ -123,7 +124,7 @@ class DrugMessageFormatter:
             dosage_info += f"      <b>Время начала действия:</b> {dosage.onset}\n" if dosage.onset else ""
             dosage_info += f"      <b>Период полувыведения:</b> {dosage.half_life}\n" if dosage.half_life else ""
             dosage_info += f"      <b>Продолжительность действия:</b> {dosage.duration}\n" if dosage.duration else ""
-            dosage_info += f"      {dosage.notes}\n" if dosage.notes else "\n"
+            dosage_info += f"      {dosage.notes}\n" if dosage.notes else ""
 
             dosages_list += dosage_info + "\n"
 
@@ -149,7 +150,7 @@ class DrugMessageFormatter:
 
         return MessageTemplates.DRUGS_ANALOGS.format(
             drug_name_ru=drug.name_ru,
-            analogs_description=analogs_description,
+            analogs_description=analogs_description or "",
             analogs_section=analogs_section
         )
 
@@ -163,7 +164,7 @@ class DrugMessageFormatter:
         pharmacokinetics = absorption + metabolism + elimination
         pharmacokinetics += f"Максимальная концентрация в крови достигает через <b><u>{drug.time_to_peak}</u></b>" if drug.time_to_peak else ""
 
-        metabolism_description: str = drug.metabolism_description
+        metabolism_description: str = drug.metabolism_description or ""
 
         return MessageTemplates.DRUG_INFO_METABOLISM.format(
             drug_name_ru=drug.name_ru,

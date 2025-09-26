@@ -6,7 +6,7 @@ from aiogram.types import Message
 
 from lexicon import MessageText
 from lexicon.keyboard_words import ButtonText
-from services.cache_bot_service import CacheService
+from services.cache_service import CacheService
 from states.states import States
 
 logger = logging.getLogger(__name__)

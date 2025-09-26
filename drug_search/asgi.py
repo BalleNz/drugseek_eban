@@ -9,8 +9,6 @@ app = fastapi_app
 # TELEGRAM BOT
 bot = ...
 
-# REDIS SINGLETONE
-
 if __name__ == "__main__":
     uvicorn.run(
         app=fastapi_app,

@@ -1,9 +1,13 @@
+import logging
 from typing import Optional
 from uuid import UUID
 
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
 from drug_search.core.schemas import UserTelegramDataSchema, AllowedDrugsSchema, DrugSchema, UserSchema
 from drug_search.core.services.redis_service import RedisService
+
+
+logger = logging.getLogger(__name__)
 
 
 class CacheService:
@@ -67,6 +71,7 @@ class CacheService:
         """Получение информации о лекарстве с кэшированием"""
         cached_data: Optional[DrugSchema] = await self.redis_service.get_drug(telegram_id, drug_id)
         if cached_data:
+            logger.info(f"Cache: получен Drug {cached_data}")
             return cached_data
 
         fresh_data: DrugSchema = await self.api_client.get_drug(

@@ -144,7 +144,7 @@ def drug_describe_types_keyboard(
             ],
             [
                 InlineKeyboardButton(
-                    text="Пути активации",
+                    text="Механизм действия | Пути активации",
                     callback_data=DrugDescribeCallback(
                         describe_type=DescribeTypes.PATHWAYS,
                         drug_id=drug_id,

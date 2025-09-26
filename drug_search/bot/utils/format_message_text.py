@@ -140,17 +140,17 @@ class DrugMessageFormatter:
     @staticmethod
     def format_analogs(drug: DrugSchema) -> str:
         """Форматирование аналогов"""
-        analogs_description: str = drug.analogs_description if drug.analogs_description else ""
-
         analogs_section: str = ""
         for i, analog in enumerate(sorted(drug.analogs, key=lambda x: x.percent, reverse=True), start=1):
             analogs_section += f"<b>{i}) " + analog.analog_name + "</b>\n"
             analogs_section += "        " + analog.difference + "\n"
             analogs_section += f"        <u>схожесть</u>: {str(analog.percent)}% \n\n"
 
+        analogs_description: str = drug.analogs_description + "\n\n" if drug.analogs_description else ""
+
         return MessageTemplates.DRUGS_ANALOGS.format(
             drug_name_ru=drug.name_ru,
-            analogs_description=analogs_description or "",
+            analogs_description=analogs_description,
             analogs_section=analogs_section
         )
 
@@ -164,7 +164,7 @@ class DrugMessageFormatter:
         pharmacokinetics = absorption + metabolism + elimination
         pharmacokinetics += f"Максимальная концентрация в крови достигает через <b><u>{drug.time_to_peak}</u></b>" if drug.time_to_peak else ""
 
-        metabolism_description: str = drug.metabolism_description or ""
+        metabolism_description: str = drug.metabolism_description + "\n\n" if drug.metabolism_description else ""
 
         return MessageTemplates.DRUG_INFO_METABOLISM.format(
             drug_name_ru=drug.name_ru,

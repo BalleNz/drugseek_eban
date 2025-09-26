@@ -29,7 +29,7 @@ class MessageTemplates:
         "<b>{drug_name_ru} механизм действия {sources_section}</b>\n\n"
         "<b>Основное действие: </b>\n{primary_action}\n\n"
         "{secondary_actions_section}"
-        "<b>Пути активации:</b> \n"
+        "<b>┫Пути активации:</b>"
         "{pathways_list}\n"
     )
 
@@ -47,7 +47,7 @@ class MessageTemplates:
 
     DRUG_INFO_METABOLISM = (
         "<b>{drug_name_ru} метаболизм.</b>\n\n"
-        "{metabolism_description}\n\n"
+        "{metabolism_description}"
         "{pharmacokinetics}"
     )
 
@@ -58,7 +58,7 @@ class MessageTemplates:
 
     DRUGS_ANALOGS: str = (
         "<b>{drug_name_ru} аналоги.</b>\n\n"
-        "{analogs_description}\n\n"
+        "{analogs_description}"
         "{analogs_section}"
     )
 

@@ -64,12 +64,11 @@ class CacheService:
     async def get_drug(
             self,
             access_token: str,
-            telegram_id: str,
             drug_id: UUID,
             expiry: int = 15  # временно для дебага
     ) -> DrugSchema:
         """Получение информации о лекарстве с кэшированием"""
-        cached_data: Optional[DrugSchema] = await self.redis_service.get_drug(telegram_id, drug_id)
+        cached_data: Optional[DrugSchema] = await self.redis_service.get_drug(drug_id)
         if cached_data:
             logger.info(f"Cache: получен Drug {cached_data}")
             return cached_data
@@ -80,7 +79,6 @@ class CacheService:
         )
 
         await self.redis_service.set_drug(
-            telegram_id,
             drug_id,
             fresh_data,
             expiry

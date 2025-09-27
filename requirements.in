@@ -13,3 +13,4 @@ dotenv
 aiohttp
 redis
 pytest
+arq

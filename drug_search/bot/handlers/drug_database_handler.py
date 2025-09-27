@@ -87,8 +87,6 @@ async def drug_describe_handler(
     Описание препарата в зависимости от Describe_type.
     Тут также передается page для плавного возвращения в меню
     """
-    user_id = str(callback.from_user.id)
-
     # callback data
     drug_id: UUID = callback_data.drug_id
     describe_type: DescribeTypes = callback_data.describe_type
@@ -96,7 +94,6 @@ async def drug_describe_handler(
 
     drug_description: DrugSchema = await cache_service.get_drug(
         access_token=access_token,
-        telegram_id=user_id,
         drug_id=drug_id
     )
 

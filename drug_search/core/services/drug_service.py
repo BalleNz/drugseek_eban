@@ -32,14 +32,19 @@ class DrugService:
 
     async def update_drug(
             self,
-            drug_in_process: DrugSchema
+            drug_in_process: None | DrugSchema = None,
+            drug_id: uuid.UUID | None = None
     ) -> DrugSchema:
         """
         Обновляет все поля препарата, кроме исследований.
 
         Использует ассистента и (PubMed)
+        :param drug_id: обновление по drug_id
         :param drug_in_process: схема препарата в процессе создания.
         """
+        if not drug_in_process:
+            drug_in_process = self.repo.get_with_all_relationships(drug_id)
+
         try:
             # параллельное выполнение клиента ассистента
             assistant_response_dosages, assistant_response_pathways, assistant_response_combinations = await asyncio.gather(

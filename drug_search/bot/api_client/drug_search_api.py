@@ -92,7 +92,7 @@ class DrugSearchAPIClient(BaseHttpClient):
         """Обновление исследований препарата"""
         return await self._request(
             HTTPMethod.POST,
-            f"/v1/drugs/update/researchs/{drug_id}",
+            f"/v1/drugs/update/{drug_id}/researches",
             response_model=DrugSchema,
             access_token=access_token
         )

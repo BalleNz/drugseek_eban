@@ -27,6 +27,7 @@ class Config(BaseSettings):
 
     # Telegram Bot
     BOT_TOKEN: ClassVar[str] = environ.get("BOT_TOKEN", "")
+    TELEGRAM_API_URL: ClassVar[str] = ""  # TODO
 
     # FastAPI
     WEBAPP_HOST: str = environ.get("WEBAPP_HOST", "0.0.0.0")
@@ -39,8 +40,12 @@ class Config(BaseSettings):
     ACCESS_TOKEN_EXPIRES_MINUTES: int = 1200
 
     # Redis
-    REDIS_URL: str = environ.get("REDIS_URL", "redis_pool://localhost:6379/0")
+    REDIS_URL: str = environ.get("REDIS_URL", "redis://redis:6379")
 
+    # ARQ
+    ARQ_REDIS_URL: str = environ.get("ARQ_REDIS_URL", REDIS_URL)
+    ARQ_REDIS_QUEUE: str = environ.get("ARQ_QUEUE", "arq:queue")
+    ARQ_MAX_JOBS: int = int(environ.get("ARQ_MAX_JOBS", "10"))
 
     # AUTH ENDPOINT
     ACCESS_TOKEN_ENDPOINT: str = "v1/auth/"

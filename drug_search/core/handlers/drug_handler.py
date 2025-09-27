@@ -46,8 +46,8 @@ async def new_drug(
     drug: DrugSchema | None = await drug_service.find_drug_by_query(
         user_query=user_query
     )
-
     drug_exist = bool(drug)
+
     if not drug_exist:
         assistant_response: AssistantResponseDrugValidation = await assistant_service.get_user_query_validation(
             user_query=user_query
@@ -139,8 +139,10 @@ async def update_old_drug(
         drug_id: UUID = Path(..., description="ID препарата в формате UUID")
 ):
     """Обновляет препарат"""
-    pass
-
+    if user.allowed_requests:
+        drug: DrugSchema = await drug_service.update_drug(drug_id=drug_id)
+        return drug
+    return {"status": "User hasn't allowed requests"}
 
 @drug_router.get(
     path="/{drug_id}",
@@ -156,12 +158,11 @@ async def get_drug(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов.")
 
     drug: DrugSchema | None = await drug_service.repo.get_with_all_relationships(drug_id)
-
     return drug
 
 
 @drug_router.post(
-    path="/update/researches/{drug_id}",
+    path="/update/{drug_id}/researches",
     description="Обновляет исследования для препарата"
 )
 async def update_drug_researches(

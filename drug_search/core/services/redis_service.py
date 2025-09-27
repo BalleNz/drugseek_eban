@@ -10,7 +10,7 @@ from drug_search.core.schemas import DrugSchema, AllowedDrugsSchema, UserSchema
 
 class CacheKeys(str, Enum):
     ALLOWED_DRUGS = "allowed_drugs_info"
-    DRUG_DESCRIBE = "drug_describe"
+    DRUG = "drug"
     USER_PROFILE = "user_profile"
 
 
@@ -27,8 +27,8 @@ class RedisService:
         return f"user:{telegram_id}:{CacheKeys.ALLOWED_DRUGS}"
 
     @staticmethod
-    def _get_drug_describe_key(telegram_id: str, drug_id: UUID) -> str:
-        return f"user:{telegram_id}:{CacheKeys.DRUG_DESCRIBE}:{drug_id}"
+    def _get_drug_key(drug_id: UUID) -> str:
+        return f"{CacheKeys.DRUG}:{drug_id}"
 
     @staticmethod
     def _get_user_profile_key(telegram_id: str):
@@ -71,9 +71,9 @@ class RedisService:
             ex=expire_seconds
         )
 
-    async def get_drug(self, telegram_id: str, drug_id: UUID) -> Optional[DrugSchema]:
+    async def get_drug(self, drug_id: UUID) -> Optional[DrugSchema]:
         """Получение информации о лекарстве из кэша"""
-        cache_key = self._get_drug_describe_key(telegram_id, drug_id)
+        cache_key = self._get_drug_key(drug_id)
         cached_data = await self.redis.get(cache_key)
         if cached_data:
             return DrugSchema.model_validate_json(cached_data)
@@ -81,13 +81,12 @@ class RedisService:
 
     async def set_drug(
         self,
-        telegram_id: str,
         drug_id: UUID,
         data: DrugSchema,
         expire_seconds: int = 86400
     ) -> None:
         """Сохранение информации о лекарстве в кэш"""
-        cache_key = self._get_drug_describe_key(telegram_id, drug_id)
+        cache_key = self._get_drug_key(drug_id)
         await self.redis.set(
             cache_key,
             data.model_dump_json(),
@@ -128,7 +127,7 @@ class RedisService:
 
     async def invalidate_drug_describe(self, telegram_id: str, drug_id: UUID) -> None:
         """Инвалидация кэша информации о лекарстве"""
-        cache_key: str = self._get_drug_describe_key(telegram_id, drug_id)
+        cache_key: str = self._get_drug_key(telegram_id, drug_id)
         await self.redis.delete(cache_key)
 
     async def invalidate_user_profile(self, telegram_id: str) -> None:

@@ -12,7 +12,7 @@ from drug_search.core.lexicon import Prompts
 from drug_search.core.schemas import (AssistantResponseDrugResearches, AssistantResponsePubmedQuery,
                                       AssistantDosageDescriptionResponse, AssistantResponseCombinations,
                                       AssistantResponseDrugPathways, AssistantResponseDrugValidation,
-                                      ClearResearchesRequest)
+                                      ClearResearchesRequest, SelectActionResponse)
 from drug_search.core.utils.exceptions import AssistantResponseError
 
 logger = logging.getLogger(__name__)
@@ -166,3 +166,11 @@ class AssistantService(AssistantInterface):
         """
         return await self.get_response(input_query=drug_name, prompt=self.prompts.GET_PUBMED_SEARCH_QUERY,
                                        pydantic_model=AssistantResponsePubmedQuery)
+
+    async def predict_user_action(self, query: str) -> SelectActionResponse:
+        """Предугадывает действие юзера с промптом"""
+        return await self.get_response(
+            input_query=query,
+            prompt=self.prompts.PREDICT_USER_ACTION,
+            pydantic_model=SelectActionResponse
+        )

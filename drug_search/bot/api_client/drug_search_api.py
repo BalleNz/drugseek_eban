@@ -8,6 +8,14 @@ from drug_search.core.schemas.telegram_schemas import AllowedDrugsSchema
 class DrugSearchAPIClient(BaseHttpClient):
     """Универсальный клиент для DrugSearch API"""
 
+    # arq
+    async def assistant_get_action(self, access_token: str, query: str) -> str:
+        return await self._request(
+            HTTPMethod.POST,
+            endpoint="/v1/assistant/action",
+            request_body={"query": query}
+        )
+
     # Auth endpoints
     async def telegram_auth(self, telegram_user_data: UserTelegramDataSchema) -> str:
         response: dict = await self._request(

@@ -13,8 +13,8 @@ if config.config_file_name is not None:
 
 from drug_search.config import config as app_config
 
-config.set_main_option("sqlalchemy.url", app_config.DATABASE_URL + "?async_fallback=True")
-
+database_url: str = app_config.DATABASE_URL.replace("db:", "localhost:") + "?async_fallback=True"  # for not docker location
+config.set_main_option("sqlalchemy.url", database_url)
 
 from drug_search.infrastructure.database.models.base import *  # noqa
 from drug_search.infrastructure.database.models.drug import *  # noqa
@@ -54,7 +54,7 @@ def run_migrations_offline():
 
 def run_migrations_online():
     """Run migrations in 'online' mode."""
-    print("making migration on DATABASE_URL: " + app_config.DATABASE_URL)
+    print("making migration on DATABASE_URL: " + database_url)
 
     connectable = engine_from_config(
         config.get_section(config.config_ini_section),

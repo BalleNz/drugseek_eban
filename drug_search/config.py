@@ -1,11 +1,19 @@
-from os import environ
+import logging
+from os import environ, path
+from pathlib import Path
 from typing import ClassVar
 
 from dotenv import load_dotenv
 from fastapi.security import OAuth2PasswordBearer
 from pydantic_settings import BaseSettings
 
-load_dotenv()
+# Получаем абсолютный путь к .env файлу
+BASE_DIR = Path(__file__).parent.parent
+ENV_PATH = path.join(BASE_DIR, '.env')
+
+load_dotenv(ENV_PATH)
+
+logging.getLogger(__name__)
 
 
 class Config(BaseSettings):
@@ -23,11 +31,10 @@ class Config(BaseSettings):
 
     # Database
     DATABASE_URL: ClassVar[str] = environ.get("DATABASE_URL", "")
-    DATABASE_TEST_URL: ClassVar[str] = environ.get("DATABASE_URL_TEST", "")
 
     # Telegram Bot
-    BOT_TOKEN: ClassVar[str] = environ.get("BOT_TOKEN", "")
-    TELEGRAM_API_URL: ClassVar[str] = ""  # TODO
+    TELEGRAM_BOT_TOKEN: ClassVar[str] = environ.get("TELEGRAM_BOT_TOKEN", "")
+    TELEGRAM_API_URL: ClassVar[str] = "https://api.telegram.org/bot"
 
     # FastAPI
     WEBAPP_HOST: str = environ.get("WEBAPP_HOST", "0.0.0.0")
@@ -63,3 +70,10 @@ class Config(BaseSettings):
 
 
 config: Config = Config()
+logging.info(f"ENVIRONMENT CREATED: {config.model_dump()}")
+
+if __name__ == "__main__":
+    print(f"ENV_PATH: {ENV_PATH}")
+    print(f"File exists: {path.exists(ENV_PATH)}")
+    print(f"DEEPSEEK_API_KEY: {environ.get('DEEPSEEK_API_KEY', 'NOT_FOUND')}")
+    print(f"Config DEEPSEEK_API_KEY: {config.DEEPSEEK_API_KEY}")

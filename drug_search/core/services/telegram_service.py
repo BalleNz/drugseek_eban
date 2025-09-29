@@ -1,3 +1,5 @@
+import aiohttp
+
 from drug_search.config import config
 
 
@@ -8,16 +10,17 @@ class TelegramService:
         """Инициализация сервиса"""
         self.api_url = f"{config.TELEGRAM_API_URL}{config.TELEGRAM_BOT_TOKEN}"
 
-    def send_message(
+    async def send_message(
             self,
             user_telegram_id: str,
-            message: str
+            message: str,
+            reply_markup: dict = None  # keyboard
     ):
         """Отправляет сообщение юзеру"""
         url = f"{self.api_url}/sendMessage"
         data = {
-            "chat_id": chat_id,
-            "text": text,
+            "chat_id": user_telegram_id,
+            "text": message,
             "parse_mode": "HTML"
         }
 
@@ -26,17 +29,15 @@ class TelegramService:
             data["reply_markup"] = json.dumps(reply_markup)
 
         async with aiohttp.ClientSession() as session:
-            async with session.post(url, data=data, ssl=ssl_context) as response:
+            async with session.post(url, data=data) as response:
                 if response.status != 200:
                     response_text = await response.text()
                     raise ValueError(f"Ошибка отправки сообщения в Telegram: {response.status} - {response_text}")
 
     async def send_drug_created_notification(
             self,
-            user_id,
-            drug_id,
-            drug_name,
-            original_query
+            user_telegram_id: str,
+            drug_name: str,
     ):
         """Отправляет сообщение о создании препарата с клавиатурой"""
         pass

@@ -3,17 +3,19 @@ from typing import Any, Awaitable, Callable, Dict
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, User
 
+from api_client.drug_search_api import DrugSearchAPIClient
+from dependencies.api_client_dep import get_api_client
 from drug_search.core.dependencies.cache_bot_service_dep import get_cache_service
 from drug_search.core.services.cache_service import CacheService
 
 handlers_that_use_api_client = [
-    None
+    "assistant_request"
 ]
 
-handlers_that_use_redis = [
+handlers_that_use_cache_service = [
     "drug_menu_handler",
     "drug_list_handler",
-    "drug_describe_handler"
+    "drug_describe_handler"  # TODO
 ]
 
 
@@ -29,6 +31,10 @@ class DependencyInjectionMiddleware(BaseMiddleware):
 
         # Добавляем в контекст
         data['cache_service'] = cache_service
+
+        if event.text in handlers_that_use_api_client:
+            api_client: DrugSearchAPIClient = get_api_client()
+            data["api_client"] = api_client
 
         try:
             # Получаем access token и сохраняем к контекст

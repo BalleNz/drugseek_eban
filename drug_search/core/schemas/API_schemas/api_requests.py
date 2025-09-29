@@ -25,3 +25,7 @@ class UserRequestLogSchema(BaseModel):
     user_id: uuid.UUID = Field(..., description="User ID")
     user_query: str = Field(..., description="запрос пользователя")
     used_at: datetime = Field(..., description="дата и время использования")
+
+
+class QueryRequest(BaseModel):
+    query: str

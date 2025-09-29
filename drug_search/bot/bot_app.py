@@ -36,7 +36,7 @@ storage = RedisStorage(redis_client)
 dp = Dispatcher(storage=storage)
 
 bot = aiogram.Bot(
-    token=config.BOT_TOKEN,
+    token=config.TELEGRAM_BOT_TOKEN,
     default=DefaultBotProperties(
         parse_mode=ParseMode.HTML
     )

@@ -5,15 +5,17 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.params import Path
 
+from drug_search.core.dependencies.user_service_dep import get_user_service
 from drug_search.core.dependencies.assistant_service_dep import get_assistant_service
 from drug_search.core.dependencies.drug_service_dep import get_drug_service_with_deps, get_drug_service
-from drug_search.core.dependencies.user_service_dep import get_user_service
+from drug_search.core.dependencies.task_service_dep import get_task_service
 from drug_search.core.schemas import (UserSchema, DrugExistingResponse,
                                       EXIST_STATUS, AssistantResponseDrugValidation, DrugSchema)
 from drug_search.core.services.assistant_service import AssistantService
 from drug_search.core.services.drug_service import DrugService
-from drug_search.core.services.user_service import UserService
 from drug_search.core.utils.auth import get_auth_user
+from drug_search.core.services.task_service import TaskService
+from drug_search.core.services.user_service import UserService
 
 logger = logging.getLogger(__name__)
 drug_router = APIRouter(prefix="/drugs")
@@ -28,6 +30,7 @@ async def new_drug(
         user: Annotated[UserSchema, Depends(get_auth_user)],
         drug_service: Annotated[DrugService, Depends(get_drug_service_with_deps)],
         assistant_service: Annotated[AssistantService, Depends(get_assistant_service)],
+        task_service: Annotated[TaskService, Depends(get_task_service)],
         user_query: str = Path(),
 ):
     """
@@ -53,18 +56,16 @@ async def new_drug(
             user_query=user_query
         )
         if assistant_response.status == EXIST_STATUS.EXIST:
-            # Запись нового препарата
-            # TODO: rabbitmq, Celery to workflow
-
             # пытаемся найти по ДВ
             drug: DrugSchema | None = await drug_service.find_drug_by_query(
                 user_query=assistant_response.drug_name
             )
 
             if not drug:
-                drug: DrugSchema = await drug_service.new_drug(drug_name=assistant_response.drug_name)
-
-                # Когда создастся -> отправить сообщение в боте юзеру через воркфлоу с инлайн клавиатурой: (купить/отменить)
+                await task_service.enqueue_drug_creation(
+                    drug_name=assistant_response.drug_name,
+                    user_telegram_id=user.telegram_id
+                )
 
                 return DrugExistingResponse(
                     drug_exist=True,
@@ -143,6 +144,7 @@ async def update_old_drug(
         drug: DrugSchema = await drug_service.update_drug(drug_id=drug_id)
         return drug
     return {"status": "User hasn't allowed requests"}
+
 
 @drug_router.get(
     path="/{drug_id}",

@@ -22,6 +22,6 @@ class DrugAnswer:
     description: str
 
 
-class AnswerAssistantResponse:
+class QuestionAssistantResponse:
     answer: str
     drugs: list[DrugAnswer]

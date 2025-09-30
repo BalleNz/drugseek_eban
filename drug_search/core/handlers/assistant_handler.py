@@ -6,14 +6,38 @@ from fastapi.params import Depends
 from drug_search.core.dependencies.assistant_service_dep import get_assistant_service
 from drug_search.core.services.assistant_service import AssistantService
 from drug_search.core.schemas import QueryRequest, SelectActionResponse
+from schemas import QuestionAssistantResponse
 
 assistant_router = APIRouter(prefix="/assistant")
 
 
-@assistant_router.post(path="/action", response_model=SelectActionResponse)
+@assistant_router.post(path="actions/predict_action", response_model=SelectActionResponse)
 async def action_from_assistant(
         request: QueryRequest,
         assistant_service: Annotated[AssistantService, Depends(get_assistant_service)]
 ):
     """Возвращает ответ с предугадыванием действия юзера"""
-    return await assistant_service.predict_user_action(request.query)
+    return await assistant_service.actions.predict_user_action(request.query)
+
+
+@assistant_router.post(path="/actions/question", response_model=QuestionAssistantResponse)
+async def action_from_assistant(
+        request: QueryRequest,
+        assistant_service: Annotated[AssistantService, Depends(get_assistant_service)]
+):
+    """Отвечает на вопрос юзера, дает список препаратов для достижения целей"""
+    return await assistant_service.actions.answer_to_question(question=request.query)
+
+
+# если преп в боте не найденн по drug_get (поиск по drug_name из ассистента) в АПИ
+# —> дергаем ручку assistant/actions/drug_validation
+# после этого спрашиваем добавить преп или нет
+
+
+@assistant_router.post(path="/actions/drug_validation", response_model=QuestionAssistantResponse)
+async def action_from_assistant(
+        request: QueryRequest,
+        assistant_service: Annotated[AssistantService, Depends(get_assistant_service)]
+):
+    """Валидирует препарат на существование, дает ему характеристику (danger_class)"""
+    return await assistant_service.actions.answer_to_question(question=request.query)

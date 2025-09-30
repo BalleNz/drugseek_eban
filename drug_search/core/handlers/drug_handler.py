@@ -131,9 +131,7 @@ async def allow_drug(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex)
 
 
-@drug_router.post(
-    path="/update/{drug_id}"
-)
+@drug_router.post(path="/update/{drug_id}")
 async def update_old_drug(
         user: Annotated[UserSchema, Depends(get_auth_user)],
         drug_service: Annotated[DrugService, Depends(get_drug_service)],
@@ -146,10 +144,7 @@ async def update_old_drug(
     return {"status": "User hasn't allowed requests"}
 
 
-@drug_router.get(
-    path="/{drug_id}",
-    response_model=DrugSchema
-)
+@drug_router.get(path="/{drug_id}", response_model=DrugSchema)
 async def get_drug(
         user: Annotated[UserSchema, Depends(get_auth_user)],
         drug_service: Annotated[DrugService, Depends(get_drug_service)],
@@ -163,10 +158,7 @@ async def get_drug(
     return drug
 
 
-@drug_router.post(
-    path="/update/{drug_id}/researches",
-    description="Обновляет исследования для препарата"
-)
+@drug_router.post(path="/update/{drug_id}/researches", description="Обновляет исследования для препарата")
 async def update_drug_researches(
         user: Annotated[UserSchema, Depends(get_auth_user)],
         drug_service: Annotated[DrugService, Depends(get_drug_service_with_deps)],
@@ -174,6 +166,7 @@ async def update_drug_researches(
         drug_id: UUID = Path(..., description="ID препарата в формате UUID")
 ):
     """Обновляет таблицу с исследованиями препарата. Возвращает схему препарата."""
+    # TODO задачу в arq
     if not user.allowed_requests:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов.")
 

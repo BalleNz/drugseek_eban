@@ -1,4 +1,3 @@
-import json
 import logging
 import threading
 from abc import ABC, abstractmethod
@@ -12,7 +11,8 @@ from drug_search.core.lexicon import Prompts
 from drug_search.core.schemas import (AssistantResponseDrugResearches, AssistantResponsePubmedQuery,
                                       AssistantDosageDescriptionResponse, AssistantResponseCombinations,
                                       AssistantResponseDrugPathways, AssistantResponseDrugValidation,
-                                      ClearResearchesRequest, SelectActionResponse)
+                                      ClearResearchesRequest, SelectActionResponse, QuestionAssistantResponse)
+from drug_search.core.utils import assistant_utils
 from drug_search.core.utils.exceptions import AssistantResponseError
 
 logger = logging.getLogger(__name__)
@@ -63,6 +63,7 @@ class AssistantService(AssistantInterface):
             if not self._initialized:
                 self.prompts = Prompts()
                 self.client = OpenAI(api_key=config.DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
+                self.actions = self.UserActions(self)
                 self._initialized = True
 
     async def get_response(
@@ -142,21 +143,7 @@ class AssistantService(AssistantInterface):
         :return: Схема с лаконичным видом исследований.
         """
 
-        def get_raw_researchs_request_from_pydantic() -> str:
-            """Превращение Pydantic схемы в строку"""
-            json_query = {
-                "drug_name": pubmed_researches_with_drug_name.drug_name,
-                "researches": [
-                    {
-                        **research.model_dump(exclude_none=True),
-                        "publication_date": research.publication_date.isoformat()
-                    }
-                    for research in pubmed_researches_with_drug_name.researches
-                ]
-            }
-            return json.dumps(json_query, indent=4, ensure_ascii=False)
-
-        input_query = get_raw_researchs_request_from_pydantic()
+        input_query = assistant_utils.serialize_researches_request(request=pubmed_researches_with_drug_name)
         return await self.get_response(input_query=input_query, prompt=self.prompts.GET_DRUG_RESEARCHES,
                                        pydantic_model=AssistantResponseDrugResearches)
 
@@ -167,10 +154,29 @@ class AssistantService(AssistantInterface):
         return await self.get_response(input_query=drug_name, prompt=self.prompts.GET_PUBMED_SEARCH_QUERY,
                                        pydantic_model=AssistantResponsePubmedQuery)
 
-    async def predict_user_action(self, query: str) -> SelectActionResponse:
-        """Предугадывает действие юзера с промптом"""
-        return await self.get_response(
-            input_query=query,
-            prompt=self.prompts.PREDICT_USER_ACTION,
-            pydantic_model=SelectActionResponse
-        )
+    class UserActions:
+        """Класс для взаимодействием с действиями пользователя:
+
+        Actions:
+
+        drug_search | question | spam | other
+        """
+
+        def __init__(self, assistant_service):
+            self.assistant_service = assistant_service
+
+        async def predict_user_action(self, query: str) -> SelectActionResponse:
+            """Предугадывает действие юзера с промптом"""
+            return await self.assistant_service.get_response(
+                input_query=query,
+                prompt=self.assistant_service.prompts.PREDICT_USER_ACTION,
+                pydantic_model=SelectActionResponse
+            )
+
+        async def answer_to_question(self, question: str) -> QuestionAssistantResponse:
+            """Отвечает на вопрос пользователя и дает ему список препаратов для его решения"""
+            return await self.assistant_service.get_response(
+                input_query=question,
+                prompt=self.assistant_service.prompts.ANSWER_TO_QUESTION,
+                pydantic_model=QuestionAssistantResponse
+            )

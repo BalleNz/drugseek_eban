@@ -42,5 +42,6 @@ __all__ = [
     #  API
     'AddTokensRequest',
     'QueryRequest',
-    'SelectActionResponse'
+    'SelectActionResponse',
+    'QuestionAssistantResponse'
 ]

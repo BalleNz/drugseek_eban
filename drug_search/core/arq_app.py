@@ -1,6 +1,6 @@
 from arq.connections import RedisSettings
 
-from drug_search.infrastructure.arq.arq_tasks import create_drug_and_notify
+from drug_search.core.arq_tasks import create_drug_and_notify
 from drug_search.config import config
 
 

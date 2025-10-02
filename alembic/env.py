@@ -5,7 +5,6 @@ from sqlalchemy import pool
 
 from alembic import context
 
-
 config = context.config
 
 if config.config_file_name is not None:
@@ -13,12 +12,14 @@ if config.config_file_name is not None:
 
 from drug_search.config import config as app_config
 
-database_url: str = app_config.DATABASE_URL.replace("db:", "localhost:") + "?async_fallback=True"  # for not docker location
+database_url: str = app_config.DATABASE_URL.replace("db:", "localhost:") + "?async_fallback=True"
 config.set_main_option("sqlalchemy.url", database_url)
 
+# Импортируем ВСЕ модели и типы ДО определения target_metadata
 from drug_search.infrastructure.database.models.base import *  # noqa
 from drug_search.infrastructure.database.models.drug import *  # noqa
 from drug_search.infrastructure.database.models.user import *  # noqa
+from drug_search.infrastructure.database.models.types import *  # noqa
 from drug_search.infrastructure.database import *  # noqa
 
 target_metadata = IDMixin.metadata
@@ -46,15 +47,12 @@ def run_migrations_offline():
             dialect_opts={"paramstyle": "named"},
         )
 
-        with context.begin_transaction():
-            context.run_migrations()
-
-        config.set_main_option("sqlalchemy.url", app_config.DATABASE_TEST_URL + "?async_fallback=True")
+    with context.begin_transaction():
+        context.run_migrations()
 
 
 def run_migrations_online():
-    """Run migrations in 'online' mode."""
-    print("making migration on DATABASE_URL: " + database_url)
+    print("Making migration on DATABASE_URL: " + database_url)
 
     connectable = engine_from_config(
         config.get_section(config.config_ini_section),
@@ -70,6 +68,7 @@ def run_migrations_online():
 
         with context.begin_transaction():
             context.run_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()

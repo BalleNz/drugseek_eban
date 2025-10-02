@@ -17,7 +17,8 @@ class TaskService:
     def __init__(self, arq_pool: ArqRedis):
         self.arq_pool = arq_pool
 
-    def generate_job_id(self, query: str) -> str:
+    @staticmethod
+    def generate_job_id(query: str) -> str:
         """Возвращает закодированную строку (приведенную к байтам)"""
         normalized: str = query.lower().strip()
         return hashlib.md5(normalized.encode()).hexdigest()[:8]

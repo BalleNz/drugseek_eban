@@ -1,6 +1,7 @@
 import aiohttp
 
 from drug_search.config import config
+from drug_search.core.schemas import DrugSchema
 
 
 class TelegramService:
@@ -37,7 +38,9 @@ class TelegramService:
     async def send_drug_created_notification(
             self,
             user_telegram_id: str,
-            drug_name: str,
+            drug: DrugSchema,
     ):
         """Отправляет сообщение о создании препарата с клавиатурой"""
-        pass
+        await self.send_message(user_telegram_id, message=drug.name)
+
+        pass # TODO

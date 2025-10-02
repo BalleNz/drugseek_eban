@@ -31,7 +31,6 @@ __all__ = [
     'Pathway',
     'MechanismSummary',
     'CombinationType',
-    'EXIST_STATUS',
     'PubmedResearchSchema',
     #  User Schema
     'UserSchema',

@@ -5,127 +5,172 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.params import Path
 
-from drug_search.core.dependencies.user_service_dep import get_user_service
 from drug_search.core.dependencies.assistant_service_dep import get_assistant_service
+from drug_search.core.dependencies.cache_bot_service_dep import get_cache_service
 from drug_search.core.dependencies.drug_service_dep import get_drug_service_with_deps, get_drug_service
 from drug_search.core.dependencies.task_service_dep import get_task_service
+from drug_search.core.dependencies.user_service_dep import get_user_service
+from drug_search.core.lexicon.enums import EXIST_STATUS
 from drug_search.core.schemas import (UserSchema, DrugExistingResponse,
-                                      EXIST_STATUS, AssistantResponseDrugValidation, DrugSchema)
+                                      AssistantResponseDrugValidation, DrugSchema)
 from drug_search.core.services.assistant_service import AssistantService
+from drug_search.core.services.cache_service import CacheService
 from drug_search.core.services.drug_service import DrugService
-from drug_search.core.utils.auth import get_auth_user
 from drug_search.core.services.task_service import TaskService
 from drug_search.core.services.user_service import UserService
+from drug_search.core.utils.auth import get_auth_user
 
 logger = logging.getLogger(__name__)
 drug_router = APIRouter(prefix="/drugs")
 
 
 @drug_router.post(
-    "/search/{user_query}",
-    description="Поиск препарата среди существующих. Создает новый препарат (после валидации), если его не было.",
-    response_model=DrugExistingResponse
+    "/new/{drug_name}",
+    description="Создает новый препарат (в ARQ), затем отсылается уведомление с клавиатурой",
 )
 async def new_drug(
         user: Annotated[UserSchema, Depends(get_auth_user)],
-        drug_service: Annotated[DrugService, Depends(get_drug_service_with_deps)],
-        assistant_service: Annotated[AssistantService, Depends(get_assistant_service)],
         task_service: Annotated[TaskService, Depends(get_task_service)],
-        user_query: str = Path(),
+        drug_name: str = Path(description="ДВ")
 ):
-    """
-    Проверяет наличие препарата и его доступ у пользователя.
-    Если препарата нет в БД — создает.
-    :returns:
-        {
-            "drug_allowed": bool,
-            "is_drug": bool,
-            "drug": DrugSchema
-        }
-    """
+    """Создает препарат в ARQ через TaskService"""
     if not user.allowed_requests:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User hasn't allowed requests")
 
-    drug: DrugSchema | None = await drug_service.find_drug_by_query(
-        user_query=user_query
-    )
-    drug_exist = bool(drug)
+    try:
+        task_response = await task_service.enqueue_drug_creation(user_telegram_id=user.telegram_id, drug_name=drug_name)
+        logger.info(f"✅ Drug creation job enqueued with ID: {task_response["job_id"]}")
 
-    if not drug_exist:
-        assistant_response: AssistantResponseDrugValidation = await assistant_service.get_user_query_validation(
-            user_query=user_query
+        return {
+            "status": task_response["status"],
+            "job_id": task_response["job_id"],
+            "message": task_response["message"]
+        }
+    except Exception as ex:
+        return {"status": 0, "exception": str(ex)}
+
+
+@drug_router.get(
+    path="/search/with_trigrams/{drug_name_query}",
+    description="поиск препарата в БД / в мире; Использует триграммы",
+    response_model=DrugExistingResponse
+)
+async def search_drug(
+        user: Annotated[UserSchema, Depends(get_auth_user)],
+        drug_service: Annotated[DrugService, Depends(get_drug_service)],
+        assistant_service: Annotated[AssistantService, Depends(get_assistant_service)],
+        drug_name_query: str = Path(..., description="Предполагаемое название препарата"),
+):
+    drug: DrugSchema | None = await drug_service.find_drug_by_query(
+        user_query=drug_name_query
+    )
+    is_drug_in_database = bool(drug)
+
+    if is_drug_in_database:
+        return DrugExistingResponse(
+            is_exist=True,
+            is_drug_in_database=True,
+            drug=drug,
+            is_allowed=drug.id in user.allowed_drug_ids(),
+            danger_classification=drug.danger_classification
         )
+
+    if not is_drug_in_database:
+
+        """Валидирует препарат на существование, дает ему характеристику (danger_class)"""
+        assistant_response: AssistantResponseDrugValidation = await assistant_service.get_user_query_validation(
+            user_query=drug_name_query
+        )
+
         if assistant_response.status == EXIST_STATUS.EXIST:
-            # пытаемся найти по ДВ
+
+            # Еще раз пытаемся найти по ДВ в Базе
             drug: DrugSchema | None = await drug_service.find_drug_by_query(
                 user_query=assistant_response.drug_name
             )
 
-            if not drug:
-                await task_service.enqueue_drug_creation(
-                    drug_name=assistant_response.drug_name,
-                    user_telegram_id=user.telegram_id
-                )
+            return DrugExistingResponse(
+                is_exist=True,
+                is_drug_in_database=bool(drug),  # может быть найден, а может и нет
+                is_allowed=drug.id in user.allowed_drug_ids(),
+                drug=drug,  # Drug | None
+                danger_classification=assistant_response.danger_classification
+            )
 
-                return DrugExistingResponse(
-                    drug_exist=True,
-                    is_allowed=False,
-                    drug=None
-                )
-        else:
-            drug_exist = False
+        else:  # препарат не существует в принципе
+            return DrugExistingResponse(
+                is_exist=False,
+                is_drug_in_database=False,
+                is_allowed=False,
+                drug=None,
+                danger_classification=assistant_response.danger_classification
+            )
 
-    is_allowed = False
-    if drug:
-        is_allowed = drug.id in user.allowed_drug_ids()
 
+@drug_router.get(
+    path="/search/without_trigrams/{drug_name_query}",
+    description="поиск препа без триграмм",
+    response_model=DrugExistingResponse
+)
+async def search_drug_without_trigrams(
+        user: Annotated[UserSchema, Depends(get_auth_user)],
+        drug_service: Annotated[DrugService, Depends(get_drug_service)],
+        assistant_service: Annotated[AssistantService, Depends(get_assistant_service)],
+        drug_name_query: str = Path(..., description="Строго действующее вещество"),
+):
+    """
+    Нужен для случая если из предыдущей ручки найден не тот препарат.
+
+    Условие:
+    Препарат точно существует.
+
+    На вход подается строго действующее вещество
+    """
+    validation_response: AssistantResponseDrugValidation = await assistant_service.get_user_query_validation(
+        drug_name_query)
+    logger.info(validation_response.model_dump_json())
+
+    if validation_response.status == EXIST_STATUS.NOT_EXIST:
+        logger.info(f"Drug {drug_name_query} not exist!\n {validation_response.model_dump_json()}")
+        return DrugExistingResponse(
+            is_exist=False,
+            is_drug_in_database=False,
+            is_allowed=False,
+            drug=None,
+            danger_classification=None
+        )
+
+    drug: DrugSchema | None = await drug_service.repo.find_drug_without_trigrams(validation_response.drug_name)
     return DrugExistingResponse(
-        drug_exist=drug_exist,
-        is_allowed=is_allowed,
-        drug=drug
+        is_exist=True,
+        is_drug_in_database=bool(drug),
+        is_allowed=drug.id in user.allowed_drug_ids() if drug else None,
+        drug=drug,
+        danger_classification=validation_response.danger_classification
     )
 
 
 @drug_router.post(
     path="/allow/{drug_id}",
     description="Разрешает и возвращает существующий препарат",
-    response_model=DrugExistingResponse
 )
 async def allow_drug(
         user: Annotated[UserSchema, Depends(get_auth_user)],
-        drug_service: Annotated[DrugService, Depends(get_drug_service)],
         user_service: Annotated[UserService, Depends(get_user_service)],
+        cache_service: Annotated[CacheService, Depends(get_cache_service)],
         drug_id: UUID = Path(..., description="ID препарата в формате UUID"),
 ):
-    """
-    Разрешает препарат, который существует в БД
-
-    Формат:
-        {
-            "drug": DrugSchema,
-            "is_allowed": bool
-        }
-    """
+    """Разрешает препарат, который существует в БД"""
     if not user.allowed_requests:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов.")
-
-    drug: DrugSchema | None = await drug_service.repo.get(drug_id)
-    if drug_id in user.allowed_drug_ids():
-        return DrugExistingResponse(
-            drug=drug,
-            is_allowed=True,
-            drug_exist=True
-        )
 
     try:
         await user_service.reduce_tokens(user_id=user.id, tokens_to_reduce=1)
         await user_service.allow_drug_to_user(user_id=user.id, drug_id=drug_id)
 
-        return DrugExistingResponse(
-            drug=drug,
-            is_allowed=True,
-            drug_exist=True
-        )
+        await cache_service.redis_service.invalidate_user_data(telegram_id=user.telegram_id)
+
+        return {"status": 1}
 
     except Exception as ex:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex)

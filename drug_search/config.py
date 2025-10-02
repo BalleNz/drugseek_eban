@@ -13,7 +13,7 @@ ENV_PATH = path.join(BASE_DIR, '.env')
 
 load_dotenv(ENV_PATH)
 
-logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class Config(BaseSettings):
@@ -24,13 +24,13 @@ class Config(BaseSettings):
     NEW_DRUG_COST: int = 1  # allow or generate drug to user
 
     # Режим разработки True/False
-    DEBUG_MODE: ClassVar[bool] = True
+    DEBUG: ClassVar[bool] = environ.get("DEBUG", "true").lower() == "true"
 
     # Deepseek API
     DEEPSEEK_API_KEY: ClassVar[str] = environ.get("DEEPSEEK_API_KEY", "")
 
     # Database
-    DATABASE_URL: ClassVar[str] = environ.get("DATABASE_URL", "")
+    DATABASE_URL: str = environ.get("DATABASE_URL", "")
 
     # Telegram Bot
     TELEGRAM_BOT_TOKEN: ClassVar[str] = environ.get("TELEGRAM_BOT_TOKEN", "")
@@ -50,15 +50,24 @@ class Config(BaseSettings):
     REDIS_URL: str = environ.get("REDIS_URL", "redis://redis:6379")
 
     # ARQ
-    ARQ_REDIS_URL: str = environ.get("ARQ_REDIS_URL", REDIS_URL)
+    ARQ_REDIS_URL: str = environ.get("ARQ_REDIS_URL", "")
     ARQ_REDIS_QUEUE: str = environ.get("ARQ_QUEUE", "arq:queue")
     ARQ_MAX_JOBS: int = int(environ.get("ARQ_MAX_JOBS", "10"))
 
     # AUTH ENDPOINT
     ACCESS_TOKEN_ENDPOINT: str = "v1/auth/"
 
+
+
     def __init__(self, **data):
         super().__init__(**data)
+
+        if self.DEBUG:
+            # Replace container addresses with localhost for development
+            self.DATABASE_URL = self.DATABASE_URL.replace("db:", "localhost:")
+            self.REDIS_URL = self.REDIS_URL.replace("redis://redis:", "redis://localhost:")
+            self.ARQ_REDIS_URL = self.ARQ_REDIS_URL.replace("redis://redis:", "redis://localhost:")
+
         self._oauth2_scheme = OAuth2PasswordBearer(
             tokenUrl=self.ACCESS_TOKEN_ENDPOINT,
             scheme_name="TelegramAccessToken"
@@ -75,5 +84,4 @@ logging.info(f"ENVIRONMENT CREATED: {config.model_dump()}")
 if __name__ == "__main__":
     print(f"ENV_PATH: {ENV_PATH}")
     print(f"File exists: {path.exists(ENV_PATH)}")
-    print(f"DEEPSEEK_API_KEY: {environ.get('DEEPSEEK_API_KEY', 'NOT_FOUND')}")
-    print(f"Config DEEPSEEK_API_KEY: {config.DEEPSEEK_API_KEY}")
+    print(f"Config : {config.model_dump()}")

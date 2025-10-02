@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 
 from drug_search.config import config
 
-DEBUG_MODE: Final[bool] = config.DEBUG_MODE
+DEBUG: Final[bool] = config.DEBUG
 DATABASE_URL: Final[str] = config.DATABASE_URL
 
 
@@ -34,7 +34,7 @@ def create_async_db_engine_and_session(
 
 engine, async_session_maker = create_async_db_engine_and_session(
     database_url=DATABASE_URL,
-    echo=True if DEBUG_MODE else False,
+    echo=True if DEBUG else False,
     pool_size=5,
     max_overflow=10,
     pool_timeout=30,

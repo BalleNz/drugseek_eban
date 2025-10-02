@@ -5,6 +5,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from drug_search.core.lexicon.enums import DANGER_CLASSIFICATION
+
 
 class CombinationType(str, Enum):
     GOOD = 'good'
@@ -75,6 +77,7 @@ class DrugPathwaySchema(BaseModel):
 
 class DrugPriceSchema(BaseModel):
     """Схема цены препарата"""
+    # FUTURE
     id: int = Field(...)
     drug_brandname: str = Field(...)
     price: float = Field(...)
@@ -140,7 +143,7 @@ class DrugSchema(BaseModel):
     created_at: Optional[datetime] = Field(default=None)
     updated_at: Optional[datetime] = Field(default=None)
 
-    is_danger: Optional[bool] = Field(default=None, description="Является ли препарат запрещенным")
+    danger_classification: Optional[DANGER_CLASSIFICATION] = Field(default=None, description="класс опасности 0/1/2")
 
     class Config:
         from_attributes = True

@@ -3,13 +3,14 @@ from datetime import date
 from typing import Optional, Type, TypeVar
 
 from pydantic import BaseModel
-from sqlalchemy import String, Float, ForeignKey, Text, UniqueConstraint, ARRAY, Index, func, Date, Boolean
+from sqlalchemy import String, Float, ForeignKey, Text, UniqueConstraint, ARRAY, Index, func, Date
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID  # Важно импортировать UUID для PostgreSQL
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from drug_search.infrastructure.database.models.base import TimestampsMixin, IDMixin
 from drug_search.core.schemas import DrugAnalogSchema, DrugCombinationSchema, DrugPathwaySchema, \
     DrugResearchSchema, DrugSynonymSchema, DrugDosageSchema, DrugSchema
+from drug_search.infrastructure.database.models.base import TimestampsMixin, IDMixin
+from drug_search.infrastructure.database.models.types import DangerClassificationEnum
 
 M = TypeVar("M", bound=IDMixin)
 S = TypeVar("S", bound=BaseModel)
@@ -31,7 +32,13 @@ class Drug(IDMixin, TimestampsMixin):
     # dosages info
     dosages_fun_fact: Mapped[Optional[str]] = mapped_column(Text)
 
-    is_danger: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false", comment="опасный ли препарат (наркотик, стероид и т.д.)")
+    danger_classification: Mapped[DangerClassificationEnum] = mapped_column(
+        DangerClassificationEnum,
+        comment="классификация опасности препарата: "
+                "0 - безопасен"
+                "1 - сомнительно"
+                "2 - запрещен в рф"
+    )
 
     # pharmacokinetics
     absorption: Mapped[Optional[str]] = mapped_column(Text)
@@ -120,7 +127,7 @@ class Drug(IDMixin, TimestampsMixin):
             elimination=self.elimination,
             time_to_peak=self.time_to_peak,
 
-            is_danger=self.is_danger,
+            danger_classification=self.danger_classification,
 
             synonyms=_map_schemas(self.synonyms),
             dosages=_map_schemas(self.dosages),

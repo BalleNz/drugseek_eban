@@ -44,9 +44,9 @@ async def telegram_auth(
             ...,
             examples=[
                 {
-                    "chat_id": "1488",
-                    "telegram_id": "123456789",
-                    "username": "johndoe",
+                    "chat_id": "1257313065",
+                    "telegram_id": "1257313065",
+                    "username": "еблан",
                     "first_name": "John",
                     "last_name": "Doe",
                     "photo_url": "https://t.me/i/userpic/123/johndoe.jpg"

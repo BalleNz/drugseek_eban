@@ -29,6 +29,8 @@ async def assistant_request(
     """
     # TODO: делает задачу в TaskService
 
+    # TODO в клиете обработку если не нужный препарат найден (дергаем ручку ассистента)
+
     messsage: SendMessage = message.answer(text="Запрос принят.. ожидайте")
     api_client
 

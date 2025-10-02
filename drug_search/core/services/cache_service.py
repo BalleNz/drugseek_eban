@@ -106,6 +106,3 @@ class CacheService:
         )
 
         return fresh_data
-
-
-    # TODO invalidate methods, вызывать с хендлеров при обновлении препарата, юзер профиля (покупка подписки, препарата)

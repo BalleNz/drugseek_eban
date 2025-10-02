@@ -1,16 +1,11 @@
 from datetime import date
-from enum import Enum
 from typing import Optional, Dict
 
 from pydantic import BaseModel, Field
 
 from drug_search.core.schemas.drug_schemas import DrugAnalogSchema, Pathway, MechanismSummary, \
     CombinationType
-
-
-class EXIST_STATUS(Enum):
-    EXIST: str = "exist"
-    NOT_EXIST: str = "not exist"
+from drug_search.core.lexicon.enums import EXIST_STATUS, DANGER_CLASSIFICATION
 
 
 class DosageParams(BaseModel):
@@ -19,12 +14,13 @@ class DosageParams(BaseModel):
     max_day: Optional[str] = Field(default=None)
     per_time_weight_based: Optional[str] = Field(default=None)
     max_day_weight_based: Optional[str] = Field(default=None)
-    notes: Optional[str] = Field(default=None)
+    notes: str = Field(default=None)
 
 
 class AssistantResponseDrugValidation(BaseModel):
     status: EXIST_STATUS = Field(...)
     drug_name: str = Field(default=None)
+    danger_classification: Optional[DANGER_CLASSIFICATION] = Field(default=None)
 
 
 class AssistantDosageDescriptionResponse(BaseModel):
@@ -32,6 +28,7 @@ class AssistantDosageDescriptionResponse(BaseModel):
     drug_name: str = Field(..., description="одно возможное название для ДВ на англ.")
     latin_name: str = Field(...)
     drug_name_ru: str = Field(...)
+    danger_classification: DANGER_CLASSIFICATION = Field(...)
 
     synonyms: Optional[list[str]] = Field(None, description="все возможные названия для препарата на RU")
 
@@ -48,8 +45,6 @@ class AssistantDosageDescriptionResponse(BaseModel):
     metabolism: Optional[str] = Field(default=None, description="основные пути метаболизма")
     elimination: Optional[str] = Field(default=None, description="ТОП 3 (примерно) путей выведения...")
     time_to_peak: Optional[str] = Field(default=None, description="время до достижения Cmax")
-
-    is_danger: bool = Field(...)
 
     dosages: Dict[str, Optional[Dict[str, Optional[DosageParams]]]]
 

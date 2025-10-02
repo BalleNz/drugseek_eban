@@ -1,8 +1,8 @@
-"""сперма
+"""init
 
-Revision ID: 280276509122
+Revision ID: f9dc88694631
 Revises: 
-Create Date: 2025-07-26 15:47:27.769415
+Create Date: 2025-10-02 16:23:41.879100
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '280276509122'
+revision = 'f9dc88694631'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -23,38 +23,44 @@ def upgrade():
     sa.Column('name_ru', sa.String(length=100), nullable=True),
     sa.Column('latin_name', sa.String(length=100), nullable=True),
     sa.Column('description', sa.Text(), nullable=True),
-    sa.Column('classification', sa.String(length=100), nullable=True),
+    sa.Column('classification', sa.Text(), nullable=True),
+    sa.Column('fun_fact', sa.Text(), nullable=True),
+    sa.Column('analogs_description', sa.Text(), nullable=True),
     sa.Column('dosages_fun_fact', sa.Text(), nullable=True),
-    sa.Column('absorption', sa.String(length=100), nullable=True),
+    sa.Column('danger_classification', sa.Enum('SAFE', 'SUBSCRIPTION_NEED', 'DANGER', name='danger_classification'), nullable=False, comment='классификация опасности препарата: 0 - безопасен1 - сомнительно2 - запрещен в рф'),
+    sa.Column('absorption', sa.Text(), nullable=True),
     sa.Column('metabolism', sa.Text(), nullable=True),
     sa.Column('elimination', sa.Text(), nullable=True),
     sa.Column('time_to_peak', sa.String(length=100), nullable=True),
-    sa.Column('primary_action', sa.String(length=100), nullable=True),
-    sa.Column('secondary_actions', sa.String(length=100), nullable=True),
+    sa.Column('metabolism_description', sa.Text(), nullable=True),
+    sa.Column('primary_action', sa.Text(), nullable=True),
+    sa.Column('secondary_actions', sa.Text(), nullable=True),
     sa.Column('clinical_effects', sa.Text(), nullable=True),
     sa.Column('pathways_sources', sa.ARRAY(sa.String()), nullable=True),
-    sa.Column('dosages_sources', sa.ARRAY(sa.String()), nullable=True),
+    sa.Column('dosage_sources', sa.ARRAY(sa.String()), nullable=True),
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('id', 'name')
+    sa.UniqueConstraint('id', 'name'),
+    sa.UniqueConstraint('name')
     )
     op.create_table('users',
     sa.Column('telegram_id', sa.String(), nullable=False, comment='telegram id'),
     sa.Column('username', sa.String(), nullable=False, comment='telegram username'),
-    sa.Column('first_name', sa.String(), nullable=False, comment='telegram first name'),
-    sa.Column('last_name', sa.String(), nullable=False, comment='telegram last name'),
+    sa.Column('first_name', sa.String(), nullable=True, comment='telegram first name'),
+    sa.Column('last_name', sa.String(), nullable=True, comment='telegram last name'),
+    sa.Column('drug_subscription', sa.Boolean(), server_default='false', nullable=False, comment='подписка на запрещенку'),
+    sa.Column('drug_subscription_end', sa.DateTime(), nullable=True, comment='окончание подписки на запрещенку'),
     sa.Column('allowed_requests', sa.Integer(), nullable=False, comment='Количество разрешенных запросов'),
     sa.Column('used_requests', sa.Integer(), nullable=False, comment='Количество использованных запросов'),
-    sa.Column('description', sa.Text(), nullable=False, comment="Каждые 10 запросов о пользователе обновляется его описание. Аля 'какой ты биофакер/химик/фармацевт?'"),
+    sa.Column('description', sa.Text(), nullable=True, comment="Каждые 10 запросов о пользователе обновляется его описание. Аля 'какой ты биофакер/химик/фармацевт?'"),
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index('uq_users_telegram_id', 'users', ['telegram_id'], unique=True)
-    op.create_index('uq_users_username', 'users', ['username'], unique=True)
     op.create_table('allowed_drugs',
     sa.Column('user_id', sa.UUID(), nullable=False),
     sa.Column('drug_id', sa.UUID(), nullable=False),
@@ -67,12 +73,11 @@ def upgrade():
     op.create_table('drug_analogs',
     sa.Column('drug_id', sa.UUID(), nullable=False),
     sa.Column('analog_name', sa.String(length=100), nullable=False, comment='аналог к основному drug'),
-    sa.Column('percent', sa.Float(), nullable=False, comment='процент схожести'),
-    sa.Column('difference', sa.String(length=100), nullable=False, comment='отличие от основного препа'),
+    sa.Column('percent', sa.String(length=10), nullable=False, comment='процент схожести'),
+    sa.Column('difference', sa.Text(), nullable=False, comment='отличие от основного препа'),
     sa.Column('id', sa.UUID(), nullable=False),
     sa.ForeignKeyConstraint(['drug_id'], ['drugs.id'], name='fk_drug_analogs_drug_id', ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('analog_name')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_drug_analogs_drug_id'), 'drug_analogs', ['drug_id'], unique=False)
     op.create_table('drug_combinations',
@@ -82,23 +87,22 @@ def upgrade():
     sa.Column('effect', sa.Text(), nullable=False),
     sa.Column('risks', sa.Text(), nullable=True),
     sa.Column('products', sa.ARRAY(sa.String()), nullable=True),
-    sa.Column('sources', sa.ARRAY(sa.String()), nullable=False),
     sa.Column('id', sa.UUID(), nullable=False),
     sa.ForeignKeyConstraint(['drug_id'], ['drugs.id'], name='fk_drug_combinations_drug_id', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('drug_dosages',
     sa.Column('drug_id', sa.UUID(), nullable=False),
-    sa.Column('route', sa.String(length=30), nullable=True, comment='parental/topical/other'),
-    sa.Column('method', sa.String(length=30), nullable=True, comment='intravenous/intramuscular/eye_drops/skin/nasal/peroral/inhalation/rectal/vaginal'),
+    sa.Column('route', sa.String(length=50), nullable=True, comment='parental/topical/other'),
+    sa.Column('method', sa.String(length=50), nullable=True, comment='intravenous/intramuscular/eye_drops/skin/nasal/peroral/inhalation/rectal/vaginal'),
     sa.Column('per_time', sa.String(length=100), nullable=True),
     sa.Column('max_day', sa.String(length=100), nullable=True),
     sa.Column('per_time_weight_based', sa.String(length=100), nullable=True, comment='for peroral and intramuscular only'),
     sa.Column('max_day_weight_based', sa.String(length=100), nullable=True, comment='for peroral and intramuscular only'),
     sa.Column('onset', sa.String(length=100), nullable=True, comment="<Время начала действия (например, 'немедленно'). Только для intramuscular/intravenous/peroral>"),
-    sa.Column('half_life', sa.String(length=100), nullable=True, comment='период полувыведения'),
-    sa.Column('duration', sa.String(length=100), nullable=True, comment='продолжительность действия'),
-    sa.Column('notes', sa.String(length=100), nullable=True),
+    sa.Column('half_life', sa.String(length=150), nullable=True, comment='период полувыведения'),
+    sa.Column('duration', sa.String(length=150), nullable=True, comment='продолжительность действия'),
+    sa.Column('notes', sa.Text(), nullable=True),
     sa.Column('id', sa.UUID(), nullable=False),
     sa.ForeignKeyConstraint(['drug_id'], ['drugs.id'], name='fk_drug_dosages_drug_id', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
@@ -107,12 +111,11 @@ def upgrade():
     op.create_table('drug_pathways',
     sa.Column('drug_id', sa.UUID(), nullable=False),
     sa.Column('receptor', sa.String(length=100), nullable=False),
-    sa.Column('binding_affinity', sa.String(length=50), nullable=True),
-    sa.Column('affinity_description', sa.String(length=100), nullable=True),
-    sa.Column('activation_type', sa.String(length=50), nullable=False),
-    sa.Column('pathway', sa.String(length=100), nullable=True),
-    sa.Column('effect', sa.String(length=100), nullable=True),
-    sa.Column('source', sa.String(length=100), nullable=True),
+    sa.Column('binding_affinity', sa.String(length=200), nullable=True),
+    sa.Column('affinity_description', sa.String(length=200), nullable=True),
+    sa.Column('activation_type', sa.String(length=200), nullable=False),
+    sa.Column('pathway', sa.String(length=200), nullable=True),
+    sa.Column('effect', sa.String(length=200), nullable=True),
     sa.Column('note', sa.Text(), nullable=True),
     sa.Column('id', sa.UUID(), nullable=False),
     sa.ForeignKeyConstraint(['drug_id'], ['drugs.id'], name='fk_drug_pathways_drug_id', ondelete='CASCADE'),
@@ -131,14 +134,31 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('drug_brandname')
     )
+    op.create_table('drug_researchs',
+    sa.Column('drug_id', sa.UUID(), nullable=False),
+    sa.Column('name', sa.String(length=255), nullable=False),
+    sa.Column('description', sa.Text(), nullable=False),
+    sa.Column('publication_date', sa.Date(), nullable=False),
+    sa.Column('url', sa.String(length=255), nullable=False),
+    sa.Column('summary', sa.Text(), nullable=True),
+    sa.Column('journal', sa.String(length=255), nullable=False),
+    sa.Column('doi', sa.String(length=100), nullable=False),
+    sa.Column('authors', sa.Text(), nullable=True),
+    sa.Column('study_type', sa.String(length=150), nullable=True),
+    sa.Column('interest', sa.Float(), nullable=False),
+    sa.Column('id', sa.UUID(), nullable=False),
+    sa.ForeignKeyConstraint(['drug_id'], ['drugs.id'], name='fk_drug_researches_drug_id', ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('doi')
+    )
+    op.create_index('idx_drug_researches_doi', 'drug_researchs', ['doi'], unique=True)
+    op.create_index(op.f('ix_drug_researchs_drug_id'), 'drug_researchs', ['drug_id'], unique=False)
     op.create_table('drug_synonyms',
     sa.Column('drug_id', sa.UUID(), nullable=False),
     sa.Column('synonym', sa.String(length=100), nullable=False, comment='одно из названий препарата на русском'),
     sa.Column('id', sa.UUID(), nullable=False),
     sa.ForeignKeyConstraint(['drug_id'], ['drugs.id'], name='fk_drug_synonyms_drug_id', ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('drug_id', 'synonym', name='uq_drug_synonym'),
-    sa.UniqueConstraint('synonym')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_index('idx_drug_synonyms_lower', 'drug_synonyms', [sa.literal_column('lower(synonym)')], unique=False, postgresql_using='btree')
     op.create_index(op.f('ix_drug_synonyms_drug_id'), 'drug_synonyms', ['drug_id'], unique=False)
@@ -161,6 +181,9 @@ def downgrade():
     op.drop_index(op.f('ix_drug_synonyms_drug_id'), table_name='drug_synonyms')
     op.drop_index('idx_drug_synonyms_lower', table_name='drug_synonyms', postgresql_using='btree')
     op.drop_table('drug_synonyms')
+    op.drop_index(op.f('ix_drug_researchs_drug_id'), table_name='drug_researchs')
+    op.drop_index('idx_drug_researches_doi', table_name='drug_researchs')
+    op.drop_table('drug_researchs')
     op.drop_table('drug_prices')
     op.drop_table('drug_pathways')
     op.drop_table('drug_dosages')
@@ -169,7 +192,6 @@ def downgrade():
     op.drop_table('drug_analogs')
     op.drop_index('ix_allowed_drugs_user_id_drug_id', table_name='allowed_drugs')
     op.drop_table('allowed_drugs')
-    op.drop_index('uq_users_username', table_name='users')
     op.drop_index('uq_users_telegram_id', table_name='users')
     op.drop_table('users')
     op.drop_table('drugs')

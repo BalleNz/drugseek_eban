@@ -1,9 +1,11 @@
+from typing import Final
+
 from redis.asyncio import ConnectionPool
 
 from drug_search.config import config
 
-# REDIS_URL = config.REDIS_URL
-REDIS_URL = "redis://localhost:6379"  # outside container
+
+REDIS_URL: Final[str] = config.REDIS_URL
 
 REDIS_POOL = ConnectionPool.from_url(
     REDIS_URL,

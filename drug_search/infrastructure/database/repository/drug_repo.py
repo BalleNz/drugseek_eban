@@ -23,6 +23,34 @@ class DrugRepository(BaseRepository):
     def __init__(self, session: AsyncSession):
         super().__init__(model=Drug, session=session)
 
+    async def find_drug_without_trigrams(
+            self,
+            drug_name_query: str
+    ) -> DrugSchema | None:
+        stmt = (
+            select(Drug)
+            .where(
+                func.lower(Drug.name) == func.lower(drug_name_query)
+            )
+            .options(
+                selectinload(Drug.analogs),
+                selectinload(Drug.dosages),
+                selectinload(Drug.pathways),
+                selectinload(Drug.synonyms),
+                selectinload(Drug.combinations),
+                selectinload(Drug.prices),
+                selectinload(Drug.researches)
+            )
+        )
+
+        result = await self.session.execute(stmt)
+        drug: Drug = result.scalar_one_or_none()
+
+        if not drug:
+            return None
+
+        return drug.get_schema()
+
     async def find_drug_by_query(
             self,
             user_query: str
@@ -31,7 +59,7 @@ class DrugRepository(BaseRepository):
         Поиск препарата по триграммному сходству с синонимами (один запрос).
         Возвращает DrugSchema с максимальной схожестью или None.
 
-        :param user_query: Запрос пользователя для поиска препарата используя триграммы.
+        :param user_query: Запрос пользователя.
         """
         stmt = (
             select(Drug)
@@ -130,11 +158,11 @@ class DrugRepository(BaseRepository):
             drug.analogs_description = assistant_response.analogs_description
             drug.metabolism_description = assistant_response.metabolism_description
             drug.dosage_sources = assistant_response.dosage_sources
-            drug.is_danger = assistant_response.is_danger
             drug.absorption = assistant_response.absorption
             drug.metabolism = assistant_response.metabolism
             drug.elimination = assistant_response.elimination
             drug.time_to_peak = assistant_response.time_to_peak
+            drug.danger_classification = assistant_response.danger_classification
             dosages_data = []
             for route, methods in assistant_response.dosages.items():
                 if methods and route:

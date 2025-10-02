@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_DB: ${DATABASE_NAME}
     ports:
-      - "5430:5432"
+      - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
@@ -27,7 +27,7 @@ services:
       - "8000:8000"
     command: python3 asgi.py
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      DEBUG: False  # с докера дебага нет
     depends_on:
       db:
         condition: service_healthy
@@ -49,13 +49,14 @@ services:
   arq_worker:
     build: .
     container_name: worker
+    env_file:
+      - .env
     environment:
-      - REDIS_URL=${REDIS_URL}
-      - DATABASE_URL=${DATABASE_URL}
+      - DEBUG=false  # с докера дебага нет
     depends_on:
       - redis
       - db
-    command: arq app.tasks.worker.WorkerSettings
+    command: arq drug_search.core.arq_app.WorkerSettings
     restart: unless-stopped
 
 volumes:

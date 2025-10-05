@@ -10,8 +10,8 @@ from drug_search.core.schemas import QueryRequest, SelectActionResponse, Questio
 assistant_router = APIRouter(prefix="/assistant")
 
 
-@assistant_router.post(path="actions/predict_action", response_model=SelectActionResponse)
-async def action_from_assistant(
+@assistant_router.post(path="/actions/predict_action", response_model=SelectActionResponse)
+async def get_action(
         request: QueryRequest,
         assistant_service: Annotated[AssistantService, Depends(get_assistant_service)]
 ):
@@ -20,7 +20,7 @@ async def action_from_assistant(
 
 
 @assistant_router.post(path="/actions/question", response_model=QuestionAssistantResponse)
-async def action_from_assistant(
+async def action_answer(
         request: QueryRequest,
         assistant_service: Annotated[AssistantService, Depends(get_assistant_service)]
 ):

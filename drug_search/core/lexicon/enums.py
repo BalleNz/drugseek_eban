@@ -1,6 +1,12 @@
 from enum import Enum
 
 
+class SUBSCRIBE_TYPES(str, Enum):
+    DEFAULT = "DEFAULT"
+    LITE = "LITE"  # 10 запросов в день
+    PREMIUM = "PREMIUM"  # безлимит + подписка на запрещенку
+
+
 class ACTIONS_FROM_ASSISTANT(str, Enum):
     DRUG_SEARCH = "drug_search"
     QUESTION = "question"
@@ -15,5 +21,5 @@ class EXIST_STATUS(Enum):
 
 class DANGER_CLASSIFICATION(Enum):
     SAFE: str = "SAFE"
-    SUBSCRIPTION_NEED: str = "SUBSCRIPTION_NEED"
+    PREMIUM_NEED: str = "PREMIUM_NEED"
     DANGER: str = "DANGER"

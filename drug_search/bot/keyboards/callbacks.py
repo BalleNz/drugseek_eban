@@ -8,16 +8,26 @@ from aiogram.filters.callback_data import CallbackData
 class DescribeTypes(str, Enum):
     BRIEFLY = "Briefly"
     DOSAGES = "Dosages"
-    PATHWAYS = "Pathways"
+    MECHANISM = "Mechanism"
     COMBINATIONS = "Combinations"
     RESEARCHES = "Researches"
     ANALOGS = "Analogs"
     METABOLISM = "Metabolism"
+    UPDATE_INFO = "UpdateInfo"
+
+
+class DrugActions(str, Enum):
+    UPDATE_DRUG = "UpdateDrug"
 
 
 class ArrowTypes(str, Enum):
     BACK = "back"
     FORWARD = "forward"
+
+
+# CALLBACKS
+class DrugActionsCallback(CallbackData, prefix="drug_actions"):
+    action: DrugActions
 
 
 class DatabaseCallback(CallbackData, prefix="database"):
@@ -33,4 +43,4 @@ class DrugListCallback(CallbackData, prefix="drug_list"):
 class DrugDescribeCallback(CallbackData, prefix="drug_describe"):
     drug_id: uuid.UUID
     describe_type: Optional[DescribeTypes]
-    page: int  # страница с прошлого меню
+    page: int | None  # страница с прошлого меню | None (если вне меню)

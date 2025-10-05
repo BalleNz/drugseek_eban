@@ -2,8 +2,10 @@ import uuid
 
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
-from drug_search.bot.keyboards import DrugDescribeCallback, DrugListCallback, DescribeTypes, ArrowTypes
+from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback, DescribeTypes,
+                                       ArrowTypes)
 from drug_search.bot.lexicon.keyboard_words import ButtonText
+from drug_search.core.lexicon.enums import SUBSCRIBE_TYPES
 from drug_search.core.schemas.telegram_schemas import DrugBriefly
 
 # Reply
@@ -82,14 +84,15 @@ def get_drug_list_keyboard(drugs: list[DrugBriefly], page: int) -> InlineKeyboar
 
 def drug_describe_types_keyboard(
         drug_id: uuid.UUID,
-        page: int,  # страница с прошлого меню
-        describe_type: DescribeTypes
+        describe_type: DescribeTypes,
+        user_subscribe_type: SUBSCRIBE_TYPES,
+        page: int | None = None,  # страница с прошлого меню
 ) -> InlineKeyboardMarkup:
     """Возвращает клавиатуру с выбором разделов препарата,
     или со стрелкой возвращения в меню листинга (в зависимости от describe_type)
     """
     if describe_type != DescribeTypes.BRIEFLY:
-        return InlineKeyboardMarkup(
+        keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
                 [
                     InlineKeyboardButton(
@@ -103,12 +106,28 @@ def drug_describe_types_keyboard(
                 ]
             ]
         )
+        if describe_type == DescribeTypes.UPDATE_INFO:
+            keyboard.inline_keyboard.insert(
+                __index=0,
+                __object=[
+                    InlineKeyboardButton(
+                        text=ButtonText.UPDATE_DRUG if user_subscribe_type != SUBSCRIBE_TYPES.PREMIUM else ButtonText.UPDATE_DRUG_FOR_PREMIUM,
+                        callback_data=DrugDescribeCallback(
+                            describe_type=DescribeTypes.BRIEFLY,
+                            drug_id=drug_id,
+                            page=page
+                        ).pack()
+                    )
+                ]
+            )
+
+        return keyboard
 
     keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="Дозировки",
+                    text=ButtonText.DOSAGES,
                     callback_data=DrugDescribeCallback(
                         describe_type=DescribeTypes.DOSAGES,
                         drug_id=drug_id,
@@ -116,7 +135,7 @@ def drug_describe_types_keyboard(
                     ).pack()
                 ),
                 InlineKeyboardButton(
-                    text="Метаболизм",
+                    text=ButtonText.METABOLISM,
                     callback_data=DrugDescribeCallback(
                         describe_type=DescribeTypes.METABOLISM,
                         drug_id=drug_id,
@@ -126,7 +145,7 @@ def drug_describe_types_keyboard(
             ],
             [
                 InlineKeyboardButton(
-                    text="Комбинации",
+                    text=ButtonText.COMBINATIONS,
                     callback_data=DrugDescribeCallback(
                         describe_type=DescribeTypes.COMBINATIONS,
                         drug_id=drug_id,
@@ -134,7 +153,7 @@ def drug_describe_types_keyboard(
                     ).pack()
                 ),
                 InlineKeyboardButton(
-                    text="Аналоги",
+                    text=ButtonText.ANALOGS,
                     callback_data=DrugDescribeCallback(
                         describe_type=DescribeTypes.ANALOGS,
                         drug_id=drug_id,
@@ -144,9 +163,9 @@ def drug_describe_types_keyboard(
             ],
             [
                 InlineKeyboardButton(
-                    text="Механизм действия | Пути активации",
+                    text=ButtonText.MECHANISM,
                     callback_data=DrugDescribeCallback(
-                        describe_type=DescribeTypes.PATHWAYS,
+                        describe_type=DescribeTypes.MECHANISM,
                         drug_id=drug_id,
                         page=page
                     ).pack()
@@ -154,7 +173,7 @@ def drug_describe_types_keyboard(
             ],
             [
                 InlineKeyboardButton(
-                    text="Научные исследования",
+                    text=ButtonText.RESEARCHES,
                     callback_data=DrugDescribeCallback(
                         describe_type=DescribeTypes.RESEARCHES,
                         drug_id=drug_id,
@@ -164,35 +183,28 @@ def drug_describe_types_keyboard(
             ],
             [
                 InlineKeyboardButton(
+                    text=ButtonText.UPDATE_DRUG,
+                    callback_data=DrugDescribeCallback(
+                        describe_type=describe_type.UPDATE_INFO,
+                        drug_id=drug_id,
+                        page=page
+                    ).pack()
+                )
+            ]
+        ]
+    )
+
+    # если просмотр с кнопки "база данных"
+    if page is not None:
+        keyboard.inline_keyboard.append(
+            [
+                InlineKeyboardButton(
                     text="<——",
                     callback_data=DrugListCallback(
                         page=page
                     ).pack()
                 )
             ]
-        ]
-    )
+        )
+
     return keyboard
-
-
-def drug_describe_menu_keyboard(
-        drug_id: uuid.UUID,
-        page: int
-):
-    """Клавиатура во время просмотра одного из разделов препарата.
-    Имеет только стрелку возвращения в листинг.
-    """
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="<——",
-                    callback_data=DrugDescribeCallback(
-                        drug_id=drug_id,
-                        describe_type=DescribeTypes.BRIEFLY,
-                        page=page
-                    ).pack()
-                )
-            ]
-        ]
-    )

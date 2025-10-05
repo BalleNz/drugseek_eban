@@ -1,6 +1,10 @@
+from datetime import datetime
+
 from drug_search.bot.keyboards import DescribeTypes
 from drug_search.bot.lexicon.message_text import MessageTemplates
-from drug_search.core.schemas import AllowedDrugsSchema, UserSchema, DrugSchema, CombinationType
+from drug_search.core.lexicon.enums import SUBSCRIBE_TYPES
+from drug_search.core.schemas import AllowedDrugsSchema, UserSchema, DrugSchema, CombinationType, \
+    QuestionAssistantResponse
 
 SYMBOLS = ["▤", "▥", "▨", "▧", "▦", "▩"] * 2
 
@@ -14,6 +18,24 @@ def make_google_sources(sources: list[str]) -> list[dict]:
         }
         for source in sources
     ]
+
+
+def get_subscription_name(subscription_type: SUBSCRIBE_TYPES):
+    match subscription_type:
+        case SUBSCRIBE_TYPES.DEFAULT:
+            return "нет"
+        case SUBSCRIBE_TYPES.LITE:
+            return "стандарт"
+        case SUBSCRIBE_TYPES.PREMIUM:
+            return "премиум"
+
+
+def days_text(day: datetime):
+    """Преобразование datetime в русскоязычные дни"""
+    days = (day - datetime.now()).days
+    return f"{days} день" if days % 10 == 1 and days % 100 != 11 else \
+        f"{days} дня" if 2 <= days % 10 <= 4 and (days % 100 < 10 or days % 100 >= 20) else \
+            f"{days} дней"
 
 
 class DrugMessageFormatter:
@@ -33,7 +55,7 @@ class DrugMessageFormatter:
         )
 
     @staticmethod
-    def format_pathways(drug: DrugSchema) -> str:
+    def format_mechanism(drug: DrugSchema) -> str:
         """Форматирование информации о путях воздействия"""
         pathways_list: str = ""
 
@@ -190,7 +212,13 @@ class DrugMessageFormatter:
     def format_drugs_info(allowed_drugs_info: AllowedDrugsSchema) -> str:
         return MessageTemplates.DRUGS_INFO.format(
             len_allowed_drugs=allowed_drugs_info.allowed_drugs_count,
-            len_drugs=allowed_drugs_info.drugs_count
+        )
+
+    @staticmethod
+    def format_drug_update_info(drug: DrugSchema):
+        return MessageTemplates.DRUG_UPDATE_INFO.format(
+            drug_name=drug.name_ru,
+            drug_last_update=drug.updated_at
         )
 
     @staticmethod
@@ -199,11 +227,12 @@ class DrugMessageFormatter:
         format_methods = {
             DescribeTypes.BRIEFLY: DrugMessageFormatter.format_drug_briefly,
             DescribeTypes.DOSAGES: DrugMessageFormatter.format_dosages,
-            DescribeTypes.PATHWAYS: DrugMessageFormatter.format_pathways,
+            DescribeTypes.MECHANISM: DrugMessageFormatter.format_mechanism,
             DescribeTypes.COMBINATIONS: DrugMessageFormatter.format_combinations,
             DescribeTypes.RESEARCHES: DrugMessageFormatter.format_researches,
             DescribeTypes.METABOLISM: DrugMessageFormatter.format_metabolism,
-            DescribeTypes.ANALOGS: DrugMessageFormatter.format_analogs
+            DescribeTypes.ANALOGS: DrugMessageFormatter.format_analogs,
+            DescribeTypes.UPDATE_INFO: DrugMessageFormatter.format_drug_update_info
         }
 
         method = format_methods.get(describe_type)
@@ -217,19 +246,43 @@ class UserProfileMessageFormatter:
     """Форматирование пользовательских сообщений"""
 
     @staticmethod
-    def format_user_profile(user_data: UserSchema) -> str:
+    def format_user_profile(user: UserSchema) -> str:
         """Форматирование профиля пользователя"""
-        description = user_data.description
-        description_section = f"<b>Описание:</b>\n{description}\n" if description else ""
+        profile_icon: str = ""
+        match user.subscription_type:
+            case SUBSCRIBE_TYPES.DEFAULT:
+                profile_icon = "🪰"
+            case SUBSCRIBE_TYPES.LITE:
+                profile_icon = "🧢"
+            case SUBSCRIBE_TYPES.PREMIUM:
+                profile_icon = "👑"
 
-        subscription: str = f"<b>Подписка на запрещенку</b>: <b>Активна</b>\n" if user_data.drug_subscription else "Подписка отсутствует :(\n"
-        subscription_end: str = f"Окончание подписки: {user_data.drug_subscription_end}\n" if user_data.drug_subscription else ""
+        subscription: str = f"<u>Подписка:</u> {get_subscription_name(user.subscription_type)}"
+        subscription_end: str = f" <i>(ещё {days_text(user.subscription_end)})</i>\n\n" if user.subscription_end else "\n\n"
         subscription_section = subscription + subscription_end
 
         return MessageTemplates.USER_PROFILE.format(
-            username=user_data.username,
-            used_requests=user_data.used_requests,
-            allowed_requests=user_data.allowed_requests,
-            description_section=description_section,
+            profile_icon=profile_icon,
+            used_requests=user.used_requests,
+            allowed_requests=user.allowed_requests,
+            description_section=user.description if user.description else "",
             subscription_section=subscription_section
+        )
+
+
+class AssistantMessageFormatter:
+    @staticmethod
+    def format_assistant_answer(assistant_response: QuestionAssistantResponse):
+        """Ответ со списком препаратов"""
+        drugs_section: str = ""
+        for i, drug in enumerate(assistant_response.drugs, start=1):
+            drugs_section += f"""
+            {i}) {drug.drug_name}:\n
+            {drug.description}\n
+            <u>{drug.efficiency}</u>\n\n
+            """
+
+        return MessageTemplates.ASSISTANT_ANSWER_DRUGS.format(
+            answer=assistant_response.answer,
+            drugs_section=drugs_section
         )

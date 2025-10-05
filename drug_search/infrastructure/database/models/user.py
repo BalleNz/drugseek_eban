@@ -3,11 +3,13 @@ from datetime import datetime
 from typing import Optional, Type, TypeVar, Union
 
 from pydantic import BaseModel
-from sqlalchemy import String, ForeignKey, Text, Index, func, DateTime, Boolean, Integer, UUID as PG_UUID
+from sqlalchemy import String, ForeignKey, Text, Index, func, DateTime, Integer, UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from drug_search.infrastructure.database.models.base import IDMixin, TimestampsMixin
+from drug_search.infrastructure.database.models.types import UserSubscriptionTypes
+from drug_search.core.lexicon.enums import SUBSCRIBE_TYPES
 from drug_search.core.schemas import UserSchema, UserRequestLogSchema, AllowedDrugSchema
+from drug_search.infrastructure.database.models.base import IDMixin, TimestampsMixin
 
 M = TypeVar("M", bound='IDMixin')
 S = TypeVar("S", bound=BaseModel)
@@ -21,9 +23,14 @@ class User(IDMixin, TimestampsMixin):
     first_name: Mapped[Optional[str]] = mapped_column(String, comment="telegram first name")
     last_name: Mapped[Optional[str]] = mapped_column(String, comment="telegram last name")
 
-    # drugs_subscription
-    drug_subscription: Mapped[bool] = mapped_column(Boolean, server_default="false", default=False, comment="подписка на запрещенку")
-    drug_subscription_end: Mapped[Optional[datetime]] = mapped_column(DateTime, comment="окончание подписки на запрещенку")
+    # subscription
+    subscription_type: Mapped[UserSubscriptionTypes] = mapped_column(
+        UserSubscriptionTypes,
+        server_default=SUBSCRIBE_TYPES.DEFAULT.value,
+        default=SUBSCRIBE_TYPES.DEFAULT,
+        comment="Тип подписки юзера"
+    )
+    subscription_end: Mapped[Optional[datetime]] = mapped_column(DateTime, comment="окончание подписки")
 
     allowed_requests: Mapped[int] = mapped_column(Integer, default=3, comment="Количество разрешенных запросов")
     used_requests: Mapped[int] = mapped_column(Integer, default=0, comment="Количество использованных запросов")
@@ -48,8 +55,8 @@ class User(IDMixin, TimestampsMixin):
             username=self.username,
             first_name=self.first_name,
             last_name=self.last_name,
-            drug_subscription=self.drug_subscription,
-            drug_subscription_end=self.drug_subscription_end,
+            subscription_type=self.subscription_type,
+            subscription_end=self.subscription_end,
             allowed_requests=self.allowed_requests,
             used_requests=self.used_requests,
             description=self.description,

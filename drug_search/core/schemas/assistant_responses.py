@@ -61,7 +61,7 @@ class AssistantResponseDrugCombinationSchema(BaseModel):
 
 
 class AssistantResponseCombinations(BaseModel):
-    combinations: list[AssistantResponseDrugCombinationSchema]
+    combinations: list[AssistantResponseDrugCombinationSchema] | None
 
 
 class AssistantResponseDrugPathways(BaseModel):

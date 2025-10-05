@@ -17,8 +17,8 @@ class WorkerSettings:
     # Настройки worker
     queue_name = config.ARQ_REDIS_QUEUE
     max_jobs = config.ARQ_MAX_JOBS
-    job_timeout = 300  # 5 минут timeout на задачу
-    keep_result = 3600  # Хранить результат 1 час
+    job_timeout = 600  # 10 минут timeout на задачу
+    keep_result = 600  # Хранить результат 10 мин
 
     # Retry политика
     retry_jobs = True

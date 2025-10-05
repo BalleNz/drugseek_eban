@@ -7,10 +7,12 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.redis import RedisStorage
 
-from dependencies.redis_service_dep import redis_client
-from drug_search.bot.handlers.start_handler import router as router0
-from drug_search.bot.handlers.drug_database_handler import router as router1
-from drug_search.bot.handlers.profile_handler import router as router2
+from drug_search.core.dependencies.redis_service_dep import redis_client
+from drug_search.bot.handlers.start_handler import router as start_router
+from drug_search.bot.handlers.drug_database_handler import router as database_router
+from drug_search.bot.handlers.profile_handler import router as profile_router
+from drug_search.bot.handlers.actions import router as actions_router
+from drug_search.bot.handlers.drug_actions import router as drug_actions_router
 from drug_search.bot.middlewares.depends_injectors import DependencyInjectionMiddleware
 from drug_search.config import config
 
@@ -21,9 +23,11 @@ def setup_auth(dp: Dispatcher):
 
     # Регистрация хендлеров (порядок важен)
     for router in [
-        router2,
-        router1,
-        router0,
+        start_router,
+        database_router,
+        profile_router,
+        actions_router,
+        drug_actions_router
     ]:
         dp.include_router(router)
 
@@ -45,7 +49,7 @@ bot = aiogram.Bot(
 
 def logging_cfg():
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
 

@@ -1,5 +1,6 @@
 import hashlib
 import logging
+import uuid
 from enum import Enum
 
 from arq import ArqRedis
@@ -26,30 +27,31 @@ class TaskService:
     async def enqueue_drug_creation(
             self,
             user_telegram_id: str,
+            user_id: uuid.UUID,
             drug_name: str
     ):
         job_id: str = self.generate_job_id(drug_name)  # один для всех задач с одним drug_name
 
-        try:
-            job = await self.arq_pool.enqueue_job(
-                ARQ_JOBS.CREATE_DRUG,
-                user_telegram_id,
-                drug_name,
-                _job_id=job_id,
-                _expires=300  # minutes
-            )
+        job = await self.arq_pool.enqueue_job(
+            ARQ_JOBS.CREATE_DRUG.value,
+            user_telegram_id,
+            user_id,
+            drug_name,
+            _job_id=job_id,
+            _expires=10  # minutes
+        )
+        if job:
             return {
                 "status": "queued",
-                "job_id": job_id,
+                "job_id": job.job_id,
                 "drug_name": drug_name,
                 "message": "Задача поставлена в очередь!"
             }
-        except Exception as ex:
-            if "already exists" in str(ex):
-                return {
-                    "status": "already_queued",
-                    "job_id": job_id,
-                    "drug_name": drug_name,
-                    "message": "Препарат уже создается или создан"
-                }
-            raise ex
+
+        # TODO решить как будет отсылать уведомление, если другой человек уже создал задачу (в клиенте или здесь)
+        return {
+            "status": "already_queued",
+            "job_id": job_id,
+            "drug_name": drug_name,
+            "message": "Препарат уже создается или создан"
+        }

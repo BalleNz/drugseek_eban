@@ -12,7 +12,7 @@ router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
 
 
-@router.message(CommandStart)
+@router.message(CommandStart())
 async def start_dialog(message: Message, state: FSMContext):
     await state.clear()
     await message.answer(text=MessageText.HELLO, reply_markup=main_menu_keyboard)

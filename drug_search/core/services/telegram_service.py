@@ -2,6 +2,7 @@ import aiohttp
 
 from drug_search.config import config
 from drug_search.core.schemas import DrugSchema
+from drug_search.bot.lexicon import MessageTemplates
 
 
 class TelegramService:
@@ -40,7 +41,6 @@ class TelegramService:
             user_telegram_id: str,
             drug: DrugSchema,
     ):
-        """Отправляет сообщение о создании препарата с клавиатурой"""
-        await self.send_message(user_telegram_id, message=drug.name)
-
-        pass # TODO
+        """Отправляет сообщение о созданном препарате с клавиатурой"""
+        message = MessageTemplates.DRUG_CREATED_JOB_FINISHED.format(name_ru=drug.name_ru)
+        await self.send_message(user_telegram_id, message=message, reply_markup=None)

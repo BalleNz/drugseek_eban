@@ -35,9 +35,9 @@ class Drug(IDMixin, TimestampsMixin):
     danger_classification: Mapped[DangerClassificationEnum] = mapped_column(
         DangerClassificationEnum,
         comment="классификация опасности препарата: "
-                "0 - безопасен"
-                "1 - сомнительно"
-                "2 - запрещен в рф"
+                "SAFE - безопасен"
+                "PREMIUM_NEED - сомнительно"
+                "DANGER - запрещен в рф"
     )
 
     # pharmacokinetics

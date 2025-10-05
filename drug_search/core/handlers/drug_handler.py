@@ -38,7 +38,11 @@ async def new_drug(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User hasn't allowed requests")
 
     try:
-        task_response = await task_service.enqueue_drug_creation(user_telegram_id=user.telegram_id, drug_name=drug_name)
+        task_response = await task_service.enqueue_drug_creation(
+            user_telegram_id=user.telegram_id,
+            user_id=user.id,
+            drug_name=drug_name
+        )
         logger.info(f"✅ Drug creation job enqueued with ID: {task_response["job_id"]}")
 
         return {
@@ -76,7 +80,6 @@ async def search_drug(
         )
 
     if not is_drug_in_database:
-
         """Валидирует препарат на существование, дает ему характеристику (danger_class)"""
         assistant_response: AssistantResponseDrugValidation = await assistant_service.get_user_query_validation(
             user_query=drug_name_query
@@ -92,7 +95,7 @@ async def search_drug(
             return DrugExistingResponse(
                 is_exist=True,
                 is_drug_in_database=bool(drug),  # может быть найден, а может и нет
-                is_allowed=drug.id in user.allowed_drug_ids(),
+                is_allowed=drug.id in user.allowed_drug_ids() if bool(drug) else None,
                 drug=drug,  # Drug | None
                 danger_classification=assistant_response.danger_classification
             )
@@ -183,6 +186,8 @@ async def update_old_drug(
         drug_id: UUID = Path(..., description="ID препарата в формате UUID")
 ):
     """Обновляет препарат"""
+    # TODO ARQ
+    ...
     if user.allowed_requests:
         drug: DrugSchema = await drug_service.update_drug(drug_id=drug_id)
         return drug

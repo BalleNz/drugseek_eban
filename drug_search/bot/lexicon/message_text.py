@@ -19,8 +19,8 @@ class MessageTemplates:
 
     DRUG_INFO_BRIEFLY = (
         "<b>{drug_name_ru} ({drug_name}, {latin_name})</b>\n\n"
+        "{description}\n\n"
         "<b>Классификация:</b> {classification}\n\n"
-        "<b>Описание:</b>\n{description}\n\n"
         "<b>Клинические эффекты:</b>\n{clinical_effects}\n\n"
         "{fun_fact}"
     )
@@ -63,17 +63,32 @@ class MessageTemplates:
     )
 
     USER_PROFILE = (
-        "<b>Профиль пользователя</b>\n"
-        "@{username}\n\n"
-        "<b>Статистика запросов:</b>\n"
-        "• Использовано: {used_requests}\n"
-        "• Доступно: {allowed_requests}\n\n"
-        "{description_section}"
+        "<b>{profile_icon} Твой профиль</b>\n\n"
+        "Использовано запросов за сегодня: {used_requests}\n"
+        "Осталось запросов сегодня: {allowed_requests}\n\n"
         "{subscription_section}"
+        "{description_section}"
+    )  # TODO логику поменять. *Использовано за сегодня.
+
+    DRUG_UPDATE_INFO = (
+        "{drug_name}\n\n"
+        "Последнее обновление препарата: {drug_last_update}\n"
     )
 
     DRUGS_INFO = (
-        "<b>Все ваши купленные препараты расположены на этой странице!</b>\n\n"
-        "Всего купленных препаратов: <b>{len_allowed_drugs}</b>\n"
-        "Всего препаратов в БАЗЕ: <b>{len_drugs}</b>"
+        "<b>Все ваши препараты расположены на этой странице!</b>\n\n"
+        "Всего препаратов в <b>Базе:</b> {len_allowed_drugs}"
     )
+
+    # ASSISTANT
+    ASSISTANT_ANSWER_DRUGS = (
+        "{answer}\n\n"
+        "<b>Список препаратов, которые вам помогут:</b>\n"
+        "{drugs_section}"
+    )
+
+    # ARQ
+    DRUG_CREATED_JOB_FINISHED = (
+        "<b>Препарат {name_ru} теперь доступен в вашей Базе!</b>"
+    )
+

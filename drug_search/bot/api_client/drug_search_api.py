@@ -1,19 +1,31 @@
 from uuid import UUID
 
 from drug_search.bot.api_client.base_http_client import BaseHttpClient, HTTPMethod
-from drug_search.core.schemas import UserTelegramDataSchema, UserSchema, DrugExistingResponse, DrugSchema
-from drug_search.core.schemas.telegram_schemas import AllowedDrugsSchema
+from drug_search.core.schemas import (UserTelegramDataSchema, UserSchema, DrugExistingResponse,
+                                      DrugSchema, QuestionAssistantResponse, AllowedDrugsSchema,
+                                      SelectActionResponse)
 
 
 class DrugSearchAPIClient(BaseHttpClient):
     """Универсальный клиент для DrugSearch API"""
 
-    # arq
-    async def assistant_get_action(self, access_token: str, query: str) -> str:
+    # assistant handler
+    async def assistant_get_action(self, access_token: str, query: str) -> SelectActionResponse:
         return await self._request(
             HTTPMethod.POST,
-            endpoint="/v1/assistant/action",
-            request_body={"query": query}
+            endpoint="/v1/assistant/actions/predict_action",
+            request_body={"query": query},
+            access_token=access_token,
+            response_model=SelectActionResponse
+        )
+
+    async def assistant_get_answer(self, access_token: str, question: str) -> QuestionAssistantResponse:
+        return await self._request(
+            HTTPMethod.POST,
+            endpoint="/v1/assistant/actions/question",
+            request_body={"query": question},
+            access_token=access_token,
+            response_model=QuestionAssistantResponse
         )
 
     # Auth endpoints
@@ -61,8 +73,8 @@ class DrugSearchAPIClient(BaseHttpClient):
     ) -> DrugExistingResponse:
         """Поиск препарата"""
         return await self._request(
-            HTTPMethod.POST,
-            f"/v1/drugs/search/{user_query}",
+            HTTPMethod.GET,
+            f"/v1/drugs/search/with_trigrams/{user_query}",
             response_model=DrugExistingResponse,
             access_token=access_token
         )

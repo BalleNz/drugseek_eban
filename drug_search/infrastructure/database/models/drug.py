@@ -246,10 +246,6 @@ class DrugPathway(IDMixin):
 
     note: Mapped[Optional[str]] = mapped_column(Text)  # дополнительные примечания
 
-    __table_args__ = (
-        UniqueConstraint('drug_id', 'receptor', 'activation_type', name='uq_drug_pathway'),
-    )
-
     @property
     def schema_class(cls) -> Type[S]:
         return DrugPathwaySchema

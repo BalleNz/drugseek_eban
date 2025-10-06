@@ -277,9 +277,9 @@ class AssistantMessageFormatter:
         drugs_section: str = ""
         for i, drug in enumerate(assistant_response.drugs, start=1):
             drugs_section += f"""
-            {i}) {drug.drug_name}:\n
-            {drug.description}\n
-            <u>{drug.efficiency}</u>\n\n
+            {i}) <b>{drug.drug_name}:</b>
+            {drug.description}
+            <u>Эффективность:</u> {drug.efficiency}
             """
 
         return MessageTemplates.ASSISTANT_ANSWER_DRUGS.format(

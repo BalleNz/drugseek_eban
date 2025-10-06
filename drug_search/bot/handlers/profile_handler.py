@@ -32,8 +32,3 @@ async def get_profife_info(
     await message.answer(
         text=MessageText.format_user_profile(profile_info)
     )
-
-
-"""@router.callback_query(CallbackData())
-async def _hui():
-    pass"""

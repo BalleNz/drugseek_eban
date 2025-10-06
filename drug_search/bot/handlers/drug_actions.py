@@ -18,4 +18,4 @@ async def assistant_request(
         state: FSMContext,
         api_client: DrugSearchAPIClient
 ):
-    pass
+    pass  # TODO

@@ -74,7 +74,20 @@ class DrugSearchAPIClient(BaseHttpClient):
         """Поиск препарата"""
         return await self._request(
             HTTPMethod.GET,
-            f"/v1/drugs/search/with_trigrams/{user_query}",
+            f"/v1/drugs/search/{user_query}",
+            response_model=DrugExistingResponse,
+            access_token=access_token
+        )
+
+    async def search_drug_trigrams(
+            self,
+            drug_name_query: str,
+            access_token: str
+    ) -> DrugExistingResponse:
+        """Поиск препарата триграммами"""
+        return await self._request(
+            HTTPMethod.GET,
+            endpoint=f"/v1/drugs/search/trigrams/{drug_name_query}",
             response_model=DrugExistingResponse,
             access_token=access_token
         )

@@ -24,7 +24,7 @@ async def drug_menu_handler(
         access_token: str,
         state: FSMContext,
 ):
-    """Отображает сообщение и позволяет листать препараты (после подтвеждения)"""
+    """Отображает сообщение и позволяет листать препараты (после подтверждения)"""
     user_id = str(message.from_user.id)
 
     allowed_drugs_info: AllowedDrugsSchema = await cache_service.get_allowed_drugs(
@@ -94,7 +94,7 @@ async def drug_describe_handler(
             drug_id=drug_id,
             page=page,
             describe_type=describe_type,
-            user_subscribe_type=user.drug_subscription
+            user_subscribe_type=user.subscription_type
         ),
         link_preview_options=LinkPreviewOptions(is_disabled=True)
     )

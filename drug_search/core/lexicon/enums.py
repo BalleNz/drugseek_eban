@@ -14,12 +14,12 @@ class ACTIONS_FROM_ASSISTANT(str, Enum):
     OTHER = "other"
 
 
-class EXIST_STATUS(Enum):
+class EXIST_STATUS(str, Enum):
     EXIST: str = "exist"
     NOT_EXIST: str = "not exist"
 
 
-class DANGER_CLASSIFICATION(Enum):
+class DANGER_CLASSIFICATION(str, Enum):
     SAFE: str = "SAFE"
     PREMIUM_NEED: str = "PREMIUM_NEED"
     DANGER: str = "DANGER"

@@ -19,8 +19,8 @@ class MessageTemplates:
 
     DRUG_INFO_BRIEFLY = (
         "<b>{drug_name_ru} ({drug_name}, {latin_name})</b>\n\n"
+        "<i>({classification})</i>\n\n"
         "{description}\n\n"
-        "<b>Классификация:</b> {classification}\n\n"
         "<b>Клинические эффекты:</b>\n{clinical_effects}\n\n"
         "{fun_fact}"
     )
@@ -83,7 +83,7 @@ class MessageTemplates:
     # ASSISTANT
     ASSISTANT_ANSWER_DRUGS = (
         "{answer}\n\n"
-        "<b>Список препаратов, которые вам помогут:</b>\n"
+        "<b>Список препаратов, которые вам помогут:</b>"
         "{drugs_section}"
     )
 

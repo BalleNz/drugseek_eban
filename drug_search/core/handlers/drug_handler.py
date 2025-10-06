@@ -55,8 +55,8 @@ async def new_drug(
 
 
 @drug_router.get(
-    path="/search/with_trigrams/{drug_name_query}",
-    description="поиск препарата в БД / в мире; Использует триграммы",
+    path="/search/{drug_name_query}",
+    description="поиск препарата ассистентом; Использует триграммы",
     response_model=DrugExistingResponse
 )
 async def search_drug(
@@ -111,8 +111,29 @@ async def search_drug(
 
 
 @drug_router.get(
+    path="/search/trigrams/{drug_name_query}",
+    description="триграмм-поиск препарата",
+    response_model=DrugExistingResponse
+)
+async def search_drug_only_trigrams(
+        drug_service: Annotated[DrugService, Depends(get_drug_service)],
+        user: Annotated[UserSchema, Depends(get_auth_user)],
+        drug_name_query: str = Path(..., description="Строго действующее вещество"),
+):
+    drug: DrugSchema | None = await drug_service.find_drug_by_query(drug_name_query)
+
+    return DrugExistingResponse(
+        is_exist=True if drug else None,
+        is_drug_in_database=True if drug else False,
+        is_allowed=drug.id in user.allowed_drug_ids() if drug else None,
+        drug=drug,
+        danger_classification=drug.danger_classification if drug else None,
+    )
+
+
+@drug_router.get(
     path="/search/without_trigrams/{drug_name_query}",
-    description="поиск препа без триграмм",
+    description="поиск препарата без триграмм",
     response_model=DrugExistingResponse
 )
 async def search_drug_without_trigrams(

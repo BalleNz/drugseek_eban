@@ -1,4 +1,3 @@
-import asyncio
 import logging
 
 from aiogram import Router
@@ -9,7 +8,8 @@ from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
 from drug_search.bot.keyboards import DescribeTypes, drug_describe_types_keyboard
 from drug_search.bot.utils.format_message_text import AssistantMessageFormatter, DrugMessageFormatter
 from drug_search.core.lexicon.enums import ACTIONS_FROM_ASSISTANT
-from drug_search.core.schemas import QuestionAssistantResponse, SelectActionResponse, DrugExistingResponse
+from drug_search.core.schemas import (QuestionAssistantResponse, SelectActionResponse,
+                                      DrugExistingResponse, UserSchema)
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
@@ -32,45 +32,30 @@ async def assistant_request(
     }
     """
     # TODO: делает задачу в TaskService
-
     # TODO в клиете обработку если не нужный препарат найден (дергаем ручку ассистента)
 
-    drug_existing_response: DrugExistingResponse | None = await api_client.search_drug(message.text,
-                                                                                       access_token=access_token)
+    user: UserSchema = await api_client.get_current_user(access_token)
 
-    if drug_existing_response.is_exist:
-        if drug_existing_response.is_drug_in_database:
-            message_text = DrugMessageFormatter.format_drug_briefly(drug_existing_response.drug)
-            await message.answer(
-                message_text,
-                reply_markup=drug_describe_types_keyboard(
-                    drug_id=drug_existing_response.drug.id,
-                    describe_type=DescribeTypes.BRIEFLY,
-                ),
-                link_preview_options=LinkPreviewOptions(is_disabled=True)
-            )
-        else:
-            await message.answer("такого препарат нет в БД ")
+    # Fast drug search with trigrams
+    drug_response: DrugExistingResponse = await api_client.search_drug_trigrams(
+        drug_name_query=message.text,
+        access_token=access_token
+    )
+
+    if drug_response.is_drug_in_database:
+        message_text = DrugMessageFormatter.format_drug_briefly(drug_response.drug)
+        await message.answer(
+            message_text,
+            reply_markup=drug_describe_types_keyboard(
+                drug_id=drug_response.drug.id,
+                describe_type=DescribeTypes.BRIEFLY,
+                user_subscribe_type=user.subscription_type
+            ),
+            link_preview_options=LinkPreviewOptions(is_disabled=True)
+        )
     else:
         message_request: Message = await message.answer(text="Запрос принят.. обрабатываю")
 
-        asyncio.create_task(process_assistant_request(
-            message, access_token, state, api_client, message_request
-        ))
-
-
-async def process_assistant_request(
-        message: Message,
-        access_token: str,
-        state: FSMContext,
-        api_client: DrugSearchAPIClient,
-        message_request: Message
-):
-    # TODO поменять полностью логику:
-    # СНАЧАЛА ПОИСК ПРЕПАРАТА
-    # ЕСЛИ НЕ НАЙДЕН -> поиск действия (спам или вопрос (только два действия теперь))
-
-    try:
         action_response: SelectActionResponse = await api_client.assistant_get_action(
             access_token, message.text
         )
@@ -84,14 +69,28 @@ async def process_assistant_request(
                 await message_request.edit_text(message_text)
 
             case ACTIONS_FROM_ASSISTANT.DRUG_SEARCH:
-                ...
+                drug_existing_response: DrugExistingResponse | None = await api_client.search_drug(
+                    message.text,
+                    access_token=access_token
+                )
+
+                if drug_existing_response.is_exist:
+                    if drug_existing_response.is_drug_in_database:
+                        message_text = DrugMessageFormatter.format_drug_briefly(drug_existing_response.drug)
+                        await message.answer(
+                            message_text,
+                            reply_markup=drug_describe_types_keyboard(
+                                drug_id=drug_existing_response.drug.id,
+                                describe_type=DescribeTypes.BRIEFLY,
+                                user_subscribe_type=user.subscription_type
+                            ),
+                            link_preview_options=LinkPreviewOptions(is_disabled=True)
+                        )
+                    else:
+                        await message.answer("такого препарат нет в БД ")
 
             case ACTIONS_FROM_ASSISTANT.SPAM:
                 await message.answer("Это сообщение распознано как спам")
 
             case ACTIONS_FROM_ASSISTANT.OTHER:
                 await message.answer("Пожалуйста, уточните ваш запрос")
-
-    except Exception as e:
-        logger.error(f"Error processing assistant request: {e}")
-        await message.answer("Произошла ошибка при обработке запроса")

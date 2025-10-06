@@ -7,7 +7,7 @@ from drug_search.core.schemas.drug_schemas import DrugSchema
 
 
 class DrugExistingResponse(BaseModel):
-    is_exist: bool
+    is_exist: bool | None
     danger_classification: DANGER_CLASSIFICATION | None = Field(None, description="Класс опасности (0/1/2)")
 
     is_drug_in_database: bool | None

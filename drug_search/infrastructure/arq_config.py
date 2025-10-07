@@ -1,6 +1,6 @@
 from arq.connections import RedisSettings
 
-from drug_search.core.arq_tasks import create_drug_and_notify
+from drug_search.core.arq_tasks import drug_operations
 from drug_search.config import config
 
 
@@ -8,7 +8,7 @@ from drug_search.config import config
 class WorkerSettings:
     # Функции которые может выполнять worker
     functions = [
-        create_drug_and_notify,
+        drug_operations,
     ]
 
     # Настройки Redis

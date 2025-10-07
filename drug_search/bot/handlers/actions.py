@@ -81,14 +81,10 @@ async def main_action(
                 if user.allowed_question_requests:
                     # отнимаем токен
                     await api_client.add_tokens(access_token, tokens_amount=-1)
-                    # сразу инвалидируем кеш
+                    # сразу инвалидируем кеш  (для актуальности количества токенов)
                     await cache_service.redis_service.invalidate_user_data(message.from_user.id)
 
-                    answer_response: QuestionAssistantResponse = await api_client.assistant_get_answer(
-                        access_token, message.text
-                    )
-                    message_text: str = AssistantMessageFormatter.format_assistant_answer(answer_response)
-                    await message_request.edit_text(message_text)
+
 
             case ACTIONS_FROM_ASSISTANT.DRUG_SEARCH:
                 drug_existing_response: DrugExistingResponse | None = await api_client.search_drug(

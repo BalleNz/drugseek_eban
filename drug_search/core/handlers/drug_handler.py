@@ -5,6 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.params import Path
 
+from arq_tasks import DrugOperations
 from drug_search.core.dependencies.assistant_service_dep import get_assistant_service
 from drug_search.core.dependencies.cache_bot_service_dep import get_cache_service
 from drug_search.core.dependencies.drug_service_dep import get_drug_service_with_deps, get_drug_service
@@ -38,7 +39,8 @@ async def new_drug(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User hasn't allowed requests")
 
     try:
-        task_response = await task_service.enqueue_drug_creation(
+        task_response = await task_service.enqueue_drug_operations(
+            operation=DrugOperations.CREATE,
             user_telegram_id=user.telegram_id,
             user_id=user.id,
             drug_name=drug_name
@@ -56,7 +58,7 @@ async def new_drug(
 
 @drug_router.get(
     path="/search/{drug_name_query}",
-    description="поиск препарата ассистентом; Использует три граммы",
+    description="поиск препарата ассистентом; Использует триграммы",
     response_model=DrugExistingResponse
 )
 async def search_drug(

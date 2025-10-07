@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from drug_search.bot.keyboards import DescribeTypes
 from drug_search.bot.lexicon.message_text import MessageTemplates
@@ -31,11 +31,46 @@ def get_subscription_name(subscription_type: SUBSCRIBE_TYPES):
 
 
 def days_text(day: datetime):
-    """Преобразование datetime в русскоязычные дни"""
+    """Преобразование datetime.days в русскоязычные дни"""
     days = (day - datetime.now()).days
     return f"{days} день" if days % 10 == 1 and days % 100 != 11 else \
         f"{days} дня" if 2 <= days % 10 <= 4 and (days % 100 < 10 or days % 100 >= 20) else \
             f"{days} дней"
+
+
+def get_time_when_refresh(last_update: datetime) -> str:
+    def __get_time_name_format(count: int, time_type: str):
+        """Преобразование datetime.hours | .minutes в русскоязычный формат"""
+        if time_type == "minutes":
+            if count % 10 == 1 and count % 100 != 11:
+                return "минута"
+            elif 2 <= count % 10 <= 4 and (count % 100 < 10 or count % 100 >= 20):
+                return "минуты"
+            else:
+                return "минут"
+        elif time_type == "hours":
+            if count % 10 == 1 and count % 100 != 11:
+                return "час"
+            elif 2 <= count % 10 <= 4 and (count % 100 < 10 or count % 100 >= 20):
+                return "часа"
+            else:
+                return "часов"
+
+    text: str = "<i>({time_to_update} {time_format} до сброса)</i>"
+
+    time_diff: timedelta = (last_update + timedelta(hours=24)) - datetime.now()
+    if time_diff <= timedelta(hours=1):
+        time_to_update: int = time_diff.seconds // 60
+        return text.format(
+            time_to_update=time_to_update,
+            time_format=__get_time_name_format(time_to_update, "minutes")
+        )
+    else:
+        time_to_update: int = time_diff.seconds // 60 // 60
+        return text.format(
+            time_to_update=time_to_update,
+            time_format=__get_time_name_format(time_to_update, "hours")
+        )
 
 
 class DrugMessageFormatter:
@@ -244,7 +279,6 @@ class DrugMessageFormatter:
 
 class UserProfileMessageFormatter:
     """Форматирование пользовательских сообщений"""
-
     @staticmethod
     def format_user_profile(user: UserSchema) -> str:
         """Форматирование профиля пользователя"""
@@ -261,10 +295,13 @@ class UserProfileMessageFormatter:
         subscription_end: str = f" <i>(ещё {days_text(user.subscription_end)})</i>\n\n" if user.subscription_end else "\n\n"
         subscription_section = subscription + subscription_end
 
+        refresh_section: str = get_time_when_refresh(user.requests_last_refresh)
+
         return MessageTemplates.USER_PROFILE.format(
             profile_icon=profile_icon,
-            used_requests=user.used_requests,
-            allowed_requests=user.allowed_requests,
+            allowed_search_requests=user.allowed_search_requests,
+            allowed_question_requests=user.allowed_question_requests,
+            refresh_section=refresh_section,
             description_section=user.description if user.description else "",
             subscription_section=subscription_section
         )

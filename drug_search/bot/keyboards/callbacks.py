@@ -44,3 +44,8 @@ class DrugDescribeCallback(CallbackData, prefix="drug_describe"):
     drug_id: uuid.UUID
     describe_type: Optional[DescribeTypes]
     page: int | None  # страница с прошлого меню | None (если вне меню)
+
+
+ # если найден неверный препарат
+class WrongDrugFoundedCallback(CallbackData, prefix="wrong_drug"):
+    drug_name_query: str

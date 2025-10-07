@@ -34,7 +34,7 @@ async def new_drug(
         drug_name: str = Path(description="ДВ")
 ):
     """Создает препарат в ARQ через TaskService"""
-    if not user.allowed_requests:
+    if not user.allowed_search_requests:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User hasn't allowed requests")
 
     try:
@@ -56,7 +56,7 @@ async def new_drug(
 
 @drug_router.get(
     path="/search/{drug_name_query}",
-    description="поиск препарата ассистентом; Использует триграммы",
+    description="поиск препарата ассистентом; Использует три граммы",
     response_model=DrugExistingResponse
 )
 async def search_drug(
@@ -185,7 +185,7 @@ async def allow_drug(
         drug_id: UUID = Path(..., description="ID препарата в формате UUID"),
 ):
     """Разрешает препарат, который существует в БД"""
-    if not user.allowed_requests:
+    if not user.allowed_search_requests:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов.")
 
     try:
@@ -209,7 +209,7 @@ async def update_old_drug(
     """Обновляет препарат"""
     # TODO ARQ
     ...
-    if user.allowed_requests:
+    if user.allowed_search_requests:
         drug: DrugSchema = await drug_service.update_drug(drug_id=drug_id)
         return drug
     return {"status": "User hasn't allowed requests"}
@@ -222,7 +222,7 @@ async def get_drug(
         drug_id: UUID = Path(..., description="ID препарата в формате UUID")
 ):
     """Возвращает препарат по его ID"""
-    if not user.allowed_requests:
+    if not user.allowed_search_requests:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов.")
 
     drug: DrugSchema | None = await drug_service.repo.get_with_all_relationships(drug_id)
@@ -238,7 +238,7 @@ async def update_drug_researches(
 ):
     """Обновляет таблицу с исследованиями препарата. Возвращает схему препарата."""
     # TODO задачу в arq
-    if not user.allowed_requests:
+    if not user.allowed_search_requests:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов.")
 
     await user_service.reduce_tokens(user.id, 1)

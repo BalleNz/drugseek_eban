@@ -28,6 +28,6 @@ async def action_answer(
     return await assistant_service.actions.answer_to_question(question=request.query)
 
 
-# если преп в боте не найденн по drug_get (поиск по drug_name из ассистента) в АПИ
+# если препарат в боте не найден по drug_get (поиск по drug_name из ассистента) в АПИ
 # —> дергаем ручку assistant/actions/drug_validation
-# после этого спрашиваем добавить преп или нет
+# после этого спрашиваем добавить препарат или нет

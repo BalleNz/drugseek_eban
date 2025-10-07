@@ -18,6 +18,7 @@ __all__ = [
     'AssistantResponsePubmedQuery',
     'ClearResearchesRequest',
     #  Drug Schema
+    'DrugBriefly',
     'DrugSchema',
     'DrugDosageSchema',
     'DrugPathwaySchema',

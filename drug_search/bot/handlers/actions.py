@@ -2,39 +2,53 @@ import logging
 
 from aiogram import Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, LinkPreviewOptions
+from aiogram.types import Message, LinkPreviewOptions, CallbackQuery
 
+from drug_search.core.dependencies.cache_bot_service_dep import cache_service
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
 from drug_search.bot.keyboards import DescribeTypes, drug_describe_types_keyboard
 from drug_search.bot.utils.format_message_text import AssistantMessageFormatter, DrugMessageFormatter
 from drug_search.core.lexicon.enums import ACTIONS_FROM_ASSISTANT
 from drug_search.core.schemas import (QuestionAssistantResponse, SelectActionResponse,
                                       DrugExistingResponse, UserSchema)
+from keyboards import WrongDrugFoundedCallback
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
 
 
-@router.message()
-async def assistant_request(
-        message: Message,
+@router.message(WrongDrugFoundedCallback.filter())
+async def wrong_drug_founded(
+        callback_query: CallbackQuery,
         access_token: str,
-        state: FSMContext,  # TODO попробовать убрать функцию и удалить state
+        state: FSMContext,
+        callback_data: WrongDrugFoundedCallback,
         api_client: DrugSearchAPIClient
 ):
-    """ручка для возвращения ответа ассистента в виде:
-    "response": {
-        "action": "drug_search/question_from_user/spam",
-        "drug_exist": bool | None,
-        "drug_name": str | None,
-        "answer": str | None,
-        ""
-    }
-    """
-    # TODO: делает задачу в TaskService
-    # TODO в клиете обработку если не нужный препарат найден (дергаем ручку ассистента)
+    user: UserSchema = await cache_service.get_user_profile(access_token, callback_query.from_user.id)
+    message: Message = await callback_query.message.answer("Поиск препарата..")
 
-    user: UserSchema = await api_client.get_current_user(access_token)
+    drug_response: DrugExistingResponse = await api_client.search_drug(callback_data.drug_name_query, access_token)
+    await message.edit_text(
+        text=DrugMessageFormatter.format_drug_briefly(drug_response.drug),
+        callback_data=drug_describe_types_keyboard(
+            drug_id=drug_response.drug.id,
+            describe_type=DescribeTypes.BRIEFLY,
+            user_subscribe_type=user.subscription_type,
+        )
+    )
+
+
+@router.message()
+async def main_action(
+        message: Message,
+        access_token: str,
+        state: FSMContext,
+        api_client: DrugSearchAPIClient
+):
+    """Основная ручка для запросов юзера"""
+
+    user: UserSchema = await cache_service.get_user_profile(access_token=access_token, telegram_id=message.from_user.id)
 
     # Fast drug search with trigrams
     drug_response: DrugExistingResponse = await api_client.search_drug_trigrams(
@@ -49,7 +63,8 @@ async def assistant_request(
             reply_markup=drug_describe_types_keyboard(
                 drug_id=drug_response.drug.id,
                 describe_type=DescribeTypes.BRIEFLY,
-                user_subscribe_type=user.subscription_type
+                user_subscribe_type=user.subscription_type,
+                drug_name=message.text
             ),
             link_preview_options=LinkPreviewOptions(is_disabled=True)
         )
@@ -62,11 +77,18 @@ async def assistant_request(
 
         match action_response.action:
             case ACTIONS_FROM_ASSISTANT.QUESTION:
-                answer_response: QuestionAssistantResponse = await api_client.assistant_get_answer(
-                    access_token, message.text
-                )
-                message_text: str = AssistantMessageFormatter.format_assistant_answer(answer_response)
-                await message_request.edit_text(message_text)
+                # TODO: делает задачу в TaskService (вот эту всю хуйню туда запихать просто)
+                if user.allowed_question_requests:
+                    # отнимаем токен
+                    await api_client.add_tokens(access_token, tokens_amount=-1)
+                    # сразу инвалидируем кеш
+                    await cache_service.redis_service.invalidate_user_data(message.from_user.id)
+
+                    answer_response: QuestionAssistantResponse = await api_client.assistant_get_answer(
+                        access_token, message.text
+                    )
+                    message_text: str = AssistantMessageFormatter.format_assistant_answer(answer_response)
+                    await message_request.edit_text(message_text)
 
             case ACTIONS_FROM_ASSISTANT.DRUG_SEARCH:
                 drug_existing_response: DrugExistingResponse | None = await api_client.search_drug(

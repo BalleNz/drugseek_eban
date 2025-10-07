@@ -3,10 +3,11 @@ import uuid
 from contextlib import asynccontextmanager
 
 from database.repository.user_repo import UserRepository
+from dependencies.redis_service_dep import get_redis
 from drug_search.core.dependencies.assistant_service_dep import get_assistant_service
 from drug_search.core.dependencies.pubmed_service_dep import get_pubmed_service
 from drug_search.core.dependencies.telegram_service_dep import get_telegram_service
-from drug_search.core.dependencies.user_service_dep import get_user_service
+from drug_search.core.schemas import DrugSchema
 from drug_search.core.services.assistant_service import AssistantService
 from drug_search.core.services.drug_service import DrugService
 from drug_search.core.services.pubmed_service import PubmedService
@@ -14,7 +15,7 @@ from drug_search.core.services.telegram_service import TelegramService
 from drug_search.core.services.user_service import UserService
 from drug_search.infrastructure.database.engine import get_async_session
 from drug_search.infrastructure.database.repository.drug_repo import DrugRepository
-from drug_search.core.schemas import DrugSchema
+from services.redis_service import RedisService
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +60,9 @@ async def create_drug_and_notify(
                 assistant_service=assistant_service,
                 pubmed_service=pubmed_service
             )
+
+            redis_service: RedisService = get_redis()
+            await redis_service.invalidate_user_data(user_telegram_id)
 
             drug: DrugSchema = await drug_service.new_drug(drug_name)
 

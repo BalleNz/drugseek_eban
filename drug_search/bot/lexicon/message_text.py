@@ -3,7 +3,7 @@ SYMBOLS = ["▤", "▥", "▨", "▧", "▦", "▩"] * 2
 
 def make_google_sources(sources: list[str]) -> list[dict]:
     """Возвращает ссылки на поиск гугл различных источников,
-    например, Articles, DrugbankID..
+    например, Articles, DrugBankID.
     """
     return [
         {
@@ -64,11 +64,13 @@ class MessageTemplates:
 
     USER_PROFILE = (
         "<b>{profile_icon} Твой профиль</b>\n\n"
-        "Использовано запросов за сегодня: {used_requests}\n"
-        "Осталось запросов сегодня: {allowed_requests}\n\n"
+        "<b>Осталось запросов сегодня:</b>\n"
+        "    Поиск препаратов: <u>{allowed_search_requests}</u>\n"
+        "    Вопросы: <u>{allowed_question_requests}</u>\n\n"
+        "{refresh_section}\n\n"
         "{subscription_section}"
         "{description_section}"
-    )  # TODO логику поменять. *Использовано за сегодня.
+    )
 
     DRUG_UPDATE_INFO = (
         "{drug_name}\n\n"
@@ -77,7 +79,7 @@ class MessageTemplates:
 
     DRUGS_INFO = (
         "<b>Все ваши препараты расположены на этой странице!</b>\n\n"
-        "Всего препаратов в <b>Базе:</b> {len_allowed_drugs}"
+        "Всего препаратов в вашей <b>базе:</b> {len_allowed_drugs}"
     )
 
     # ASSISTANT
@@ -89,6 +91,5 @@ class MessageTemplates:
 
     # ARQ
     DRUG_CREATED_JOB_FINISHED = (
-        "<b>Препарат {name_ru} теперь доступен в вашей Базе!</b>"
+        "<b>Препарат {name_ru} теперь доступен в вашей базе!</b>"
     )
-

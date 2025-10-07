@@ -3,7 +3,7 @@ import uuid
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
 from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback, DescribeTypes,
-                                       ArrowTypes)
+                                       ArrowTypes, WrongDrugFoundedCallback)
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.core.lexicon.enums import SUBSCRIBE_TYPES
 from drug_search.core.schemas.telegram_schemas import DrugBriefly
@@ -87,6 +87,7 @@ def drug_describe_types_keyboard(
         describe_type: DescribeTypes,
         user_subscribe_type: SUBSCRIBE_TYPES,
         page: int | None = None,  # страница с прошлого меню
+        drug_name: str | None = None  # если найден неверный препарат
 ) -> InlineKeyboardMarkup:
     """Возвращает клавиатуру с выбором разделов препарата,
     или со стрелкой возвращения в меню листинга (в зависимости от describe_type)
@@ -194,14 +195,26 @@ def drug_describe_types_keyboard(
         ]
     )
 
-    # если просмотр с кнопки "база данных"
     if page is not None:
+        # если просмотр с кнопки "база данных"
         keyboard.inline_keyboard.append(
             [
                 InlineKeyboardButton(
                     text="<——",
                     callback_data=DrugListCallback(
                         page=page
+                    ).pack()
+                )
+            ]
+        )
+    elif drug_name:
+        # если просмотр с поиска
+        keyboard.inline_keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text="<b>Найден не тот препарат</b>",
+                    callback_data=WrongDrugFoundedCallback(
+                        drug_name_query=drug_name
                     ).pack()
                 )
             ]

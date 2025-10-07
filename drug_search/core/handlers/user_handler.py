@@ -16,7 +16,7 @@ user_router = APIRouter(prefix="/user")
     response_model=UserSchema,
     description="Получить описание юзера"
 )
-async def get_me(
+async def get_user(
         user: Annotated[UserSchema, Depends(get_auth_user)],
 ):
     return user

@@ -1,3 +1,4 @@
+import datetime
 import logging
 import uuid
 from typing import Any, Sequence
@@ -7,6 +8,9 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from drug_search.core.lexicon import (PREMIUM_SEARCH_DAY_LIMIT, DEFAULT_SEARCH_DAY_LIMIT,
+                                      SUBSCRIBE_TYPES, DEFAULT_QUESTIONS_DAY_LIMIT, LITE_QUESTIONS_DAY_LIMIT,
+                                      LITE_SEARCH_DAY_LIMIT, PREMIUM_QUESTIONS_DAY_LIMIT)
 from drug_search.core.schemas import UserTelegramDataSchema, UserSchema, AllowedDrugsSchema, DrugBriefly
 from drug_search.infrastructure.database.models.user import AllowedDrugs, User
 from drug_search.infrastructure.database.repository.base_repo import BaseRepository
@@ -17,6 +21,27 @@ logger = logging.getLogger(__name__)
 class UserRepository(BaseRepository):
     def __init__(self, session: AsyncSession):
         super().__init__(model=User, session=session)
+
+    async def __refresh_requests(self, user: User):
+        """Обновляет дневные лимиты
+        При создании юзера столбцы последнего обновления уже есть
+        """
+        user.requests_last_refresh = datetime.datetime.now()
+
+        match user.subscription_type:
+            case SUBSCRIBE_TYPES.DEFAULT:
+                user.allowed_search_requests = DEFAULT_SEARCH_DAY_LIMIT
+                user.allowed_question_requests = DEFAULT_QUESTIONS_DAY_LIMIT
+
+            case SUBSCRIBE_TYPES.LITE:
+                user.allowed_search_requests = LITE_SEARCH_DAY_LIMIT
+                user.allowed_question_requests = LITE_QUESTIONS_DAY_LIMIT
+
+            case SUBSCRIBE_TYPES.PREMIUM:
+                user.allowed_search_requests = PREMIUM_SEARCH_DAY_LIMIT
+                user.allowed_question_requests = PREMIUM_QUESTIONS_DAY_LIMIT
+
+        await self.session.commit()
 
     async def get_user(self, user_id: uuid.UUID) -> UserSchema | None:
         """Возвращает модель юзер со всеми смежными таблицами"""
@@ -30,14 +55,18 @@ class UserRepository(BaseRepository):
         )
         result = await self.session.execute(stmt)
         user: User | None = result.scalar_one_or_none()
-        if user:
-            return user.get_schema
-        return None
+        if not user:
+            return None
+
+        # refresh day limits
+        if (datetime.datetime.now() - user.requests_last_refresh).days >= 1:
+            await self.__refresh_requests(user)
+        return user.get_schema
 
     async def get_or_create_from_telegram(self, telegram_user: UserTelegramDataSchema) -> UserSchema | None:
         """
         Возвращает модель пользователя по Telegram ID если существует.
-        Если не существует, Создает нового пользователя по схеме из Telegram Web App.
+        Если не существует, создает нового пользователя по схеме из Telegram Web App.
         """
         stmt = insert(User).values(
             telegram_id=telegram_user.telegram_id,
@@ -135,7 +164,12 @@ class UserRepository(BaseRepository):
         await self.session.execute(
             update(User)
             .where(User.id == user_id)
-            .values(allowed_requests=User.allowed_requests - amount)
+            .values(
+                allowed_search_requests=User.allowed_search_requests - amount,
+                # в случае, если мы тратим запросы, а не добавляем
+                # всегда один прибавляется вне зависимости от потраченных
+                used_requests=User.used_requests + (1 if amount > 0 else 0)
+            )
         )
         await self.session.commit()
 

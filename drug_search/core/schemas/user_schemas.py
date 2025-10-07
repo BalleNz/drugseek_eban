@@ -21,8 +21,11 @@ class UserSchema(BaseModel):
     first_name: Optional[str] = Field(None, description="first name")
     last_name: Optional[str] = Field(None, description="last name")
 
-    allowed_requests: int = Field(..., description="allowed requests on drug search")
+    allowed_search_requests: int = Field(..., description="осталось запросов для поиска")
+    allowed_question_requests: int = Field(..., description="осталось запросов для вопроса")
+
     used_requests: int = Field(..., description="count of used requests")
+    requests_last_refresh: datetime = Field(..., description="последний сброс счетчика")
 
     description: Optional[str] = Field(None, description="описание пользователя")
     allowed_drugs: list[AllowedDrugSchema] = Field(

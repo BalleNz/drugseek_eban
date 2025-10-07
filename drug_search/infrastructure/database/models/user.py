@@ -6,10 +6,10 @@ from pydantic import BaseModel
 from sqlalchemy import String, ForeignKey, Text, Index, func, DateTime, Integer, UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from drug_search.infrastructure.database.models.types import UserSubscriptionTypes
-from drug_search.core.lexicon.enums import SUBSCRIBE_TYPES
+from drug_search.core.lexicon import SUBSCRIBE_TYPES, DEFAULT_SEARCH_DAY_LIMIT, QUESTIONS_LIMIT_START
 from drug_search.core.schemas import UserSchema, UserRequestLogSchema, AllowedDrugSchema
 from drug_search.infrastructure.database.models.base import IDMixin, TimestampsMixin
+from drug_search.infrastructure.database.models.types import UserSubscriptionTypes
 
 M = TypeVar("M", bound='IDMixin')
 S = TypeVar("S", bound=BaseModel)
@@ -30,10 +30,28 @@ class User(IDMixin, TimestampsMixin):
         default=SUBSCRIBE_TYPES.DEFAULT,
         comment="Тип подписки юзера"
     )
-    subscription_end: Mapped[Optional[datetime]] = mapped_column(DateTime, comment="окончание подписки")
+    subscription_end: Mapped[Optional[datetime]] = mapped_column(DateTime, comment="Конец подписки")
 
-    allowed_requests: Mapped[int] = mapped_column(Integer, default=3, comment="Количество разрешенных запросов")
-    used_requests: Mapped[int] = mapped_column(Integer, default=0, comment="Количество использованных запросов")
+    allowed_search_requests: Mapped[int] = mapped_column(
+        Integer,
+        default=DEFAULT_SEARCH_DAY_LIMIT,
+        server_default=f"{DEFAULT_SEARCH_DAY_LIMIT}",
+        comment="Оставшиеся запросы на поиск препов"
+    )
+    allowed_question_requests: Mapped[int] = mapped_column(
+        Integer,
+        default=QUESTIONS_LIMIT_START,
+        server_default=f"{QUESTIONS_LIMIT_START}",
+        comment="Оставшиеся запросы на вопросы"
+    )
+
+    used_requests: Mapped[int] = mapped_column(Integer, default=0, comment="Количество использованных запросов в общем")
+    requests_last_refresh: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.now,
+        server_default=func.now(),
+        comment="последний сброс счётчика"
+    )
 
     description: Mapped[Optional[str]] = mapped_column(
         Text,
@@ -57,8 +75,10 @@ class User(IDMixin, TimestampsMixin):
             last_name=self.last_name,
             subscription_type=self.subscription_type,
             subscription_end=self.subscription_end,
-            allowed_requests=self.allowed_requests,
+            allowed_search_requests=self.allowed_search_requests,
+            allowed_question_requests=self.allowed_question_requests,
             used_requests=self.used_requests,
+            requests_last_refresh=self.requests_last_refresh,
             description=self.description,
             allowed_drugs=[al for al in self.allowed_drugs],
             created_at=self.created_at,

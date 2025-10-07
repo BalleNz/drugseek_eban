@@ -1,5 +1,5 @@
 from .callbacks import DatabaseCallback, DrugDescribeCallback, DrugListCallback, DescribeTypes, ArrowTypes, DrugActions, \
-    DrugActionsCallback
+    DrugActionsCallback, WrongDrugFoundedCallback
 from .keyboard_markups import get_drug_list_keyboard, drug_database_list_keyboard, drug_describe_types_keyboard
 
 __all__ = [
@@ -13,4 +13,5 @@ __all__ = [
     'drug_describe_types_keyboard',
     'DrugActions',
     'DrugActionsCallback',
+    'WrongDrugFoundedCallback'
 ]

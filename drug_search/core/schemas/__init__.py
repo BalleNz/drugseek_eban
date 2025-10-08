@@ -1,5 +1,5 @@
 from drug_search.core.schemas.API_schemas.api_requests import UserTelegramDataSchema, UserRequestLogSchema, \
-    AddTokensRequest, QueryRequest
+    AddTokensRequest, QueryRequest, QuestionRequest
 from drug_search.core.schemas.API_schemas.api_response import *
 from drug_search.core.schemas.assistant_responses import *
 from drug_search.core.schemas.drug_schemas import *
@@ -39,9 +39,12 @@ __all__ = [
     'AllowedDrugsSchema',
     'UserRequestLogSchema',
     'AllowedDrugSchema',
-    #  API
+    #  API Requests
     'AddTokensRequest',
     'QueryRequest',
+    'QuestionRequest',
+    # API Responses
     'SelectActionResponse',
-    'QuestionAssistantResponse'
+    'QuestionAssistantResponse',
+
 ]

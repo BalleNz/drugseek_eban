@@ -6,7 +6,6 @@ from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
 from drug_search.core.schemas import UserTelegramDataSchema, AllowedDrugsSchema, DrugSchema, UserSchema
 from drug_search.core.services.redis_service import RedisService
 
-
 logger = logging.getLogger(__name__)
 
 

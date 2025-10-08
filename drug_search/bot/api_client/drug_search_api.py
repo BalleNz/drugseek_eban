@@ -3,7 +3,7 @@ from uuid import UUID
 from drug_search.bot.api_client.base_http_client import BaseHttpClient, HTTPMethod
 from drug_search.core.schemas import (UserTelegramDataSchema, UserSchema, DrugExistingResponse,
                                       DrugSchema, QuestionAssistantResponse, AllowedDrugsSchema,
-                                      SelectActionResponse)
+                                      SelectActionResponse, QuestionRequest, AddTokensRequest)
 
 
 class DrugSearchAPIClient(BaseHttpClient):
@@ -19,13 +19,22 @@ class DrugSearchAPIClient(BaseHttpClient):
             response_model=SelectActionResponse
         )
 
-    async def assistant_get_answer(self, access_token: str, question: str) -> QuestionAssistantResponse:
+    async def action_answer(
+            self,
+            access_token: str,
+            user_telegram_id: str,
+            question: str,
+            old_message_id: str
+    ) -> QuestionAssistantResponse:
         return await self._request(
             HTTPMethod.POST,
             endpoint="/v1/assistant/actions/question",
-            request_body={"query": question},
+            request_body=QuestionRequest(
+                user_telegram_id=user_telegram_id,
+                question=question,
+                old_message_id=old_message_id,
+            ),
             access_token=access_token,
-            response_model=QuestionAssistantResponse
         )
 
     # Auth endpoints
@@ -56,13 +65,21 @@ class DrugSearchAPIClient(BaseHttpClient):
             access_token=access_token
         )
 
-    async def add_tokens(self, access_token: str, tokens_amount: int) -> None:
+    async def add_tokens(
+            self,
+            access_token: str,
+            amount_search_tokens: int = 1,
+            amount_question_tokens: int = 0
+    ) -> None:
         """Добавление токенов"""
         await self._request(
-            HTTPMethod.PUT,
+            HTTPMethod.POST,
             "/v1/user/tokens",
             access_token=access_token,
-            request_body={"tokens_amount": tokens_amount}
+            request_body=AddTokensRequest(
+                amount_search_tokens=amount_search_tokens,
+                amount_question_tokens=amount_question_tokens,
+            )
         )
 
     # Drug endpoints

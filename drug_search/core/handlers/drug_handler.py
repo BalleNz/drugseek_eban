@@ -5,9 +5,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.params import Path
 
-from arq_tasks import DrugOperations
+from drug_search.core.arq_tasks import DrugOperations
 from drug_search.core.dependencies.assistant_service_dep import get_assistant_service
-from drug_search.core.dependencies.cache_bot_service_dep import get_cache_service
+from drug_search.core.dependencies.cache_service_dep import get_cache_service
 from drug_search.core.dependencies.drug_service_dep import get_drug_service_with_deps, get_drug_service
 from drug_search.core.dependencies.task_service_dep import get_task_service
 from drug_search.core.dependencies.user_service_dep import get_user_service
@@ -191,7 +191,7 @@ async def allow_drug(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов.")
 
     try:
-        await user_service.reduce_tokens(user_id=user.id, tokens_to_reduce=1)
+        await user_service.add_tokens(user_id=user.id, amount_search_tokens=-1)
         await user_service.allow_drug_to_user(user_id=user.id, drug_id=drug_id)
 
         await cache_service.redis_service.invalidate_user_data(telegram_id=user.telegram_id)
@@ -243,7 +243,7 @@ async def update_drug_researches(
     if not user.allowed_search_requests:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов.")
 
-    await user_service.reduce_tokens(user.id, 1)
+    await user_service.add_tokens(user.id, 1)
     await drug_service.update_drug_researches(drug_id)
 
     return await drug_service.repo.get(drug_id)

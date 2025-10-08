@@ -3,11 +3,13 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
+from aiogram.types import Message
 from pydantic import BaseModel, Field
 
 
 class AddTokensRequest(BaseModel):
-    tokens_amount: int = Field(..., description="Количество токенов")
+    amount_search_tokens: int = Field(..., description="Токены для поиска")
+    amount_question_tokens: int = Field(..., description="Токены для вопросов")
 
 
 class UserTelegramDataSchema(BaseModel):
@@ -29,3 +31,9 @@ class UserRequestLogSchema(BaseModel):
 
 class QueryRequest(BaseModel):
     query: str
+
+
+class QuestionRequest(BaseModel):
+    user_telegram_id: str
+    question: str
+    old_message_id: str

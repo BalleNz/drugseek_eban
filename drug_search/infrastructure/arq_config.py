@@ -1,6 +1,6 @@
 from arq.connections import RedisSettings
 
-from drug_search.core.arq_tasks import drug_operations
+from drug_search.core.arq_tasks import drug_operations, assistant_operations
 from drug_search.config import config
 
 
@@ -9,6 +9,7 @@ class WorkerSettings:
     # Функции которые может выполнять worker
     functions = [
         drug_operations,
+        assistant_operations
     ]
 
     # Настройки Redis

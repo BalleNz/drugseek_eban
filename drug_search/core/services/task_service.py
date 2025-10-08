@@ -3,16 +3,18 @@ import logging
 import uuid
 from enum import Enum
 
+from aiogram.types import Message
 from arq import ArqRedis
+from arq.jobs import Job
 
-from arq_tasks import DrugOperations
+from drug_search.core.arq_tasks import DrugOperations, AssistantOperations
 
 logger = logging.getLogger(__name__)
 
 
 class ARQ_JOBS(str, Enum):
     DRUG_OPERATIONS = "drug_operations"
-    ...
+    ASSISTANT_OPERATIONS = "assistant_operations"
 
 
 class TaskService:
@@ -34,7 +36,7 @@ class TaskService:
     ):
         job_id: str = self.generate_job_id(drug_name)  # один для всех задач с одним drug_name
 
-        job = await self.arq_pool.enqueue_job(
+        job: Job = await self.arq_pool.enqueue_job(
             ARQ_JOBS.DRUG_OPERATIONS.value,
             operation,
             user_telegram_id,
@@ -48,7 +50,7 @@ class TaskService:
                 "status": "queued",
                 "job_id": job.job_id,
                 "drug_name": drug_name,
-                "operation": operation,
+                "operation": operation.value,
                 "message": "Задача поставлена в очередь!"
             }
 
@@ -57,6 +59,28 @@ class TaskService:
             "status": "already_queued",
             "job_id": job_id,
             "drug_name": drug_name,
-            "operation": operation,
+            "operation": operation.value,
             "message": "Задача уже в очереди или выполнена."
+        }
+
+    async def enqueue_assistant_operations(
+            self,
+            operation: AssistantOperations,
+            user_telegram_id: str,
+            question: str,
+            old_message_id: str,
+    ):
+        """Задача не уникальная, то есть юзер может повторять запрос"""
+        job: Job = await self.arq_pool.enqueue_job(
+            ARQ_JOBS.ASSISTANT_OPERATIONS.value,
+            operation,
+            user_telegram_id,
+            question,
+            old_message_id
+        )
+        return {
+            "status": f"{await job.status()}",
+            "operation": operation.value,
+            "user_id": user_telegram_id,
+            "question": question
         }

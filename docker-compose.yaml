@@ -56,7 +56,7 @@ services:
     depends_on:
       - redis
       - db
-    command: arq drug_search.core.arq_app.WorkerSettings
+    command: arq drug_search.infrastructure.arq_config.WorkerSettings
     restart: unless-stopped
 
 volumes:

@@ -47,7 +47,7 @@ def mock_user_repo(mock_session):
     repo.allow_drug_to_user = AsyncMock()
     repo.get_allowed_drug_names = AsyncMock()
     repo.update_user_description = AsyncMock()
-    repo.decrement_user_requests = AsyncMock()
+    repo.increment_user_requests = AsyncMock()
     return repo
 
 

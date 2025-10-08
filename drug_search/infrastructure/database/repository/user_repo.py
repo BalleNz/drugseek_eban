@@ -159,16 +159,28 @@ class UserRepository(BaseRepository):
         await self.session.execute(stmt)
         await self.session.commit()
 
-    async def decrement_user_requests(self, user_id: uuid.UUID, amount: int = 1) -> None:
-        """Atomically decrements user's allowed_requests counter."""
+    async def increment_user_requests(
+            self,
+            user_id: uuid.UUID,
+            amount_search_tokens: int = 1,
+            amount_question_tokens: int = 0
+    ) -> None:
+        """Атомарно увеличивает количество токенов.
+
+        :var amount_search_tokens: количество токенов на поиск препаратов
+        :var amount_question_tokens: количество токенов на вопросы
+        """
         await self.session.execute(
             update(User)
             .where(User.id == user_id)
             .values(
-                allowed_search_requests=User.allowed_search_requests - amount,
+                allowed_search_requests=User.allowed_search_requests + amount_search_tokens,
+                allowed_question_requests=User.allowed_search_requests + amount_question_tokens,
+
                 # в случае, если мы тратим запросы, а не добавляем
                 # всегда один прибавляется вне зависимости от потраченных
-                used_requests=User.used_requests + (1 if amount > 0 else 0)
+                # (засчитывает только при поиске препарата)
+                used_requests=User.used_requests + (1 if amount_search_tokens > 0 else 0)
             )
         )
         await self.session.commit()

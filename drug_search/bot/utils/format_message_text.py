@@ -3,8 +3,7 @@ from datetime import datetime, timedelta
 from drug_search.bot.keyboards import DescribeTypes
 from drug_search.bot.lexicon.message_text import MessageTemplates
 from drug_search.core.lexicon.enums import SUBSCRIBE_TYPES
-from drug_search.core.schemas import AllowedDrugsSchema, UserSchema, DrugSchema, CombinationType, \
-    QuestionAssistantResponse
+from drug_search.core.schemas import AllowedDrugsSchema, UserSchema, DrugSchema, CombinationType
 
 SYMBOLS = ["▤", "▥", "▨", "▧", "▦", "▩"] * 2
 
@@ -33,9 +32,9 @@ def get_subscription_name(subscription_type: SUBSCRIBE_TYPES):
 def days_text(day: datetime):
     """Преобразование datetime.days в русскоязычные дни"""
     days = (day - datetime.now()).days
-    return f"{days} день" if days % 10 == 1 and days % 100 != 11 else \
-        f"{days} дня" if 2 <= days % 10 <= 4 and (days % 100 < 10 or days % 100 >= 20) else \
-            f"{days} дней"
+    return f"{days} день" if days % 10 == 1 and days % 100 != 11 \
+        else f"{days} дня" if 2 <= days % 10 <= 4 and (days % 100 < 10 or days % 100 >= 20) \
+        else f"{days} дней"
 
 
 def get_time_when_refresh(last_update: datetime) -> str:
@@ -219,7 +218,8 @@ class DrugMessageFormatter:
         elimination: str | None = "<b>Выведение:</b>\n" + drug.elimination + "\n\n" if drug.elimination else ""
 
         pharmacokinetics = absorption + metabolism + elimination
-        pharmacokinetics += f"Максимальная концентрация в крови достигает через <b><u>{drug.time_to_peak}</u></b>" if drug.time_to_peak else ""
+        pharmacokinetics += f"Максимальная концентрация в крови достигает через <b><u>{drug.time_to_peak}</u></b>" \
+            if drug.time_to_peak else ""
 
         metabolism_description: str = drug.metabolism_description + "\n\n" if drug.metabolism_description else ""
 
@@ -279,6 +279,7 @@ class DrugMessageFormatter:
 
 class UserProfileMessageFormatter:
     """Форматирование пользовательских сообщений"""
+
     @staticmethod
     def format_user_profile(user: UserSchema) -> str:
         """Форматирование профиля пользователя"""
@@ -304,22 +305,4 @@ class UserProfileMessageFormatter:
             refresh_section=refresh_section,
             description_section=user.description if user.description else "",
             subscription_section=subscription_section
-        )
-
-
-class AssistantMessageFormatter:
-    @staticmethod
-    def format_assistant_answer(assistant_response: QuestionAssistantResponse):
-        """Ответ со списком препаратов"""
-        drugs_section: str = ""
-        for i, drug in enumerate(assistant_response.drugs, start=1):
-            drugs_section += f"""
-            {i}) <b>{drug.drug_name}:</b>
-            {drug.description}
-            <u>Эффективность:</u> {drug.efficiency}
-            """
-
-        return MessageTemplates.ASSISTANT_ANSWER_DRUGS.format(
-            answer=assistant_response.answer,
-            drugs_section=drugs_section
         )

@@ -5,7 +5,7 @@ from aiogram.types import TelegramObject, User
 
 from api_client.drug_search_api import DrugSearchAPIClient
 from dependencies.api_client_dep import get_api_client
-from drug_search.core.dependencies.cache_bot_service_dep import get_cache_service
+from drug_search.core.dependencies.cache_service_dep import get_cache_service
 from drug_search.core.services.cache_service import CacheService
 
 

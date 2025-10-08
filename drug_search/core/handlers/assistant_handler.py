@@ -3,9 +3,12 @@ from typing import Annotated
 from fastapi import APIRouter
 from fastapi.params import Depends
 
+from drug_search.core.arq_tasks import AssistantOperations
 from drug_search.core.dependencies.assistant_service_dep import get_assistant_service
+from drug_search.core.dependencies.task_service_dep import get_task_service
+from drug_search.core.schemas import QueryRequest, SelectActionResponse, QuestionAssistantResponse, QuestionRequest
 from drug_search.core.services.assistant_service import AssistantService
-from drug_search.core.schemas import QueryRequest, SelectActionResponse, QuestionAssistantResponse
+from drug_search.core.services.task_service import TaskService
 
 assistant_router = APIRouter(prefix="/assistant")
 
@@ -19,14 +22,18 @@ async def get_action(
     return await assistant_service.actions.predict_user_action(request.query)
 
 
-@assistant_router.post(path="/actions/question", response_model=QuestionAssistantResponse)
+@assistant_router.post(path="/actions/question")
 async def action_answer(
-        request: QueryRequest,
-        assistant_service: Annotated[AssistantService, Depends(get_assistant_service)]
+        request: QuestionRequest,
+        task_service: Annotated[TaskService, Depends(get_task_service)],
 ):
     """Отвечает на вопрос юзера, дает список препаратов для достижения целей"""
-    return await assistant_service.actions.answer_to_question(question=request.query)
-
+    await task_service.enqueue_assistant_operations(
+        operation=AssistantOperations.QUESTION_REQUEST,
+        user_telegram_id=request.user_telegram_id,
+        question=request.question,
+        old_message_id=request.old_message_id
+    )
 
 # если препарат в боте не найден по drug_get (поиск по drug_name из ассистента) в АПИ
 # —> дергаем ручку assistant/actions/drug_validation

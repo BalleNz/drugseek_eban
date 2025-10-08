@@ -4,12 +4,12 @@ from aiogram import Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, LinkPreviewOptions, CallbackQuery
 
-from drug_search.core.dependencies.cache_bot_service_dep import cache_service
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
 from drug_search.bot.keyboards import DescribeTypes, drug_describe_types_keyboard
-from drug_search.bot.utils.format_message_text import AssistantMessageFormatter, DrugMessageFormatter
+from drug_search.bot.utils.format_message_text import DrugMessageFormatter
+from drug_search.core.dependencies.cache_service_dep import cache_service
 from drug_search.core.lexicon.enums import ACTIONS_FROM_ASSISTANT
-from drug_search.core.schemas import (QuestionAssistantResponse, SelectActionResponse,
+from drug_search.core.schemas import (SelectActionResponse,
                                       DrugExistingResponse, UserSchema)
 from keyboards import WrongDrugFoundedCallback
 
@@ -50,7 +50,7 @@ async def main_action(
 
     user: UserSchema = await cache_service.get_user_profile(access_token=access_token, telegram_id=message.from_user.id)
 
-    # Fast drug search with trigrams
+    # Fast drug search ONLY with trigrams
     drug_response: DrugExistingResponse = await api_client.search_drug_trigrams(
         drug_name_query=message.text,
         access_token=access_token
@@ -80,10 +80,16 @@ async def main_action(
                 # TODO: делает задачу в TaskService (вот эту всю хуйню туда запихать просто)
                 if user.allowed_question_requests:
                     # отнимаем токен
-                    await api_client.add_tokens(access_token, tokens_amount=-1)
-                    # сразу инвалидируем кеш  (для актуальности количества токенов)
+                    await api_client.add_tokens(access_token, amount_question_tokens=-1)
+                    # сразу инвалидируем кеш (для актуальности количества токенов)
                     await cache_service.redis_service.invalidate_user_data(message.from_user.id)
 
+                    await api_client.action_answer(
+                        access_token=access_token,
+                        user_telegram_id=user.telegram_id,
+                        question=message.text,
+                        old_message_id=str(message_request.message_id)
+                    )
 
 
             case ACTIONS_FROM_ASSISTANT.DRUG_SEARCH:

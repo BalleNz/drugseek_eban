@@ -3,9 +3,6 @@ import uuid
 from contextlib import asynccontextmanager
 from enum import Enum
 
-from aiogram.types import Message
-
-from drug_search.bot.utils.format_message_text import AssistantMessageFormatter
 from drug_search.core.dependencies.assistant_service_dep import get_assistant_service
 from drug_search.core.dependencies.pubmed_service_dep import get_pubmed_service
 from drug_search.core.dependencies.redis_service_dep import get_redis
@@ -17,6 +14,7 @@ from drug_search.core.services.pubmed_service import PubmedService
 from drug_search.core.services.redis_service import RedisService
 from drug_search.core.services.telegram_service import TelegramService
 from drug_search.core.services.user_service import UserService
+from drug_search.core.utils.formatter import ARQMessageTemplates
 from drug_search.infrastructure.database.engine import get_async_session
 from drug_search.infrastructure.database.repository.drug_repo import DrugRepository
 from drug_search.infrastructure.database.repository.user_repo import UserRepository
@@ -101,23 +99,27 @@ async def assistant_operations(
         operation: AssistantOperations,
         user_telegram_id: str,
         question: str,
-        message: Message
+        old_message_id: str
 ):
     """
-    Запрос нейронке с фарм вопросом.
+    Операции с нейронкой.
 
     Отправляется ответ от нейронки в телеграм.
     """
     ctx['log'] = logger
+    logger.info(f"ARQ: {operation} for user {user_telegram_id}")
     assistant_service: AssistantService = await get_assistant_service()
     telegram_service: TelegramService = await get_telegram_service()
 
-    question_response: QuestionAssistantResponse = await assistant_service.actions.answer_to_question(question)
+    match operation:
+        case operation.QUESTION_REQUEST:
+            # Вопрос
+            question_response: QuestionAssistantResponse = await assistant_service.actions.answer_to_question(question)
 
-    message_text: str = AssistantMessageFormatter.format_assistant_answer(question_response)
-    await message.edit_text(message_text)
+            message_text: str = ARQMessageTemplates.format_assistant_answer(question_response)
 
-    await telegram_service.send_message(
-        user_telegram_id=user_telegram_id,
-        message=message_text
-    )
+            await telegram_service.edit_message(
+                user_telegram_id=user_telegram_id,
+                old_message_id=old_message_id,
+                message_text=message_text,
+            )

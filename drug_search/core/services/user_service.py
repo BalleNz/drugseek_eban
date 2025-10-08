@@ -7,7 +7,11 @@ from drug_search.infrastructure.database.repository.user_repo import UserReposit
 
 
 class UserService:
-    def __init__(self, repo: UserRepository, assistant_service: AssistantService = None):
+    def __init__(
+            self,
+            repo: UserRepository,
+            assistant_service: AssistantService = None,
+    ):
         self.repo = repo
         self.assistant = assistant_service
 
@@ -17,6 +21,7 @@ class UserService:
 
     async def update_user_description(self, user_id: UUID) -> None:
         """Обновляет информацию описания юзера."""
+        # TODO в Arq
         user: UserSchema = await self.repo.get(user_id)
         user_drugs = await self.repo.get_allowed_drug_names(user_id=user.id)
 
@@ -26,9 +31,27 @@ class UserService:
         )
         await self.repo.update_user_description(description=user_description, user_id=user.id)
 
-    async def reduce_tokens(self, user_id: uuid.UUID, tokens_to_reduce=1) -> None:
-        """Отнимает количество разрешенных юзеру запросов."""
-        await self.repo.decrement_user_requests(user_id=user_id, amount=tokens_to_reduce)
+    async def add_tokens(
+            self,
+            user_id: uuid.UUID,
+            amount_search_tokens: int = 1,
+            amount_question_tokens: int = 0
+    ) -> None:
+        """Добавляет запросы юзеру"""
+        await self.repo.increment_user_requests(
+            user_id=user_id,
+            amount_search_tokens=amount_search_tokens,
+            amount_question_tokens=amount_question_tokens
+        )
+
+    async def reduce_tokens(
+            self,
+            user_id: uuid.UUID,
+            amount_search_tokens: int = 1,
+            amount_question_tokens: int = 0
+    ) -> None:
+        """Отнимает запросы у юзера"""
+        await self.add_tokens(user_id, -amount_search_tokens, -amount_question_tokens)
 
     async def add_request_log(self, user_id: uuid.UUID, query: str):
         ...

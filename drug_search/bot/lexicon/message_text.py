@@ -81,15 +81,3 @@ class MessageTemplates:
         "<b>Все ваши препараты расположены на этой странице!</b>\n\n"
         "Всего препаратов в вашей <b>базе:</b> {len_allowed_drugs}"
     )
-
-    # ASSISTANT
-    ASSISTANT_ANSWER_DRUGS = (
-        "{answer}\n\n"
-        "<b>Список препаратов, которые вам помогут:</b>"
-        "{drugs_section}"
-    )
-
-    # ARQ
-    DRUG_CREATED_JOB_FINISHED = (
-        "<b>Препарат {name_ru} теперь доступен в вашей базе!</b>"
-    )

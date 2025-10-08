@@ -100,10 +100,10 @@ async def test_decrement_user_requests(mock_user_repo):
     user_id = uuid.uuid4()
 
     # Настраиваем мок
-    mock_user_repo.decrement_user_requests.return_value = None
+    mock_user_repo.increment_user_requests.return_value = None
 
     # Вызываем тестируемый метод
-    await mock_user_repo.decrement_user_requests(user_id, 1)
+    await mock_user_repo.increment_user_requests(user_id, 1)
 
     # Проверяем, что метод был вызван с правильными аргументами
-    mock_user_repo.decrement_user_requests.assert_called_once_with(user_id, 1)
+    mock_user_repo.increment_user_requests.assert_called_once_with(user_id, 1)

@@ -20,6 +20,7 @@ class DosageParams(BaseModel):
 class AssistantResponseDrugValidation(BaseModel):
     status: EXIST_STATUS = Field(...)
     drug_name: str = Field(default=None)
+    drug_name_ru: str = Field(default=None, description="Название препарата на русском")
     danger_classification: Optional[DANGER_CLASSIFICATION] = Field(default=None)
 
 

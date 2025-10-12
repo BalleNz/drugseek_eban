@@ -6,7 +6,7 @@ from fastapi.params import Depends
 from drug_search.core.arq_tasks import AssistantOperations
 from drug_search.core.dependencies.assistant_service_dep import get_assistant_service
 from drug_search.core.dependencies.task_service_dep import get_task_service
-from drug_search.core.schemas import QueryRequest, SelectActionResponse, QuestionAssistantResponse, QuestionRequest
+from drug_search.core.schemas import QueryRequest, SelectActionResponse, QuestionRequest
 from drug_search.core.services.assistant_service import AssistantService
 from drug_search.core.services.task_service import TaskService
 
@@ -18,7 +18,14 @@ async def get_action(
         request: QueryRequest,
         assistant_service: Annotated[AssistantService, Depends(get_assistant_service)]
 ):
-    """Возвращает ответ с предугадыванием действия юзера"""
+    """Возвращает ответ с предугадыванием действия юзера.
+
+    DRUG_SEARCH
+    DRUG_MENU
+    QUESTION
+    SPAM
+    OTHER
+    """
     return await assistant_service.actions.predict_user_action(request.query)
 
 

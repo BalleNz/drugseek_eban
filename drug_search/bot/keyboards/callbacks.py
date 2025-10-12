@@ -4,7 +4,10 @@ from typing import Optional
 
 from aiogram.filters.callback_data import CallbackData
 
+from drug_search.core.lexicon.enums import DANGER_CLASSIFICATION
 
+
+# [ TYPES ]
 class DescribeTypes(str, Enum):
     BRIEFLY = "Briefly"
     DOSAGES = "Dosages"
@@ -16,20 +19,13 @@ class DescribeTypes(str, Enum):
     UPDATE_INFO = "UpdateInfo"
 
 
-class DrugActions(str, Enum):
-    UPDATE_DRUG = "UpdateDrug"
-
-
 class ArrowTypes(str, Enum):
     BACK = "back"
     FORWARD = "forward"
 
 
-# CALLBACKS
-class DrugActionsCallback(CallbackData, prefix="drug_actions"):
-    action: DrugActions
-
-
+# [ CALLBACKS ]
+# [ база данных ]
 class DatabaseCallback(CallbackData, prefix="database"):
     pass
 
@@ -39,13 +35,29 @@ class DrugListCallback(CallbackData, prefix="drug_list"):
     page: int  # текущая страница
 
 
-# Подробное описание препарата
+# [ drug_actions ]
+class DrugUpdateCallback(CallbackData, prefix="drug_update"):
+    drug_id: uuid.UUID
+
+
 class DrugDescribeCallback(CallbackData, prefix="drug_describe"):
+    # Подробное описание препарата
     drug_id: uuid.UUID
     describe_type: Optional[DescribeTypes]
     page: int | None  # страница с прошлого меню | None (если вне меню)
 
 
- # если найден неверный препарат
 class WrongDrugFoundedCallback(CallbackData, prefix="wrong_drug"):
+    # если найден неверный препарат
     drug_name_query: str
+
+
+# [ покупка препарата ]
+class BuyDrugRequestCallback(CallbackData, prefix="buy_drug"):
+    drug_name: str  # если нужно предварительно создать
+    drug_id: uuid.UUID | None  # если есть в БД
+    danger_classification: DANGER_CLASSIFICATION
+
+
+class CancelDrugBuyingCallback(CallbackData, prefix="cancel_buying_drug"):
+    pass

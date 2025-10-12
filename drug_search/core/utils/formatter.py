@@ -8,11 +8,11 @@ class ARQMessageTemplates:
         """Ответ со списком препаратов"""
         drugs_section: str = ""
         for i, drug in enumerate(assistant_response.drugs, start=1):
-            drugs_section += f"""
-            {i}) <b>{drug.drug_name}:</b>
-            {drug.description}
-            <u>Эффективность:</u> {drug.efficiency}
-            """
+            drugs_section += (
+                f"{i}) <b>{drug.drug_name}:</b>\n"
+                f"{drug.description}\n"
+                f"<u>Эффективность:</u> {drug.efficiency}\n\n"
+            )
 
         return MessageTemplates.ASSISTANT_ANSWER_DRUGS.format(
             answer=assistant_response.answer,

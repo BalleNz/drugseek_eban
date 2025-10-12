@@ -22,7 +22,7 @@ async def drug_menu_handler(
         message: Message,
         cache_service: CacheService,
         access_token: str,
-        state: FSMContext,
+        state: FSMContext,  # noqa
 ):
     """Отображает сообщение и позволяет листать препараты (после подтверждения)"""
     user_id = str(message.from_user.id)

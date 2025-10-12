@@ -3,7 +3,6 @@ import logging
 import uuid
 from enum import Enum
 
-from aiogram.types import Message
 from arq import ArqRedis
 from arq.jobs import Job
 

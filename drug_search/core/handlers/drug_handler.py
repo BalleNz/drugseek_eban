@@ -58,7 +58,7 @@ async def new_drug(
 
 @drug_router.get(
     path="/search/{drug_name_query}",
-    description="поиск препарата ассистентом; Использует триграммы",
+    description="поиск: Ассистент; Триграммы",
     response_model=DrugExistingResponse
 )
 async def search_drug(
@@ -78,7 +78,8 @@ async def search_drug(
             is_drug_in_database=True,
             drug=drug,
             is_allowed=drug.id in user.allowed_drug_ids(),
-            danger_classification=drug.danger_classification
+            danger_classification=drug.danger_classification,
+            drug_name_ru=drug.name_ru
         )
 
     if not is_drug_in_database:
@@ -88,7 +89,6 @@ async def search_drug(
         )
 
         if assistant_response.status == EXIST_STATUS.EXIST:
-
             # Еще раз пытаемся найти по ДВ в Базе
             drug: DrugSchema | None = await drug_service.find_drug_by_query(
                 user_query=assistant_response.drug_name
@@ -99,16 +99,17 @@ async def search_drug(
                 is_drug_in_database=bool(drug),  # может быть найден, а может и нет
                 is_allowed=drug.id in user.allowed_drug_ids() if bool(drug) else None,
                 drug=drug,  # Drug | None
-                danger_classification=assistant_response.danger_classification
+                danger_classification=assistant_response.danger_classification,
+                drug_name_ru=assistant_response.drug_name_ru
             )
-
         else:  # препарат не существует в принципе
             return DrugExistingResponse(
                 is_exist=False,
                 is_drug_in_database=False,
                 is_allowed=False,
                 drug=None,
-                danger_classification=assistant_response.danger_classification
+                danger_classification=assistant_response.danger_classification,
+                drug_name_ru=None
             )
 
 
@@ -130,6 +131,7 @@ async def search_drug_only_trigrams(
         is_allowed=drug.id in user.allowed_drug_ids() if drug else None,
         drug=drug,
         danger_classification=drug.danger_classification if drug else None,
+        drug_name_ru=drug.name_ru if drug else None
     )
 
 
@@ -163,7 +165,8 @@ async def search_drug_without_trigrams(
             is_drug_in_database=False,
             is_allowed=False,
             drug=None,
-            danger_classification=None
+            danger_classification=None,
+            drug_name_ru=None
         )
 
     drug: DrugSchema | None = await drug_service.repo.find_drug_without_trigrams(validation_response.drug_name)
@@ -172,7 +175,8 @@ async def search_drug_without_trigrams(
         is_drug_in_database=bool(drug),
         is_allowed=drug.id in user.allowed_drug_ids() if drug else None,
         drug=drug,
-        danger_classification=validation_response.danger_classification
+        danger_classification=validation_response.danger_classification,
+        drug_name_ru=drug.name_ru if drug else None
     )
 
 
@@ -241,6 +245,7 @@ async def update_drug_researches(
     """Обновляет таблицу с исследованиями препарата. Возвращает схему препарата."""
     # TODO задачу в arq
     if not user.allowed_search_requests:
+        # TODO сделать обработку недостаточно токкенов в клиенте
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов.")
 
     await user_service.add_tokens(user.id, 1)

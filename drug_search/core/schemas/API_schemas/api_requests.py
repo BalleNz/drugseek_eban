@@ -1,10 +1,10 @@
-import json
 import uuid
 from datetime import datetime
 from typing import Optional
 
-from aiogram.types import Message
 from pydantic import BaseModel, Field
+
+from drug_search.core.lexicon.enums import DANGER_CLASSIFICATION
 
 
 class AddTokensRequest(BaseModel):
@@ -26,7 +26,7 @@ class UserTelegramDataSchema(BaseModel):
 class UserRequestLogSchema(BaseModel):
     user_id: uuid.UUID = Field(..., description="User ID")
     user_query: str = Field(..., description="запрос пользователя")
-    used_at: datetime = Field(..., description="дата и время использования")
+    used_at: datetime = Field(..., description="дата и время запроса")
 
 
 class QueryRequest(BaseModel):
@@ -37,3 +37,9 @@ class QuestionRequest(BaseModel):
     user_telegram_id: str
     question: str
     old_message_id: str
+
+
+class BuyDrugRequest(BaseModel):
+    drug_id: uuid.UUID | None  # если нужно создавать: None
+    drug_name: str  #
+    danger_classification: DANGER_CLASSIFICATION

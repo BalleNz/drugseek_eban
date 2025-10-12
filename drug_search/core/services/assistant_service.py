@@ -11,7 +11,8 @@ from drug_search.core.lexicon import Prompts
 from drug_search.core.schemas import (AssistantResponseDrugResearches, AssistantResponsePubmedQuery,
                                       AssistantDosageDescriptionResponse, AssistantResponseCombinations,
                                       AssistantResponseDrugPathways, AssistantResponseDrugValidation,
-                                      ClearResearchesRequest, SelectActionResponse, QuestionAssistantResponse)
+                                      ClearResearchesRequest, SelectActionResponse, QuestionAssistantResponse
+                                      )
 from drug_search.core.utils import assistant_utils
 from drug_search.core.utils.exceptions import AssistantResponseError
 
@@ -61,7 +62,6 @@ class AssistantService(AssistantInterface):
     def __init__(self):
         with self._lock:
             if not self._initialized:
-                self.prompts = Prompts()
                 self.client = OpenAI(api_key=config.DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
                 self.actions = self.UserActions(self)
                 self._initialized = True
@@ -107,21 +107,21 @@ class AssistantService(AssistantInterface):
             raise ex
 
     async def get_dosage(self, drug_name: str) -> AssistantDosageDescriptionResponse:
-        return await self.get_response(input_query=drug_name, prompt=self.prompts.GET_DRUG_DESCRIPTION,
+        return await self.get_response(input_query=drug_name, prompt=Prompts.GET_DRUG_DESCRIPTION,
                                        pydantic_model=AssistantDosageDescriptionResponse)
 
     async def get_pathways(self, drug_name: str) -> AssistantResponseDrugPathways:
-        return await self.get_response(input_query=drug_name, prompt=self.prompts.GET_DRUG_PATHWAYS,
+        return await self.get_response(input_query=drug_name, prompt=Prompts.GET_DRUG_PATHWAYS,
                                        pydantic_model=AssistantResponseDrugPathways)
 
     async def get_synergists(self, drug_name: str) -> AssistantResponseCombinations:
-        return await self.get_response(input_query=drug_name, prompt=self.prompts.GET_DRUG_COMBINATIONS,
+        return await self.get_response(input_query=drug_name, prompt=Prompts.GET_DRUG_COMBINATIONS,
                                        pydantic_model=AssistantResponseCombinations)
 
     async def get_user_description(self, user_name: str, user_drug_names: Sequence[str]) -> ...:
         user_drug_names_text = ', '.join(user_drug_names)
         user_query = user_name + ' ' + user_drug_names_text
-        return await self.get_response(input_query=user_query, prompt=self.prompts.GET_USER_DESCRIPTION,
+        return await self.get_response(input_query=user_query, prompt=Prompts.GET_USER_DESCRIPTION,
                                        pydantic_model=None)
 
     async def get_user_query_validation(self, user_query: str) -> AssistantResponseDrugValidation:
@@ -130,7 +130,7 @@ class AssistantService(AssistantInterface):
         :param user_query: Запрос пользователя, предполагаемое название препарата
         :returns: AssistantResponseDrugValidation с правильным ДВ | с None
         """
-        return await self.get_response(input_query=user_query, prompt=self.prompts.DRUG_SEARCH_VALIDATION,
+        return await self.get_response(input_query=user_query, prompt=Prompts.DRUG_SEARCH_VALIDATION,
                                        pydantic_model=AssistantResponseDrugValidation, temperature=0.7)
 
     async def get_clear_researches(
@@ -144,14 +144,14 @@ class AssistantService(AssistantInterface):
         """
 
         input_query = assistant_utils.serialize_researches_request(request=pubmed_researches_with_drug_name)
-        return await self.get_response(input_query=input_query, prompt=self.prompts.GET_DRUG_RESEARCHES,
+        return await self.get_response(input_query=input_query, prompt=Prompts.GET_DRUG_RESEARCHES,
                                        pydantic_model=AssistantResponseDrugResearches)
 
     async def get_pubmed_query(self, drug_name: str) -> AssistantResponsePubmedQuery:
         """
         Возвращает оптимизированный поисковой запрос для Pubmed исходя из названия действующего вещества.
         """
-        return await self.get_response(input_query=drug_name, prompt=self.prompts.GET_PUBMED_SEARCH_QUERY,
+        return await self.get_response(input_query=drug_name, prompt=Prompts.GET_PUBMED_SEARCH_QUERY,
                                        pydantic_model=AssistantResponsePubmedQuery)
 
     class UserActions:
@@ -169,7 +169,7 @@ class AssistantService(AssistantInterface):
             """Предугадывает действие юзера с промптом"""
             return await self.assistant_service.get_response(
                 input_query=query,
-                prompt=self.assistant_service.prompts.PREDICT_USER_ACTION,
+                prompt=Prompts.PREDICT_USER_ACTION,
                 pydantic_model=SelectActionResponse
             )
 
@@ -177,6 +177,6 @@ class AssistantService(AssistantInterface):
             """Отвечает на вопрос пользователя и дает ему список препаратов для его решения"""
             return await self.assistant_service.get_response(
                 input_query=question,
-                prompt=self.assistant_service.prompts.ANSWER_TO_QUESTION,
+                prompt=Prompts.ANSWER_TO_DRUGS_QUESTION,
                 pydantic_model=QuestionAssistantResponse
             )

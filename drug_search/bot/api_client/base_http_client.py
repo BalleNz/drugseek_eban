@@ -85,7 +85,8 @@ class BaseHttpClient:
             logging.error(f"Unexpected error: {e}")
             raise
 
-    def _json_serializer(self, obj):
+    @staticmethod
+    def _json_serializer(obj):
         """Кастомный сериализатор для обработки datetime"""
         if isinstance(obj, datetime):
             return obj.isoformat()

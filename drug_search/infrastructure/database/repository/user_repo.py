@@ -11,7 +11,7 @@ from sqlalchemy.orm import selectinload
 from drug_search.core.lexicon import (PREMIUM_SEARCH_DAY_LIMIT, DEFAULT_SEARCH_DAY_LIMIT,
                                       SUBSCRIBE_TYPES, DEFAULT_QUESTIONS_DAY_LIMIT, LITE_QUESTIONS_DAY_LIMIT,
                                       LITE_SEARCH_DAY_LIMIT, PREMIUM_QUESTIONS_DAY_LIMIT)
-from drug_search.core.schemas import UserTelegramDataSchema, UserSchema, AllowedDrugsSchema, DrugBriefly
+from drug_search.core.schemas import UserTelegramDataSchema, UserSchema, AllowedDrugsSchema, DrugBrieflySchema
 from drug_search.infrastructure.database.models.user import AllowedDrugs, User
 from drug_search.infrastructure.database.repository.base_repo import BaseRepository
 
@@ -136,7 +136,7 @@ class UserRepository(BaseRepository):
 
         allowed_drugs = []
         for row in allowed_drugs_rows:
-            drug_briefly = DrugBriefly(
+            drug_briefly = DrugBrieflySchema(
                 drug_id=row.id,
                 drug_name_ru=row.name_ru
             )
@@ -162,7 +162,7 @@ class UserRepository(BaseRepository):
     async def increment_user_requests(
             self,
             user_id: uuid.UUID,
-            amount_search_tokens: int = 1,
+            amount_search_tokens: int = 0,
             amount_question_tokens: int = 0
     ) -> None:
         """Атомарно увеличивает количество токенов.
@@ -175,7 +175,7 @@ class UserRepository(BaseRepository):
             .where(User.id == user_id)
             .values(
                 allowed_search_requests=User.allowed_search_requests + amount_search_tokens,
-                allowed_question_requests=User.allowed_search_requests + amount_question_tokens,
+                allowed_question_requests=User.allowed_question_requests + amount_question_tokens,
 
                 # в случае, если мы тратим запросы, а не добавляем
                 # всегда один прибавляется вне зависимости от потраченных

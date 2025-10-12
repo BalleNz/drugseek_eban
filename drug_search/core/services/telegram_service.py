@@ -2,7 +2,8 @@ import aiohttp
 from aiogram.types import ReplyKeyboardMarkup
 
 from drug_search.config import config
-from drug_search.core.schemas import DrugSchema
+from drug_search.core.schemas import DrugSchema, QuestionAssistantResponse
+from drug_search.core.utils.formatter import ARQMessageTemplates
 from drug_search.core.utils.message_templates import MessageTemplates
 
 
@@ -70,5 +71,29 @@ class TelegramService:
             drug: DrugSchema,
     ):
         """Отправляет сообщение о созданном препарате с клавиатурой"""
-        message = MessageTemplates.DRUG_CREATED_JOB_FINISHED.format(name_ru=drug.name_ru)
+        message: str = MessageTemplates.DRUG_CREATED_NOTIFICATION.format(name_ru=drug.name_ru)
         await self.send_message(user_telegram_id, message=message, reply_markup=None)
+
+    async def send_drug_updated_notification(
+            self,
+            user_telegram_id: str,
+            drug: DrugSchema,
+    ):
+        """Оповещение об обновлении препарата"""
+        message: str = MessageTemplates.DRUG_UPDATED_NOTIFICATION.format(name_ru=drug.name_ru)
+        await self.send_message(user_telegram_id, message=message, reply_markup=None)
+
+    async def edit_message_with_assistant_answer(
+            self,
+            question_response: QuestionAssistantResponse,
+            user_telegram_id: str,
+            old_message_id: str,
+    ):
+        """Редактирует сообщение для ответа на вопрос юзера"""
+        message_text: str = ARQMessageTemplates.format_assistant_answer(question_response)
+
+        await self.edit_message(
+            user_telegram_id=user_telegram_id,
+            old_message_id=old_message_id,
+            message_text=message_text,
+        )

@@ -64,7 +64,8 @@ class DrugService:
             drug: DrugSchema = await self.repo.update_combinations(
                 drug=drug_after_pathways,
                 assistant_response=assistant_response_combinations
-            )  # TODO сделать один метод который бы сохранял всю модель (тупо сложить методы и передавать все assistant responses)
+            )
+            # TODO: сделать один метод который бы сохранял всю модель (тупо сложить методы и передавать все assistant responses)
 
             await self.repo.save_from_schema(drug)
 

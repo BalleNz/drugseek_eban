@@ -14,7 +14,6 @@ from drug_search.core.services.pubmed_service import PubmedService
 from drug_search.core.services.redis_service import RedisService
 from drug_search.core.services.telegram_service import TelegramService
 from drug_search.core.services.user_service import UserService
-from drug_search.core.utils.formatter import ARQMessageTemplates
 from drug_search.infrastructure.database.engine import get_async_session
 from drug_search.infrastructure.database.repository.drug_repo import DrugRepository
 from drug_search.infrastructure.database.repository.user_repo import UserRepository
@@ -50,7 +49,8 @@ async def drug_operations(
         operation: DrugOperations,
         user_telegram_id: str,
         user_id: uuid.UUID,
-        drug_name: str,  # ДВ
+        drug_name: str | None,  # ДВ
+        drug_id: uuid.UUID | None  # для обновления
 ):
     """
     Создание препарата и отправка уведомления через ARQ
@@ -86,7 +86,12 @@ async def drug_operations(
                     )
                     await user_service.allow_drug_to_user(user_id=user_id, drug_id=drug.id)
                 case DrugOperations.UPDATE:
-                    ...
+                    drug: DrugSchema = await drug_service.update_drug(drug_id=drug_id)
+                    logger.info(f"Препарат {drug_id} обновлен")
+                    await telegram_service.send_drug_updated_notification(
+                        user_telegram_id=user_telegram_id,
+                        drug=drug
+                    )
 
             logger.info(f"ARQ Drug_{operation}: Notification sent to user {user_telegram_id}")
 
@@ -116,10 +121,8 @@ async def assistant_operations(
             # Вопрос
             question_response: QuestionAssistantResponse = await assistant_service.actions.answer_to_question(question)
 
-            message_text: str = ARQMessageTemplates.format_assistant_answer(question_response)
-
-            await telegram_service.edit_message(
+            await telegram_service.edit_message_with_assistant_answer(
+                question_response=question_response,
                 user_telegram_id=user_telegram_id,
-                old_message_id=old_message_id,
-                message_text=message_text,
+                old_message_id=old_message_id
             )

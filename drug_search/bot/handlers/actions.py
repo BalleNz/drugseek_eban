@@ -12,16 +12,18 @@ from drug_search.core.lexicon.enums import ACTIONS_FROM_ASSISTANT
 from drug_search.core.schemas import (SelectActionResponse,
                                       DrugExistingResponse, UserSchema)
 from keyboards import WrongDrugFoundedCallback
+from keyboards.keyboard_markups import drug_buy_request_keyboard
+from lexicon import MessageTemplates
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
 
 
-@router.message(WrongDrugFoundedCallback.filter())
+@router.callback_query(WrongDrugFoundedCallback.filter())
 async def wrong_drug_founded(
         callback_query: CallbackQuery,
         access_token: str,
-        state: FSMContext,
+        state: FSMContext,  # noqa
         callback_data: WrongDrugFoundedCallback,
         api_client: DrugSearchAPIClient
 ):
@@ -29,21 +31,23 @@ async def wrong_drug_founded(
     message: Message = await callback_query.message.answer("Поиск препарата..")
 
     drug_response: DrugExistingResponse = await api_client.search_drug(callback_data.drug_name_query, access_token)
-    await message.edit_text(
+    await callback_query.message.edit_text(
         text=DrugMessageFormatter.format_drug_briefly(drug_response.drug),
-        callback_data=drug_describe_types_keyboard(
+        reply_markup=drug_describe_types_keyboard(
             drug_id=drug_response.drug.id,
             describe_type=DescribeTypes.BRIEFLY,
             user_subscribe_type=user.subscription_type,
-        )
+        ),
+        link_preview_options=LinkPreviewOptions(is_disabled=True)
     )
+    await message.delete()
 
 
 @router.message()
 async def main_action(
         message: Message,
         access_token: str,
-        state: FSMContext,
+        state: FSMContext,  # noqa
         api_client: DrugSearchAPIClient
 ):
     """Основная ручка для запросов юзера"""
@@ -56,18 +60,33 @@ async def main_action(
         access_token=access_token
     )
 
-    if drug_response.is_drug_in_database:
-        message_text = DrugMessageFormatter.format_drug_briefly(drug_response.drug)
-        await message.answer(
-            message_text,
-            reply_markup=drug_describe_types_keyboard(
-                drug_id=drug_response.drug.id,
-                describe_type=DescribeTypes.BRIEFLY,
-                user_subscribe_type=user.subscription_type,
-                drug_name=message.text
-            ),
-            link_preview_options=LinkPreviewOptions(is_disabled=True)
-        )
+    if drug_response.is_exist:
+        if drug_response.is_allowed:
+            message_text = DrugMessageFormatter.format_drug_briefly(drug_response.drug)
+            await message.answer(
+                message_text,
+                reply_markup=drug_describe_types_keyboard(
+                    drug_id=drug_response.drug.id,
+                    describe_type=DescribeTypes.BRIEFLY,
+                    user_subscribe_type=user.subscription_type,
+                    drug_name=message.text
+                ),
+                link_preview_options=LinkPreviewOptions(is_disabled=True)
+            )
+        else:
+            # [ предложить купить препарат ]
+            await drug_response.edit_text(
+                text=MessageTemplates.DRUG_BUY_REQUEST.format(
+                    drug_name_ru=drug_response.drug_name_ru
+                ),
+                reply_markup=drug_buy_request_keyboard(
+                    drug_id=drug_response.drug.id if drug_response.drug else None,
+                    drug_name=drug_response.drug_name,
+                    danger_classification=drug_response.danger_classification
+                ),
+            )
+
+    # [ определяем действие юзера ]
     else:
         message_request: Message = await message.answer(text="Запрос принят.. обрабатываю")
 
@@ -77,43 +96,94 @@ async def main_action(
 
         match action_response.action:
             case ACTIONS_FROM_ASSISTANT.QUESTION:
-                # TODO: делает задачу в TaskService (вот эту всю хуйню туда запихать просто)
+                # [ ответ на вопрос юзера ]
                 if user.allowed_question_requests:
-                    # отнимаем токен
-                    await api_client.add_tokens(access_token, amount_question_tokens=-1)
-                    # сразу инвалидируем кеш (для актуальности количества токенов)
-                    await cache_service.redis_service.invalidate_user_data(message.from_user.id)
+                    await message_request.edit_text("Ожидание ответа на вопрос у ассистента..")
+                    await api_client.reduce_tokens(access_token, amount_question_tokens=1)
 
-                    await api_client.action_answer(
+                    await api_client.action_answer(  # via TaskService
                         access_token=access_token,
                         user_telegram_id=user.telegram_id,
                         question=message.text,
                         old_message_id=str(message_request.message_id)
                     )
+                else:
+                    await message_request.edit_text(
+                        text=MessageTemplates.NOT_ENOUGH_QUESTION_TOKENS
+                    )
 
+            case ACTIONS_FROM_ASSISTANT.DRUG_MENU:
+                drug_existing_response: DrugExistingResponse | None = await api_client.search_drug(
+                    action_response.drug_name,
+                    access_token=access_token
+                )
+
+                if drug_existing_response.is_allowed:
+                    await message_request.edit_text(
+                        text=DrugMessageFormatter.format_by_type(
+                            describe_type=DescribeTypes(action_response.drug_menu),
+                            drug=drug_existing_response.drug
+                        ),
+                        reply_markup=drug_describe_types_keyboard(
+                            drug_id=drug_existing_response.drug.id,
+                            describe_type=DescribeTypes(action_response.drug_menu),
+                            user_subscribe_type=user.subscription_type,
+                            drug_name=drug_existing_response.drug.name
+                        ),
+                        link_preview_options=LinkPreviewOptions(is_disabled=True)
+                    )
+
+                elif drug_existing_response.is_exist:
+                    # [ предложить купить препарат ]
+                    await message_request.edit_text(
+                        text=MessageTemplates.DRUG_BUY_REQUEST.format(
+                            drug_name_ru=action_response.drug_name
+                        ),
+                        reply_markup=drug_buy_request_keyboard(
+                            drug_id=drug_existing_response.drug.id if drug_existing_response.drug else None,
+                            drug_name=message.text,
+                            danger_classification=drug_existing_response.danger_classification
+                        ),
+                    )
+                else:
+                    logger.error(f"Drug existing response error: {drug_existing_response}")
+                    await message_request.edit_text("Произошла ошибка, такой препарат не существует..")
 
             case ACTIONS_FROM_ASSISTANT.DRUG_SEARCH:
                 drug_existing_response: DrugExistingResponse | None = await api_client.search_drug(
                     message.text,
                     access_token=access_token
                 )
-
-                if drug_existing_response.is_exist:
-                    if drug_existing_response.is_drug_in_database:
-                        message_text = DrugMessageFormatter.format_drug_briefly(drug_existing_response.drug)
-                        await message.answer(
-                            message_text,
-                            reply_markup=drug_describe_types_keyboard(
+                if drug_existing_response.is_allowed:
+                    message_text = DrugMessageFormatter.format_drug_briefly(drug_existing_response.drug)
+                    await message.answer(
+                        message_text,
+                        reply_markup=drug_describe_types_keyboard(
                                 drug_id=drug_existing_response.drug.id,
                                 describe_type=DescribeTypes.BRIEFLY,
                                 user_subscribe_type=user.subscription_type
                             ),
-                            link_preview_options=LinkPreviewOptions(is_disabled=True)
-                        )
-                    else:
-                        await message.answer("такого препарат нет в БД ")
+                        link_preview_options=LinkPreviewOptions(is_disabled=True)
+                    )
+                elif drug_existing_response.is_exist:
+                    # [ купить препарат ]
+                    await message_request.edit_text(
+                        text=MessageTemplates.DRUG_BUY_REQUEST.format(
+                            drug_name_ru=drug_existing_response.drug_name_ru
+                        ),
+                        reply_markup=drug_buy_request_keyboard(
+                            drug_id=drug_existing_response.drug.id if drug_existing_response.drug else None,
+                            drug_name=message.text,
+                            danger_classification=drug_existing_response.danger_classification
+                        ),
+                    )
+                else:
+                    await message.answer("Такой препарат не существует. "
+                                         "Возможно, вы ошиблись в написании названия. "
+                                         "Попробуйте написать действующее вещество.")
 
             case ACTIONS_FROM_ASSISTANT.SPAM:
+                # TODO возможно добавить
                 await message.answer("Это сообщение распознано как спам")
 
             case ACTIONS_FROM_ASSISTANT.OTHER:

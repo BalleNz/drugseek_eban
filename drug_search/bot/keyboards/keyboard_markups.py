@@ -4,11 +4,12 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 
 from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback, DescribeTypes,
                                        ArrowTypes, WrongDrugFoundedCallback)
+from drug_search.bot.keyboards.callbacks import BuyDrugRequestCallback
 from drug_search.bot.lexicon.keyboard_words import ButtonText
-from drug_search.core.lexicon.enums import SUBSCRIBE_TYPES
-from drug_search.core.schemas.telegram_schemas import DrugBriefly
+from drug_search.core.lexicon.enums import SUBSCRIBE_TYPES, DANGER_CLASSIFICATION
+from drug_search.core.schemas.telegram_schemas import DrugBrieflySchema
 
-# Reply
+# [Reply]
 main_menu_keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text=ButtonText.PROFILE)],
@@ -17,7 +18,7 @@ main_menu_keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(
     resize_keyboard=True,
 )
 
-# Inline
+# [Inline]
 drug_database_list_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
     inline_keyboard=[
         [
@@ -31,7 +32,7 @@ drug_database_list_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
 )
 
 
-def get_drug_list_keyboard(drugs: list[DrugBriefly], page: int) -> InlineKeyboardMarkup:
+def get_drug_list_keyboard(drugs: list[DrugBrieflySchema], page: int) -> InlineKeyboardMarkup:
     """Клавиатура с названиями препов и CallbackData"""
 
     if drugs is None:
@@ -212,7 +213,7 @@ def drug_describe_types_keyboard(
         keyboard.inline_keyboard.append(
             [
                 InlineKeyboardButton(
-                    text="<b>Найден не тот препарат</b>",
+                    text="Найден не тот препарат",
                     callback_data=WrongDrugFoundedCallback(
                         drug_name_query=drug_name
                     ).pack()
@@ -221,3 +222,27 @@ def drug_describe_types_keyboard(
         )
 
     return keyboard
+
+
+def drug_buy_request_keyboard(
+        drug_name: str,
+        drug_id: uuid.UUID | None,
+        danger_classification: DANGER_CLASSIFICATION
+) -> InlineKeyboardMarkup:
+    """Клавиатура с покупкой препарата.
+    Может не быть ID —> создается новый препарат.
+    """
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="Купить",
+                    callback_data=BuyDrugRequestCallback(
+                        drug_id=drug_id if drug_id else None,
+                        drug_name=drug_name,
+                        danger_classification=danger_classification
+                    ).pack()
+                )
+            ]
+        ]
+    )

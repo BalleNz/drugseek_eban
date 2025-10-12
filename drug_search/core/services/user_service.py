@@ -34,7 +34,7 @@ class UserService:
     async def add_tokens(
             self,
             user_id: uuid.UUID,
-            amount_search_tokens: int = 1,
+            amount_search_tokens: int = 0,
             amount_question_tokens: int = 0
     ) -> None:
         """Добавляет запросы юзеру"""
@@ -47,7 +47,7 @@ class UserService:
     async def reduce_tokens(
             self,
             user_id: uuid.UUID,
-            amount_search_tokens: int = 1,
+            amount_search_tokens: int = 0,
             amount_question_tokens: int = 0
     ) -> None:
         """Отнимает запросы у юзера"""

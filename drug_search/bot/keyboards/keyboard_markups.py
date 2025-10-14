@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -8,6 +9,7 @@ from drug_search.bot.keyboards.callbacks import BuyDrugRequestCallback
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.core.lexicon.enums import SUBSCRIBE_TYPES, DANGER_CLASSIFICATION
 from drug_search.core.schemas.telegram_schemas import DrugBrieflySchema
+from drug_search.core.utils.funcs import may_update_drug
 
 # [Reply]
 main_menu_keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(
@@ -87,11 +89,14 @@ def drug_describe_types_keyboard(
         drug_id: uuid.UUID,
         describe_type: DescribeTypes,
         user_subscribe_type: SUBSCRIBE_TYPES,
+        drug_last_update: datetime | None,  # для кнопки "обновить", только в главном меню
         page: int | None = None,  # страница с прошлого меню
         drug_name: str | None = None  # если найден неверный препарат
 ) -> InlineKeyboardMarkup:
-    """Возвращает клавиатуру с выбором разделов препарата,
-    или со стрелкой возвращения в меню листинга (в зависимости от describe_type)
+    """
+    Возвращает клавиатуру по describe_type:
+    а) с выбором разделов препарата,
+    б) со стрелкой возвращения в меню листинг
     """
     if describe_type != DescribeTypes.BRIEFLY:
         keyboard = InlineKeyboardMarkup(
@@ -110,8 +115,8 @@ def drug_describe_types_keyboard(
         )
         if describe_type == DescribeTypes.UPDATE_INFO:
             keyboard.inline_keyboard.insert(
-                __index=0,
-                __object=[
+                0,
+                [
                     InlineKeyboardButton(
                         text=ButtonText.UPDATE_DRUG if user_subscribe_type != SUBSCRIBE_TYPES.PREMIUM else ButtonText.UPDATE_DRUG_FOR_PREMIUM,
                         callback_data=DrugDescribeCallback(
@@ -179,10 +184,16 @@ def drug_describe_types_keyboard(
                     callback_data=DrugDescribeCallback(
                         describe_type=DescribeTypes.RESEARCHES,
                         drug_id=drug_id,
-                        page=page
+                        page=page,
+                        drug_has_researches=drug_has_researches  # TODO: при клике будет либо
                     ).pack()
                 )
             ],
+        ]
+    )
+
+    if drug_last_update and may_update_drug(drug_last_update) and describe_type == DescribeTypes.BRIEFLY:
+        keyboard.inline_keyboard.append(
             [
                 InlineKeyboardButton(
                     text=ButtonText.UPDATE_DRUG,
@@ -193,8 +204,7 @@ def drug_describe_types_keyboard(
                     ).pack()
                 )
             ]
-        ]
-    )
+        )
 
     if page is not None:
         # если просмотр с кнопки "база данных"
@@ -226,11 +236,11 @@ def drug_describe_types_keyboard(
 
 def drug_buy_request_keyboard(
         drug_name: str,
-        drug_id: uuid.UUID | None,
+        drug_id: uuid.UUID | None,  # Может не быть —> создается новый препарат.
         danger_classification: DANGER_CLASSIFICATION
 ) -> InlineKeyboardMarkup:
-    """Клавиатура с покупкой препарата.
-    Может не быть ID —> создается новый препарат.
+    """
+    Клавиатура с покупкой препарата.
     """
     return InlineKeyboardMarkup(
         inline_keyboard=[

@@ -20,6 +20,7 @@ from drug_search.core.services.drug_service import DrugService
 from drug_search.core.services.task_service import TaskService
 from drug_search.core.services.user_service import UserService
 from drug_search.core.utils.auth import get_auth_user
+from drug_search.core.utils.funcs import layout_converter
 
 logger = logging.getLogger(__name__)
 drug_router = APIRouter(prefix="/drugs")
@@ -79,7 +80,8 @@ async def search_drug(
             drug=drug,
             is_allowed=drug.id in user.allowed_drug_ids(),
             danger_classification=drug.danger_classification,
-            drug_name_ru=drug.name_ru
+            drug_name_ru=drug.name_ru,
+            drug_name=drug.name
         )
 
     if not is_drug_in_database:
@@ -100,7 +102,8 @@ async def search_drug(
                 is_allowed=drug.id in user.allowed_drug_ids() if bool(drug) else None,
                 drug=drug,  # Drug | None
                 danger_classification=assistant_response.danger_classification,
-                drug_name_ru=assistant_response.drug_name_ru
+                drug_name_ru=assistant_response.drug_name_ru,
+                drug_name=assistant_response.drug_name
             )
         else:  # препарат не существует в принципе
             return DrugExistingResponse(
@@ -109,7 +112,8 @@ async def search_drug(
                 is_allowed=False,
                 drug=None,
                 danger_classification=assistant_response.danger_classification,
-                drug_name_ru=None
+                drug_name_ru=None,
+                drug_name=None
             )
 
 
@@ -123,7 +127,14 @@ async def search_drug_only_trigrams(
         user: Annotated[UserSchema, Depends(get_auth_user)],
         drug_name_query: str = Path(..., description="Строго действующее вещество"),
 ):
-    drug: DrugSchema | None = await drug_service.find_drug_by_query(drug_name_query)
+    drug: DrugSchema | None = await drug_service.find_drug_by_query(
+        user_query=drug_name_query
+    )
+    if not drug:
+        # Пробуем найди на английской раскладке
+        drug: DrugSchema | None = await drug_service.find_drug_by_query(
+            user_query=layout_converter(text=drug_name_query)
+        )
 
     return DrugExistingResponse(
         is_exist=True if drug else None,
@@ -131,7 +142,8 @@ async def search_drug_only_trigrams(
         is_allowed=drug.id in user.allowed_drug_ids() if drug else None,
         drug=drug,
         danger_classification=drug.danger_classification if drug else None,
-        drug_name_ru=drug.name_ru if drug else None
+        drug_name_ru=drug.name_ru if drug else None,
+        drug_name=drug.name if drug else None
     )
 
 
@@ -166,7 +178,8 @@ async def search_drug_without_trigrams(
             is_allowed=False,
             drug=None,
             danger_classification=None,
-            drug_name_ru=None
+            drug_name_ru=None,
+            drug_name=None
         )
 
     drug: DrugSchema | None = await drug_service.repo.find_drug_without_trigrams(validation_response.drug_name)
@@ -176,7 +189,8 @@ async def search_drug_without_trigrams(
         is_allowed=drug.id in user.allowed_drug_ids() if drug else None,
         drug=drug,
         danger_classification=validation_response.danger_classification,
-        drug_name_ru=drug.name_ru if drug else None
+        drug_name_ru=validation_response.drug_name_ru,
+        drug_name=validation_response.drug_name
     )
 
 

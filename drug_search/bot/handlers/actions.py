@@ -28,19 +28,37 @@ async def wrong_drug_founded(
         api_client: DrugSearchAPIClient
 ):
     user: UserSchema = await cache_service.get_user_profile(access_token, callback_query.from_user.id)
-    message: Message = await callback_query.message.answer("Поиск препарата..")
+    await callback_query.message.edit_text("Поиск препарата..")
 
-    drug_response: DrugExistingResponse = await api_client.search_drug(callback_data.drug_name_query, access_token)
-    await callback_query.message.edit_text(
-        text=DrugMessageFormatter.format_drug_briefly(drug_response.drug),
-        reply_markup=drug_describe_types_keyboard(
-            drug_id=drug_response.drug.id,
-            describe_type=DescribeTypes.BRIEFLY,
-            user_subscribe_type=user.subscription_type,
-        ),
-        link_preview_options=LinkPreviewOptions(is_disabled=True)
-    )
-    await message.delete()
+    drug_response: DrugExistingResponse = await api_client.search_drug_without_trigrams(callback_data.drug_name_query, access_token)
+    if drug_response.is_exist:
+        if drug_response.is_allowed:
+            message_text: str = DrugMessageFormatter.format_drug_briefly(drug_response.drug)
+            await callback_query.message.edit_text(
+                message_text,
+                reply_markup=drug_describe_types_keyboard(
+                    drug_id=drug_response.drug.id,
+                    describe_type=DescribeTypes.BRIEFLY,
+                    user_subscribe_type=user.subscription_type,
+                    drug_name=drug_response.drug.name,
+                    drug_last_update=drug_response.drug.updated_at
+                ),
+                link_preview_options=LinkPreviewOptions(is_disabled=True)
+            )
+        else:
+            # [ предложить купить препарат ]
+            await callback_query.message.edit_text(
+                text=MessageTemplates.DRUG_BUY_REQUEST.format(
+                    drug_name_ru=drug_response.drug_name_ru
+                ),
+                reply_markup=drug_buy_request_keyboard(
+                    drug_id=drug_response.drug.id if drug_response.drug else None,
+                    drug_name=drug_response.drug_name,
+                    danger_classification=drug_response.danger_classification
+                ),
+            )
+    else:
+        await callback_query.message.edit_text("<b>Препарат не существует.</b>")
 
 
 @router.message()
@@ -69,7 +87,8 @@ async def main_action(
                     drug_id=drug_response.drug.id,
                     describe_type=DescribeTypes.BRIEFLY,
                     user_subscribe_type=user.subscription_type,
-                    drug_name=message.text
+                    drug_name=message.text,
+                    drug_last_update=drug_response.drug.updated_at
                 ),
                 link_preview_options=LinkPreviewOptions(is_disabled=True)
             )
@@ -88,7 +107,7 @@ async def main_action(
 
     # [ определяем действие юзера ]
     else:
-        message_request: Message = await message.answer(text="Запрос принят.. обрабатываю")
+        message_request: Message = await message.answer(text=MessageTemplates.QUERY_IN_PROCESS)
 
         action_response: SelectActionResponse = await api_client.assistant_get_action(
             access_token, message.text
@@ -128,7 +147,8 @@ async def main_action(
                             drug_id=drug_existing_response.drug.id,
                             describe_type=DescribeTypes(action_response.drug_menu),
                             user_subscribe_type=user.subscription_type,
-                            drug_name=drug_existing_response.drug.name
+                            drug_name=drug_existing_response.drug.name,
+                            drug_last_update=drug_response.drug.updated_at
                         ),
                         link_preview_options=LinkPreviewOptions(is_disabled=True)
                     )
@@ -161,7 +181,8 @@ async def main_action(
                         reply_markup=drug_describe_types_keyboard(
                                 drug_id=drug_existing_response.drug.id,
                                 describe_type=DescribeTypes.BRIEFLY,
-                                user_subscribe_type=user.subscription_type
+                                user_subscribe_type=user.subscription_type,
+                                drug_last_update=drug_response.drug.updated_at
                             ),
                         link_preview_options=LinkPreviewOptions(is_disabled=True)
                     )

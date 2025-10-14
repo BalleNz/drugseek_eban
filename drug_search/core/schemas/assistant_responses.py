@@ -53,7 +53,7 @@ class AssistantDosageDescriptionResponse(BaseModel):
         validate_by_name = True
 
 
-class AssistantResponseDrugCombinationSchema(BaseModel):
+class AssistantResponseDrugCombination(BaseModel):
     combination_type: CombinationType
     substance: str = Field(..., description="ДВ")
     effect: str
@@ -62,7 +62,7 @@ class AssistantResponseDrugCombinationSchema(BaseModel):
 
 
 class AssistantResponseCombinations(BaseModel):
-    combinations: list[AssistantResponseDrugCombinationSchema] | None
+    combinations: list[AssistantResponseDrugCombination] | None
 
 
 class AssistantResponseDrugPathways(BaseModel):
@@ -85,7 +85,8 @@ class AssistantResponseDrugResearch(BaseModel):
     authors: Optional[str] = Field(None, description="несколько самых популярных участвующих в исследовании авторов")
     study_type: Optional[str] = Field(None, description="тип исследования (RCT/метаанализ/обзор)")
     interest: float = Field(...,
-                            description="насколько исследование интересно <число с плавающей точкой, где 1.00 — максимально интересное>")
+                            description="насколько исследование интересно <число с плавающей точкой, где 1.00 — "
+                                        "максимально интересное>")
 
 
 class AssistantResponseDrugResearches(BaseModel):

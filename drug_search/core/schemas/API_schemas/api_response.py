@@ -21,10 +21,12 @@ class DrugAnswer(BaseModel):
     description: str
 
 
+# [ Responses ]
 class DrugExistingResponse(BaseModel):
     is_exist: bool | None
     danger_classification: DANGER_CLASSIFICATION | None = Field(None, description="Класс опасности")
     drug_name_ru: str | None  # если существует
+    drug_name: str | None
 
     # if exist in database
     is_drug_in_database: bool | None

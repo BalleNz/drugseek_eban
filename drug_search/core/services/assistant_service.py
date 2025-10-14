@@ -11,8 +11,7 @@ from drug_search.core.lexicon import Prompts
 from drug_search.core.schemas import (AssistantResponseDrugResearches, AssistantResponsePubmedQuery,
                                       AssistantDosageDescriptionResponse, AssistantResponseCombinations,
                                       AssistantResponseDrugPathways, AssistantResponseDrugValidation,
-                                      ClearResearchesRequest, SelectActionResponse, QuestionAssistantResponse
-                                      )
+                                      ClearResearchesRequest, SelectActionResponse, QuestionAssistantResponse)
 from drug_search.core.utils import assistant_utils
 from drug_search.core.utils.exceptions import AssistantResponseError
 

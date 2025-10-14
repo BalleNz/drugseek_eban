@@ -129,6 +129,19 @@ class DrugSearchAPIClient(BaseHttpClient):
             access_token=access_token
         )
 
+    async def search_drug_without_trigrams(
+        self,
+        drug_name_query: str,
+        access_token: str
+    ):
+        """Поиск препарата без триграмм"""
+        return await self._request(
+            HTTPMethod.GET,
+            endpoint=f"/v1/drugs/search/without_trigrams/{drug_name_query}",
+            response_model=DrugExistingResponse,
+            access_token=access_token
+        )
+
     async def get_drug(
             self,
             drug_id: UUID,

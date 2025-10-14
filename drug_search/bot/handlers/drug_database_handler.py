@@ -68,7 +68,7 @@ async def drug_describe_handler(
         cache_service: CacheService,
         access_token: str,
         callback_data: DrugDescribeCallback,
-        state: FSMContext
+        state: FSMContext  # noqa
 ):
     """
     Описание препарата в зависимости от Describe_type.
@@ -94,7 +94,8 @@ async def drug_describe_handler(
             drug_id=drug_id,
             page=page,
             describe_type=describe_type,
-            user_subscribe_type=user.subscription_type
+            user_subscribe_type=user.subscription_type,
+            drug_last_update=drug.updated_at
         ),
         link_preview_options=LinkPreviewOptions(is_disabled=True)
     )

@@ -20,12 +20,6 @@ class Config(BaseSettings):
     """
     Singleton class for environ values.
     """
-    class constants:  # TODO
-        MIN_DAYS_TO_UPDATE_DRUG: int = 60
-
-    # TOKEN SYSTEM
-    NEW_DRUG_COST: int = 1  # allow drug to user
-
     # Режим разработки True/False
     DEBUG: ClassVar[bool] = environ.get("DEBUG", "true").lower() == "true"
 

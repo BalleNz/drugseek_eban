@@ -1,13 +1,13 @@
 from datetime import timedelta, datetime, timezone
 
-from drug_search.config import config
+from drug_search.core.lexicon.consts import MIN_DAYS_TO_UPDATE_DRUG
 
 
 def may_update_drug(last_update: datetime) -> bool:
     """Проверяет, прошло ли более MIN_DAYS_TO_UPDATE_DRUG дней с последнего обновления препарата"""
     # Приводим оба времени к одному типу timezone.utc
     now_utc = datetime.now(timezone.utc)
-    threshold = now_utc - timedelta(days=config.constants.MIN_DAYS_TO_UPDATE_DRUG)
+    threshold = now_utc - timedelta(days=MIN_DAYS_TO_UPDATE_DRUG)
 
     # Приводим last_update к тому же типу tzinfo
     if last_update.tzinfo != timezone.utc:
@@ -23,12 +23,11 @@ def layout_converter(text: str) -> str:
     Автоматически определяет раскладку и конвертирует в противоположную
     """
 
-    def convert_layout(text: str, from_layout: str = 'en', to_layout: str = 'ru') -> str:
+    def convert_layout(from_layout: str = 'en', to_layout: str = 'ru') -> str:
         """
         Конвертирует текст между русской и английской раскладками
 
         Args:
-            text: исходный текст
             from_layout: 'en' или 'ru' - исходная раскладка
             to_layout: 'en' или 'ru' - целевая раскладка
         """
@@ -69,8 +68,8 @@ def layout_converter(text: str) -> str:
     ru_count = sum(1 for char in text if char in ru_chars)
 
     if en_count > ru_count:
-        return convert_layout(text, 'en', 'ru')
+        return convert_layout('en', 'ru')
     elif ru_count > en_count:
-        return convert_layout(text, 'ru', 'en')
+        return convert_layout('ru', 'en')
     else:
         return text  # неопределенно, возвращаем как есть

@@ -12,7 +12,7 @@ from drug_search.core.schemas.telegram_schemas import DrugBrieflySchema
 from drug_search.core.utils.funcs import may_update_drug
 
 # [Reply]
-main_menu_keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(
+menu_keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text=ButtonText.PROFILE)],
         [KeyboardButton(text=ButtonText.DRUG_DATABASE)]
@@ -21,7 +21,7 @@ main_menu_keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(
 )
 
 # [Inline]
-drug_database_list_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
+drug_database_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
     inline_keyboard=[
         [
             InlineKeyboardButton(
@@ -34,8 +34,10 @@ drug_database_list_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
 )
 
 
-def get_drug_list_keyboard(drugs: list[DrugBrieflySchema], page: int) -> InlineKeyboardMarkup:
-    """Клавиатура с названиями препов и CallbackData"""
+def drug_list_keyboard(drugs: list[DrugBrieflySchema], page: int) -> InlineKeyboardMarkup:
+    """
+    Клавиатура с названиями препов и CallbackData
+    """
 
     if drugs is None:
         return InlineKeyboardMarkup(inline_keyboard=[])
@@ -45,7 +47,7 @@ def get_drug_list_keyboard(drugs: list[DrugBrieflySchema], page: int) -> InlineK
     buttons = []
 
     for drug in drug_pages[page]:
-        # проходит по массиву из страниц препаратов в текущей странице page
+        # проходит по массиву в текущей странице page
         buttons.append(
             [
                 InlineKeyboardButton(
@@ -58,14 +60,13 @@ def get_drug_list_keyboard(drugs: list[DrugBrieflySchema], page: int) -> InlineK
                 )
             ]
         )
-
     buttons.append([])
 
-    # arrows logic
+    # [ arrows logic ]
     if page > 0:
         buttons[-1].append(
             InlineKeyboardButton(
-                text="<——",
+                text=ButtonText.LEFT_ARROW,
                 callback_data=DrugListCallback(
                     arrow=ArrowTypes.BACK,
                     page=page - 1
@@ -75,7 +76,7 @@ def get_drug_list_keyboard(drugs: list[DrugBrieflySchema], page: int) -> InlineK
     if len(drug_pages) - 1 - page:
         buttons[-1].append(
             InlineKeyboardButton(
-                text="——>",
+                text=ButtonText.RIGHT_ARROW,
                 callback_data=DrugListCallback(
                     arrow=ArrowTypes.FORWARD,
                     page=page + 1
@@ -85,7 +86,7 @@ def get_drug_list_keyboard(drugs: list[DrugBrieflySchema], page: int) -> InlineK
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def drug_describe_types_keyboard(
+def drug_keyboard(
         drug_id: uuid.UUID,
         describe_type: DescribeTypes,
         user_subscribe_type: SUBSCRIBE_TYPES,
@@ -103,7 +104,7 @@ def drug_describe_types_keyboard(
             inline_keyboard=[
                 [
                     InlineKeyboardButton(
-                        text="<——",
+                        text=ButtonText.LEFT_ARROW,
                         callback_data=DrugDescribeCallback(
                             describe_type=DescribeTypes.BRIEFLY,
                             drug_id=drug_id,
@@ -124,6 +125,15 @@ def drug_describe_types_keyboard(
                             drug_id=drug_id,
                             page=page
                         ).pack()
+                    )
+                ]
+            )
+        elif describe_type == DescribeTypes.RESEARCHES:
+            keyboard.inline_keyboard.insert(
+                0,
+                [
+                    InlineKeyboardButton(
+                        text=ButtonText.UPDATE_RESEARCHES
                     )
                 ]
             )
@@ -185,7 +195,6 @@ def drug_describe_types_keyboard(
                         describe_type=DescribeTypes.RESEARCHES,
                         drug_id=drug_id,
                         page=page,
-                        drug_has_researches=drug_has_researches  # TODO: при клике будет либо
                     ).pack()
                 )
             ],
@@ -211,7 +220,7 @@ def drug_describe_types_keyboard(
         keyboard.inline_keyboard.append(
             [
                 InlineKeyboardButton(
-                    text="<——",
+                    text=ButtonText.RIGHT_ARROW,
                     callback_data=DrugListCallback(
                         page=page
                     ).pack()
@@ -223,18 +232,17 @@ def drug_describe_types_keyboard(
         keyboard.inline_keyboard.append(
             [
                 InlineKeyboardButton(
-                    text="Найден не тот препарат",
+                    text=ButtonText.WRONG_DRUG_FOUNDED,
                     callback_data=WrongDrugFoundedCallback(
                         drug_name_query=drug_name
                     ).pack()
                 )
             ]
         )
-
     return keyboard
 
 
-def drug_buy_request_keyboard(
+def buy_request_keyboard(
         drug_name: str,
         drug_id: uuid.UUID | None,  # Может не быть —> создается новый препарат.
         danger_classification: DANGER_CLASSIFICATION
@@ -246,7 +254,7 @@ def drug_buy_request_keyboard(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="Купить",
+                    text=ButtonText.BUY_DRUG,
                     callback_data=BuyDrugRequestCallback(
                         drug_id=drug_id if drug_id else None,
                         drug_name=drug_name,

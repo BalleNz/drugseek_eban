@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from lexicon import SUBSCRIBE_TYPES
+from drug_search.core.lexicon import SUBSCRIBE_TYPES
 
 
 def make_google_sources(sources: list[str]) -> list[dict]:

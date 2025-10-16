@@ -9,7 +9,7 @@ from drug_search.bot.keyboards import DescribeTypes, drug_keyboard, buy_request_
 from drug_search.bot.lexicon import MessageTemplates
 from drug_search.bot.utils.format_message_text import DrugMessageFormatter
 from drug_search.core.dependencies.cache_service_dep import cache_service
-from drug_search.core.lexicon import ACTIONS_FROM_ASSISTANT
+from drug_search.core.lexicon import ACTIONS_FROM_ASSISTANT, ARROW_TYPES
 from drug_search.core.schemas import (SelectActionResponse,
                                       DrugExistingResponse, UserSchema)
 
@@ -81,7 +81,8 @@ async def main_action(
                         access_token=access_token,
                         user_telegram_id=user.telegram_id,
                         question=message.text,
-                        message_id=str(message_request.message_id)
+                        message_id=str(message_request.message_id),
+                        arrow=ARROW_TYPES.FORWARD
                     )
                 else:
                     await message_request.edit_text(

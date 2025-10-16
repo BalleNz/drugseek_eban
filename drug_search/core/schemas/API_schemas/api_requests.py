@@ -4,7 +4,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from drug_search.core.lexicon.enums import DANGER_CLASSIFICATION
+from drug_search.core.lexicon.enums import DANGER_CLASSIFICATION, ARROW_TYPES
 
 
 class AddTokensRequest(BaseModel):
@@ -37,6 +37,7 @@ class QuestionRequest(BaseModel):
     user_telegram_id: str
     question: str
     old_message_id: str
+    arrow: ARROW_TYPES
 
 
 class QuestionContinueRequest(BaseModel):

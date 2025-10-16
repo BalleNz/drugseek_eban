@@ -4,8 +4,7 @@ from typing import Optional
 
 from aiogram.filters.callback_data import CallbackData
 
-from drug_search.core.lexicon.enums import DANGER_CLASSIFICATION
-from drug_search.core.schemas import DrugAnswer
+from drug_search.core.lexicon.enums import DANGER_CLASSIFICATION, ARROW_TYPES
 
 
 # [ TYPES ]
@@ -20,11 +19,6 @@ class DescribeTypes(str, Enum):
     UPDATE_INFO = "UpdateInfo"
 
 
-class ArrowTypes(str, Enum):
-    BACK = "back"
-    FORWARD = "forward"
-
-
 # [ CALLBACKS ]
 # [ база данных ]
 class DatabaseCallback(CallbackData, prefix="database"):
@@ -32,7 +26,7 @@ class DatabaseCallback(CallbackData, prefix="database"):
 
 
 class DrugListCallback(CallbackData, prefix="drug_list"):
-    arrow: Optional[ArrowTypes] = None
+    arrow: Optional[ARROW_TYPES] = None
     page: int  # текущая страница
 
 
@@ -62,7 +56,7 @@ class WrongDrugFoundedCallback(CallbackData, prefix="wrong_drug"):
 
 class AssistantQuestionContinue(CallbackData, prefix="quest_cont"):
     question: str
-    arrow: ArrowTypes
+    arrow: ARROW_TYPES
 
 
 # [ покупка препарата ]

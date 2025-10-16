@@ -42,14 +42,6 @@ class RedisService:
     def _get_assistant_answer(query: str):
         return f"assistant_answer:{query}:{CacheKeys.ASSISTANT_ANSWER}"
 
-    @staticmethod
-    def _get_assistant_answer_used_drugs(query: str):
-        return f"assistant_answer_used_drugs:{query}"
-
-    @staticmethod
-    def _get_assistant_answer_continue(query: str):
-        return f"assistant_answer:{query}:{CacheKeys.ASSISTANT_ANSWER_CONTINUE}"
-
     async def get_access_token(self, telegram_id: str) -> Optional[str]:
         """Получение access token из кэша"""
         redis_key = self._get_token_key(telegram_id)
@@ -160,47 +152,6 @@ class RedisService:
             name=cache_key,
             value=assistant_response.model_dump_json(),
             ex=expire_seconds
-        )
-
-    async def get_assistant_answer_continue(
-            self,
-            question: str
-    ) -> QuestionAssistantResponse | None:
-        """Продолжение ответа от ассистента: ПОЛУЧЕНИЕ"""
-        cache_key: str = self._get_assistant_answer_continue(question)
-        cache_data: str | None = await self.redis.get(name=cache_key)
-        if not cache_data:
-            return None
-        return QuestionAssistantResponse.model_validate_json(cache_data)
-
-    async def set_assistant_answer_continue(
-            self,
-            question: str,
-            assistant_response: QuestionAssistantResponse
-    ) -> None:
-        """Продолжение ответа от ассистента: ЗАПИСЬ"""
-        cache_key: str = self._get_assistant_answer_continue(question)
-        await self.redis.set(
-            name=cache_key,
-            value=assistant_response.model_dump_json()
-        )
-
-    async def get_assistant_used_drugs(
-            self,
-            question: str
-    ) -> str | None:
-        cache_key: str = self._get_assistant_answer_used_drugs(question)
-        return await self.redis.get(cache_key)
-
-    async def set_assistant_used_drugs(
-            self,
-            question: str,
-            used_drugs: str
-    ) -> None:
-        cache_key: str = self._get_assistant_answer_used_drugs(question)
-        await self.redis.set(
-            name=cache_key,
-            value=used_drugs
         )
 
     # [ INVALIDATE ]

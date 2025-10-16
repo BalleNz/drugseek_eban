@@ -5,7 +5,7 @@ from fastapi.params import Depends
 
 from drug_search.core.dependencies.assistant_service_dep import get_assistant_service
 from drug_search.core.dependencies.task_service_dep import get_task_service
-from drug_search.core.schemas import QueryRequest, SelectActionResponse, QuestionRequest, QuestionContinueRequest
+from drug_search.core.schemas import QueryRequest, SelectActionResponse, QuestionRequest
 from drug_search.core.services.assistant_service import AssistantService
 from drug_search.core.services.task_service import TaskService
 
@@ -32,19 +32,8 @@ async def question_answer(
     await task_service.enqueue_assistant_answer(
         user_telegram_id=request.user_telegram_id,
         question=request.question,
-        old_message_id=request.old_message_id
-    )
-
-
-@assistant_router.post(path="/actions/question_continue")
-async def question_answer_continue(
-        request: QuestionContinueRequest,
-        task_service: Annotated[TaskService, Depends(get_task_service)],
-):
-    await task_service.enqueue_assistant_answer_continue(
-        user_telegram_id=request.user_telegram_id,
-        question=request.question,
         old_message_id=request.old_message_id,
+        arrow=request.arrow
     )
 
 

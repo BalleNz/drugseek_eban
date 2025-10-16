@@ -6,6 +6,8 @@ from enum import Enum
 from arq import ArqRedis
 from arq.jobs import Job
 
+from drug_search.core.lexicon import ARROW_TYPES
+
 logger = logging.getLogger(__name__)
 
 
@@ -16,7 +18,6 @@ class ARQ_JOBS(str, Enum):
     DRUG_CREATE = "drug_create"
     DRUG_UPDATE = "drug_update"
     ASSISTANT_ANSWER = "assistant_answer"
-    ASSISTANT_ANSWER_CONTINUE = "assistant_answer_continue"
 
 
 class TaskService:
@@ -89,36 +90,18 @@ class TaskService:
             user_telegram_id: str,
             question: str,
             old_message_id: str,
+            arrow: ARROW_TYPES
     ):
         """Задача не уникальная"""
         job: Job = await self.arq_pool.enqueue_job(
             ARQ_JOBS.ASSISTANT_ANSWER.value,
             user_telegram_id,
             question,
-            old_message_id
+            old_message_id,
+            arrow,
         )
         return {
             "status": f"{await job.status()}",
             "user_id": user_telegram_id,
             "question": question
-        }
-
-    async def enqueue_assistant_answer_continue(
-            self,
-            user_telegram_id: str,
-            question: str,
-            old_message_id: str,
-    ):
-        """Задача не уникальная"""
-        job: Job = await self.arq_pool.enqueue_job(
-            ARQ_JOBS.ASSISTANT_ANSWER_CONTINUE.value,
-            user_telegram_id,
-            question,
-            old_message_id,
-        )
-        return {
-            "status": f"{await job.status()}",
-            "user_id": user_telegram_id,
-            "question": question,
-            "mode": 'continue'
         }

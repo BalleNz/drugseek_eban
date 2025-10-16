@@ -24,3 +24,8 @@ class DANGER_CLASSIFICATION(str, Enum):
     SAFE: str = "SAFE"
     PREMIUM_NEED: str = "PREMIUM_NEED"
     DANGER: str = "DANGER"
+
+
+class ARROW_TYPES(str, Enum):
+    BACK = "back"
+    FORWARD = "forward"

@@ -1,16 +1,15 @@
-import hashlib
 import uuid
 from datetime import datetime
 
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
 from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback, DescribeTypes,
-                                       ArrowTypes, WrongDrugFoundedCallback)
+                                       WrongDrugFoundedCallback)
 from drug_search.bot.keyboards.callbacks import BuyDrugRequestCallback, AssistantQuestionContinue, \
     DrugUpdateRequestCallback
 from drug_search.bot.lexicon.keyboard_words import ButtonText
-from drug_search.core.lexicon.enums import SUBSCRIBE_TYPES, DANGER_CLASSIFICATION
-from drug_search.core.schemas import DrugBrieflySchema, DrugAnswer
+from drug_search.core.lexicon import SUBSCRIBE_TYPES, DANGER_CLASSIFICATION, ARROW_TYPES
+from drug_search.core.schemas import DrugBrieflySchema
 from drug_search.core.utils.funcs import may_update_drug
 
 # [Reply]
@@ -70,7 +69,7 @@ def drug_list_keyboard(drugs: list[DrugBrieflySchema], page: int) -> InlineKeybo
             InlineKeyboardButton(
                 text=ButtonText.LEFT_ARROW,
                 callback_data=DrugListCallback(
-                    arrow=ArrowTypes.BACK,
+                    arrow=ARROW_TYPES.BACK,
                     page=page - 1
                 ).pack()
             )
@@ -80,7 +79,7 @@ def drug_list_keyboard(drugs: list[DrugBrieflySchema], page: int) -> InlineKeybo
             InlineKeyboardButton(
                 text=ButtonText.RIGHT_ARROW,
                 callback_data=DrugListCallback(
-                    arrow=ArrowTypes.FORWARD,
+                    arrow=ARROW_TYPES.FORWARD,
                     page=page + 1
                 ).pack()
             )
@@ -269,7 +268,7 @@ def buy_request_keyboard(
 
 def question_continue_keyboard(
         question: str,
-        arrow: ArrowTypes
+        arrow: ARROW_TYPES
 ) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[

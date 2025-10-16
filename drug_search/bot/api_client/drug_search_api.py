@@ -2,11 +2,11 @@ import uuid
 from uuid import UUID
 
 from drug_search.bot.api_client.base_http_client import BaseHttpClient, HTTPMethod
-from drug_search.core.lexicon import DANGER_CLASSIFICATION
+from drug_search.core.lexicon import DANGER_CLASSIFICATION, ARROW_TYPES
 from drug_search.core.schemas import (UserTelegramDataSchema, UserSchema, DrugExistingResponse,
                                       DrugSchema, QuestionAssistantResponse, AllowedDrugsSchema,
                                       SelectActionResponse, QuestionRequest, AddTokensRequest,
-                                      BuyDrugRequest, BuyDrugResponse, UpdateDrugResponse, QuestionContinueRequest)
+                                      BuyDrugRequest, BuyDrugResponse, UpdateDrugResponse)
 
 
 class DrugSearchAPIClient(BaseHttpClient):
@@ -27,7 +27,8 @@ class DrugSearchAPIClient(BaseHttpClient):
             access_token: str,
             user_telegram_id: str,
             question: str,
-            message_id: str
+            message_id: str,
+            arrow: ARROW_TYPES
     ) -> QuestionAssistantResponse:
         return await self._request(
             HTTPMethod.POST,
@@ -36,26 +37,9 @@ class DrugSearchAPIClient(BaseHttpClient):
                 user_telegram_id=user_telegram_id,
                 question=question,
                 old_message_id=message_id,
+                arrow=arrow
             ),
             access_token=access_token,
-        )
-
-    async def question_answer_continue(
-            self,
-            access_token: str,
-            user_telegram_id: str,
-            question: str,
-            message_id: str,
-    ) -> QuestionAssistantResponse:
-        return await self._request(
-            HTTPMethod.POST,
-            endpoint="/v1/assistant/actions/question_continue",
-            request_body=QuestionContinueRequest(
-                user_telegram_id=user_telegram_id,
-                question=question,
-                old_message_id=message_id,
-            ),
-            access_token=access_token
         )
 
     # [ Auth handler ]

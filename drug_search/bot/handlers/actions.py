@@ -5,8 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, LinkPreviewOptions
 
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
-from drug_search.bot.keyboards import WrongDrugFoundedCallback, drug_keyboard, DescribeTypes, buy_request_keyboard, \
-    ArrowTypes
+from drug_search.bot.keyboards import WrongDrugFoundedCallback, drug_keyboard, DescribeTypes, buy_request_keyboard
 from drug_search.bot.keyboards.callbacks import DrugUpdateRequestCallback, BuyDrugRequestCallback, \
     AssistantQuestionContinue
 from drug_search.bot.lexicon import MessageTemplates
@@ -14,6 +13,7 @@ from drug_search.bot.utils.format_message_text import DrugMessageFormatter
 from drug_search.core.dependencies.cache_service_dep import cache_service
 from drug_search.core.schemas import (BuyDrugResponse, BuyDrugStatuses, UpdateDrugResponse,
                                       UpdateDrugStatuses, UserSchema, DrugExistingResponse)
+from drug_search.core.lexicon import ARROW_TYPES
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
@@ -50,11 +50,11 @@ async def drug_update(
 
 @router.callback_query(BuyDrugRequestCallback.filter())
 async def drug_buy_request(
-    callback_query: CallbackQuery,
-    callback_data: BuyDrugRequestCallback,
-    access_token: str,
-    state: FSMContext,  # noqa
-    api_client: DrugSearchAPIClient
+        callback_query: CallbackQuery,
+        callback_data: BuyDrugRequestCallback,
+        access_token: str,
+        state: FSMContext,  # noqa
+        api_client: DrugSearchAPIClient
 ):
     """Обработка покупки препарата"""
     api_response: BuyDrugResponse = await api_client.buy_drug(
@@ -98,7 +98,8 @@ async def wrong_drug_founded(
     user: UserSchema = await cache_service.get_user_profile(access_token, callback_query.from_user.id)
     await callback_query.message.edit_text(MessageTemplates.DRUG_MANUAL_SEARCHING)
 
-    drug_response: DrugExistingResponse = await api_client.search_drug_without_trigrams(callback_data.drug_name_query, access_token)
+    drug_response: DrugExistingResponse = await api_client.search_drug_without_trigrams(callback_data.drug_name_query,
+                                                                                        access_token)
     if drug_response.is_exist:
         if drug_response.is_allowed:
             message_text: str = DrugMessageFormatter.format_drug_briefly(drug_response.drug)
@@ -129,8 +130,8 @@ async def wrong_drug_founded(
         await callback_query.message.edit_text(MessageTemplates.DRUG_IS_NOT_EXIST)
 
 
-@router.callback_query(AssistantQuestionContinue.filter(F.arrow == ArrowTypes.BACK))
-async def assistant_question_back(
+@router.callback_query(AssistantQuestionContinue.filter())
+async def assistant_question_listing(
         callback_query: CallbackQuery,
         callback_data: AssistantQuestionContinue,
         state: FSMContext,  # noqa
@@ -138,28 +139,11 @@ async def assistant_question_back(
         api_client: DrugSearchAPIClient
 ):
     """Продолжить список ответа ассистента, но без найденных препаратов"""
+    arrow: ARROW_TYPES = ARROW_TYPES.FORWARD if callback_data.arrow == ARROW_TYPES.BACK else ARROW_TYPES.BACK
     await api_client.question_answer(
         access_token=access_token,
         user_telegram_id=str(callback_query.from_user.id),
         question=callback_data.question,
         message_id=str(callback_query.message.message_id),
-    )
-
-
-@router.callback_query(AssistantQuestionContinue.filter(F.arrow == ArrowTypes.FORWARD))
-async def assistant_question_forward(
-        callback_query: CallbackQuery,
-        callback_data: AssistantQuestionContinue,
-        state: FSMContext,  # noqa
-        access_token: str,
-        api_client: DrugSearchAPIClient
-):
-    """
-    Вернуть следующий список препаратов
-    """
-    await api_client.question_answer_continue(
-        access_token=access_token,
-        user_telegram_id=str(callback_query.from_user.id),
-        question=callback_data.question,
-        message_id=str(callback_query.message.message_id),
+        arrow=arrow
     )

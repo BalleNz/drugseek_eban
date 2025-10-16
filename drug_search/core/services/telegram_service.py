@@ -3,12 +3,12 @@ import json
 import aiohttp
 from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup
 
+from drug_search.bot.keyboards.keyboard_markups import question_continue_keyboard
 from drug_search.config import config
+from drug_search.core.lexicon import ARROW_TYPES
 from drug_search.core.schemas import DrugSchema, QuestionAssistantResponse
 from drug_search.core.utils.formatter import ARQMessageTemplates
 from drug_search.core.utils.message_templates import MessageTemplates
-from drug_search.bot.keyboards import ArrowTypes
-from drug_search.bot.keyboards.keyboard_markups import question_continue_keyboard
 
 
 class TelegramService:
@@ -106,7 +106,7 @@ class TelegramService:
             user_telegram_id: str,
             old_message_id: str,
             question: str,
-            arrow: ArrowTypes
+            arrow: ARROW_TYPES
     ):
         """Редактирует сообщение для ответа на вопрос юзера"""
         message_text: str = ARQMessageTemplates.format_assistant_answer(question_response, arrow)

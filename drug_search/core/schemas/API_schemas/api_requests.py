@@ -39,6 +39,12 @@ class QuestionRequest(BaseModel):
     old_message_id: str
 
 
+class QuestionContinueRequest(BaseModel):
+    user_telegram_id: str
+    question: str
+    old_message_id: str
+
+
 class BuyDrugRequest(BaseModel):
     drug_id: uuid.UUID | None  # если нужно создавать: None
     drug_name: str  #

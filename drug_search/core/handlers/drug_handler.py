@@ -5,22 +5,20 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.params import Path
 
-from drug_search.core.arq_tasks import DrugOperations
 from drug_search.core.dependencies.assistant_service_dep import get_assistant_service
-from drug_search.core.dependencies.cache_service_dep import get_cache_service
 from drug_search.core.dependencies.drug_service_dep import get_drug_service_with_deps, get_drug_service
 from drug_search.core.dependencies.task_service_dep import get_task_service
 from drug_search.core.dependencies.user_service_dep import get_user_service
-from drug_search.core.lexicon.enums import EXIST_STATUS
+from drug_search.core.lexicon import EXIST_STATUS, UPDATE_DRUG_COST
 from drug_search.core.schemas import (UserSchema, DrugExistingResponse,
-                                      AssistantResponseDrugValidation, DrugSchema)
+                                      AssistantResponseDrugValidation, DrugSchema, UpdateDrugResponse, UpdateDrugStatuses)
 from drug_search.core.services.assistant_service import AssistantService
-from drug_search.core.services.cache_service import CacheService
 from drug_search.core.services.drug_service import DrugService
 from drug_search.core.services.task_service import TaskService
 from drug_search.core.services.user_service import UserService
 from drug_search.core.utils.auth import get_auth_user
 from drug_search.core.utils.funcs import layout_converter
+
 
 logger = logging.getLogger(__name__)
 drug_router = APIRouter(prefix="/drugs")
@@ -29,7 +27,7 @@ drug_router = APIRouter(prefix="/drugs")
 @drug_router.post(
     "/new/{drug_name}",
     description="Создает новый препарат (в ARQ), затем отсылается уведомление с клавиатурой",
-)
+)  # TODO: удалить  (в user buy онли)
 async def new_drug(
         user: Annotated[UserSchema, Depends(get_auth_user)],
         task_service: Annotated[TaskService, Depends(get_task_service)],
@@ -40,8 +38,7 @@ async def new_drug(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User hasn't allowed requests")
 
     try:
-        task_response = await task_service.enqueue_drug_operations(
-            operation=DrugOperations.CREATE,
+        task_response = await task_service.enqueue_drug_creation(
             user_telegram_id=user.telegram_id,
             user_id=user.id,
             drug_name=drug_name
@@ -194,40 +191,32 @@ async def search_drug_without_trigrams(
     )
 
 
-@drug_router.post(
-    path="/allow/{drug_id}",
-    description="Разрешает и возвращает существующий препарат",
-)
-async def allow_drug(
-        user: Annotated[UserSchema, Depends(get_auth_user)],
-        user_service: Annotated[UserService, Depends(get_user_service)],
-        cache_service: Annotated[CacheService, Depends(get_cache_service)],
-        drug_id: UUID = Path(..., description="ID препарата в формате UUID"),
-):
-    """Разрешает препарат, который существует в БД"""
-    if not user.allowed_search_requests:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов.")
-
-    try:
-        await user_service.add_tokens(user_id=user.id, amount_search_tokens=-1)
-        await user_service.allow_drug_to_user(user_id=user.id, drug_id=drug_id)
-
-        await cache_service.redis_service.invalidate_user_data(telegram_id=user.telegram_id)
-
-        return {"status": 1}
-
-    except Exception as ex:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ex)
-
-
-@drug_router.post(path="/update/{drug_id}")
+@drug_router.post(path="/update/{drug_id}", response_model=UpdateDrugResponse)
 async def update_old_drug(
         user: Annotated[UserSchema, Depends(get_auth_user)],
+        task_service: Annotated[TaskService, Depends(get_task_service)],
         drug_service: Annotated[DrugService, Depends(get_drug_service)],
+        user_service: Annotated[UserService, Depends(get_user_service)],
         drug_id: UUID = Path(..., description="ID препарата в формате UUID")
 ):
-    """Обновляет препарат"""
-    # TODO ARQ
+    """
+    Обновляет препарат
+    """
+
+    # [ проверка на наличие токенов + покупка ]
+    if user.allowed_search_requests > UPDATE_DRUG_COST:
+        await user_service.reduce_tokens(
+            user.id,
+            amount_search_tokens=UPDATE_DRUG_COST
+        )
+    else:
+        return UpdateDrugResponse(status=UpdateDrugStatuses.NOT_ENOUGH_TOKENS)
+
+    await task_service.enqueue_drug_update(
+        user.telegram_id,
+        user.id,
+    )
+
     ...
     if user.allowed_search_requests:
         drug: DrugSchema = await drug_service.update_drug(drug_id=drug_id)

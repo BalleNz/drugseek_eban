@@ -4,17 +4,17 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from lexicon import MessageText
-from lexicon.keyboard_words import ButtonText
-from services.cache_service import CacheService
-from states.states import States
+from drug_search.bot.lexicon import MessageText
+from drug_search.bot.lexicon.keyboard_words import ButtonText
+from drug_search.bot.states.states import States
+from drug_search.core.services.cache_service import CacheService
 
 logger = logging.getLogger(__name__)
 router = Router(name=__name__)
 
 
 @router.message(F.text == ButtonText.PROFILE)
-async def get_profife_info(
+async def get_profile_info(
         message: Message,
         cache_service: CacheService,
         access_token: str,

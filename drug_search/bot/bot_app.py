@@ -8,11 +8,11 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.storage.redis import RedisStorage
 
 from drug_search.core.dependencies.redis_service_dep import redis_client
-from drug_search.bot.handlers.start_handler import router as start_router
-from drug_search.bot.handlers.drug_database_handler import router as database_router
-from drug_search.bot.handlers.profile_handler import router as profile_router
-from drug_search.bot.handlers.actions import router as actions_router
-from drug_search.bot.handlers.drug_actions import router as drug_actions_router
+from drug_search.bot.handlers.start import router as start_router
+from drug_search.bot.handlers.database import router as database_router
+from drug_search.bot.handlers.profile import router as profile_router
+from drug_search.bot.handlers.main import router as actions_router
+from drug_search.bot.handlers.actions import router as drug_actions_router
 from drug_search.bot.middlewares.depends_injectors import DependencyInjectionMiddleware
 from drug_search.config import config
 
@@ -46,16 +46,6 @@ bot = aiogram.Bot(
     )
 )
 
-
-def logging_cfg():
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
-
-
 if __name__ == "__main__":
-    logging_cfg()
-
     setup_auth(dp)
     asyncio.run(start_polling(dp))

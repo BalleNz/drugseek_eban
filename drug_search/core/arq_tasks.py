@@ -1,128 +1,161 @@
 import logging
 import uuid
-from contextlib import asynccontextmanager
 from enum import Enum
 
-from drug_search.core.dependencies.assistant_service_dep import get_assistant_service
-from drug_search.core.dependencies.pubmed_service_dep import get_pubmed_service
-from drug_search.core.dependencies.redis_service_dep import get_redis
-from drug_search.core.dependencies.telegram_service_dep import get_telegram_service
+from drug_search.bot.keyboards import ArrowTypes
+from drug_search.core.dependencies.containers.service_container import get_service_container
 from drug_search.core.schemas import DrugSchema, QuestionAssistantResponse
 from drug_search.core.services.assistant_service import AssistantService
 from drug_search.core.services.drug_service import DrugService
-from drug_search.core.services.pubmed_service import PubmedService
 from drug_search.core.services.redis_service import RedisService
 from drug_search.core.services.telegram_service import TelegramService
 from drug_search.core.services.user_service import UserService
-from drug_search.infrastructure.database.engine import get_async_session
-from drug_search.infrastructure.database.repository.drug_repo import DrugRepository
-from drug_search.infrastructure.database.repository.user_repo import UserRepository
 
 logger = logging.getLogger(__name__)
-
-
-class DrugOperations(str, Enum):
-    UPDATE = "update"
-    CREATE = "create"
 
 
 class AssistantOperations(str, Enum):
     QUESTION_REQUEST = "question"
 
 
-@asynccontextmanager
-async def get_session():
-    """Правильное использование асинхронного генератора сессии"""
-    session_gen = get_async_session()
-    session = await session_gen.__anext__()
-    try:
-        yield session
-    finally:
-        try:
-            await session_gen.__anext__()
-        except StopAsyncIteration:
-            pass
-
-
-async def drug_operations(
-        ctx,  # ARQ CONTEXT
-        operation: DrugOperations,
+async def drug_create(
+        ctx,  # noqa
+        drug_name: str,
         user_telegram_id: str,
-        user_id: uuid.UUID,
-        drug_name: str | None,  # ДВ
-        drug_id: uuid.UUID | None  # для обновления
+        user_id: uuid.UUID
 ):
-    """
-    Создание препарата и отправка уведомления через ARQ
-    """
+    """Логика создания препарата"""
+    async with get_service_container() as container:
+        # [ Dependencies ]
+        drug_service: DrugService = await container.get_drug_service()
+        telegram_service: TelegramService = await container.telegram_service
+        user_service: UserService = await container.get_user_service()
+
+        drug: DrugSchema = await drug_service.new_drug(drug_name)
+        logger.info(f"Successfully created drug '{drug_name}' with ID: {drug.id}")
+        await telegram_service.send_drug_created_notification(
+            user_telegram_id=user_telegram_id,
+            drug=drug,
+        )
+        await user_service.allow_drug_to_user(user_id=user_id, drug_id=drug.id)
+
+
+async def drug_update(
+        ctx,  # noqa
+        user_telegram_id: str,
+        drug_id: uuid.UUID,
+):
+    """Логика обновления препарата"""
     ctx['log'] = logger
 
-    try:
-        async with get_session() as session:
-            assistant_service: AssistantService = await get_assistant_service()
-            pubmed_service: PubmedService = await get_pubmed_service()
-            telegram_service: TelegramService = await get_telegram_service()
+    async with get_service_container() as container:
+        # [ Dependencies ]
+        drug_service: DrugService = await container.get_drug_service()
+        telegram_service: TelegramService = await container.telegram_service
+        redis_service: RedisService = await container.redis_service
 
-            user_service: UserService = UserService(
-                repo=UserRepository(session)
-            )
+        drug: DrugSchema = await drug_service.update_drug(drug_id=drug_id)
 
-            drug_service = DrugService(
-                repo=DrugRepository(session),
-                assistant_service=assistant_service,
-                pubmed_service=pubmed_service
-            )
+        # [ invalidate cache ]
+        await redis_service.invalidate_drug(drug_id)
 
-            redis_service: RedisService = get_redis()
-            await redis_service.invalidate_user_data(user_telegram_id)
-
-            match operation:
-                case DrugOperations.CREATE:
-                    drug: DrugSchema = await drug_service.new_drug(drug_name)
-                    logger.info(f"Successfully created drug '{drug_name}' with ID: {drug.id}")
-                    await telegram_service.send_drug_created_notification(
-                        user_telegram_id=user_telegram_id,
-                        drug=drug,
-                    )
-                    await user_service.allow_drug_to_user(user_id=user_id, drug_id=drug.id)
-                case DrugOperations.UPDATE:
-                    drug: DrugSchema = await drug_service.update_drug(drug_id=drug_id)
-                    logger.info(f"Препарат {drug_id} обновлен")
-                    await telegram_service.send_drug_updated_notification(
-                        user_telegram_id=user_telegram_id,
-                        drug=drug
-                    )
-
-            logger.info(f"ARQ Drug_{operation}: Notification sent to user {user_telegram_id}")
-
-    except Exception as ex:
-        logger.error(f"Exception while creating drug {drug_name}: {str(ex)}")
+        # [ notification ]
+        logger.info(f"Препарат {drug_id} обновлен для пользователя {user_telegram_id}")
+        await telegram_service.send_drug_updated_notification(
+            user_telegram_id=user_telegram_id,
+            drug=drug
+        )
 
 
-async def assistant_operations(
-        ctx,  # ARQ CONTEXT
-        operation: AssistantOperations,
+async def assistant_answer(
+        ctx,  # noqa
         user_telegram_id: str,
         question: str,
         old_message_id: str
 ):
     """
-    Операции с нейронкой.
-
     Отправляется ответ от нейронки в телеграм.
     """
-    ctx['log'] = logger
-    logger.info(f"ARQ: {operation} for user {user_telegram_id}")
-    assistant_service: AssistantService = await get_assistant_service()
-    telegram_service: TelegramService = await get_telegram_service()
+    logger.info(f"Question: {question} for user {user_telegram_id}")
 
-    match operation:
-        case operation.QUESTION_REQUEST:
-            # Вопрос
+    question_key: str = question[:15]  # to safe callback data length
+
+    async with get_service_container() as container:
+        assistant_service: AssistantService = await container.assistant_service
+        telegram_service: TelegramService = await container.telegram_service
+        redis_service: RedisService = await container.redis_service
+
+        question_response: QuestionAssistantResponse | None = await redis_service.get_assistant_answer(
+            question=question
+        )
+        if not question_response:
             question_response: QuestionAssistantResponse = await assistant_service.actions.answer_to_question(question)
 
-            await telegram_service.edit_message_with_assistant_answer(
-                question_response=question_response,
-                user_telegram_id=user_telegram_id,
-                old_message_id=old_message_id
+            await redis_service.set_assistant_answer(
+                assistant_response=question_response,
+                question=question_key,
             )
+            await redis_service.set_assistant_used_drugs(
+                question=question_key,
+                used_drugs=', '.join([drug.drug_name for drug in question_response.drugs])
+            )
+
+        await telegram_service.edit_message_with_assistant_answer(
+            question_response=question_response,
+            user_telegram_id=user_telegram_id,
+            old_message_id=old_message_id,
+            question=question_key,
+            arrow=ArrowTypes.FORWARD
+        )
+
+
+async def assistant_answer_continue(
+        ctx,  # noqa
+        user_telegram_id: str,
+        question: str,
+        old_message_id: str,
+):
+    """
+    Продолжение ответа на вопрос.
+    """
+    logger.info(f"Question: {question} for user {user_telegram_id}")
+
+    question_key: str = question[:15]  # to safe callback data length
+
+    async with get_service_container() as container:
+        assistant_service: AssistantService = await container.assistant_service
+        telegram_service: TelegramService = await container.telegram_service
+        redis_service: RedisService = await container.redis_service
+
+        question_response: QuestionAssistantResponse | None = await redis_service.get_assistant_answer_continue(
+            question=question
+        )
+        if not question_response:
+            old_drugs_name: str | None = await redis_service.get_assistant_used_drugs(question)
+            if not old_drugs_name:
+                await telegram_service.edit_message(
+                    old_message_id,
+                    user_telegram_id,
+                    "К сожалению, сообщение потеряно."
+                )
+                return
+            logger.info(f"new question. old drugs: {old_drugs_name}")
+
+            question_response: QuestionAssistantResponse = await assistant_service.actions.answer_to_question_continue(
+                question,
+                old_drugs_name=old_drugs_name
+            )
+            logger.info(f"response: {question_response.model_dump_json()}")
+
+            await redis_service.set_assistant_answer_continue(
+                assistant_response=question_response,
+                question=question_key,
+            )
+
+        await telegram_service.edit_message_with_assistant_answer(
+            question_response=question_response,
+            user_telegram_id=user_telegram_id,
+            old_message_id=old_message_id,
+            question=question_key,
+            arrow=ArrowTypes.BACK
+        )

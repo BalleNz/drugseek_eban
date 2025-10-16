@@ -1,10 +1,10 @@
 from abc import abstractmethod
 from datetime import datetime
-from typing import Type, Any, TypeVar, Optional, Union
+from typing import Type, Any, TypeVar, Union
 
 from pydantic import BaseModel
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import func, DateTime
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 """

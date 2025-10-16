@@ -1,35 +1,3 @@
-bot commands:
-1. /search <drug_name>
-2.
+# TODO: ограничение на размер сообщения в клиенте
 
-CORE:
-1. # FUTURE: добавить в основную БД:  CREATE EXTENSION IF NOT EXISTS pg_trgm;
-2. на user_query в get_drug: # TODO: ограничение на размер сообщения в клиенте
-4. В конце разработки проверить индексирование БД и методы -> прогнать файлы через нейронку.
-
-
-БОТ:
-
-1) Поиск препарата, покупка доступа:
-———— POST /v1/drugs/{user_query} — Возращает схему:
-    {
-        "drug_allowed": bool,
-        "is_drug": bool,
-        "drug": DrugSchema
-    }
-
-    Если препарат существует, но не был в базе, то создает его через ассистента
-
-———— POST /v1/drugs/allow/{drug_id} — разрешает препарат после прошлого запроса, если пользователь выбрат купить препарат через инлайн кнопку.
-    {
-        "drug": DrugSchema,
-        "is_allowed": bool
-    }
-
-————UPDATE DESCRIPTION if not raise HTTPException(недостаточно запросов)
-        # Возможное обновление описание пользователя
-        if not (user.used_requests + 1) % 10:
-            await user_service.update_user_description(
-                user_id=user.id,
-                assistant_service=assistant_service
-            )  # TODO сделать на стороне телеграм бота вызов ручки user_handler.update_description
+В конце разработки проверить индексирование БД и методы -> прогнать файлы через нейронку.

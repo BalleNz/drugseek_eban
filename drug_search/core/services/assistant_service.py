@@ -91,7 +91,7 @@ class AssistantService(AssistantInterface):
                 if pydantic_model:
                     return pydantic_model.model_validate_json(response.choices[0].message.content)
 
-                # если нет Pydantic модели —> возращает строку.
+                # если нет Pydantic модели —> возвращает строку.
                 return response.choices[0].message.content
             except ValidationError as e:
                 logger.error(f"Validation error: {e}")
@@ -177,5 +177,14 @@ class AssistantService(AssistantInterface):
             return await self.assistant_service.get_response(
                 input_query=question,
                 prompt=Prompts.ANSWER_TO_DRUGS_QUESTION,
+                pydantic_model=QuestionAssistantResponse
+            )
+
+        async def answer_to_question_continue(self, question: str, old_drugs_name: str) -> QuestionAssistantResponse:
+            """Отвечает на вопрос, но без препаратов из списка"""
+            query = question
+            return await self.assistant_service.get_response(
+                input_query=query,
+                prompt=Prompts.ANSWER_TO_DRUGS_QUESTION + Prompts.ANSWER_TO_DRUGS_QUESTION_CONTINUE.format(old_drugs=old_drugs_name),
                 pydantic_model=QuestionAssistantResponse
             )

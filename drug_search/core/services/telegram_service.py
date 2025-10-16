@@ -1,10 +1,14 @@
+import json
+
 import aiohttp
-from aiogram.types import ReplyKeyboardMarkup
+from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup
 
 from drug_search.config import config
 from drug_search.core.schemas import DrugSchema, QuestionAssistantResponse
 from drug_search.core.utils.formatter import ARQMessageTemplates
 from drug_search.core.utils.message_templates import MessageTemplates
+from drug_search.bot.keyboards import ArrowTypes
+from drug_search.bot.keyboards.keyboard_markups import question_continue_keyboard
 
 
 class TelegramService:
@@ -43,7 +47,7 @@ class TelegramService:
             old_message_id: str,
             user_telegram_id: str,
             message_text: str,
-            reply_markup: ReplyKeyboardMarkup | None = None,
+            reply_markup: InlineKeyboardMarkup | None = None,
             parse_mode: str = "HTML"
     ):
         """Редактирует сообщение"""
@@ -56,8 +60,21 @@ class TelegramService:
         }
 
         if reply_markup:
-            import json
-            data["reply_markup"] = json.dumps(reply_markup)
+            # Ручная сериализация, чтобы избежать проблем с None значениями
+            keyboard_data = {
+                "inline_keyboard": [
+                    [
+                        {
+                            "text": button.text,
+                            "callback_data": button.callback_data
+                            # Не включаем url, web_app и другие поля если они None
+                        }
+                        for button in row
+                    ]
+                    for row in reply_markup.inline_keyboard
+                ]
+            }
+            data["reply_markup"] = json.dumps(keyboard_data)
 
         async with aiohttp.ClientSession() as session:
             async with session.post(url, data=data) as response:
@@ -88,12 +105,18 @@ class TelegramService:
             question_response: QuestionAssistantResponse,
             user_telegram_id: str,
             old_message_id: str,
+            question: str,
+            arrow: ArrowTypes
     ):
         """Редактирует сообщение для ответа на вопрос юзера"""
-        message_text: str = ARQMessageTemplates.format_assistant_answer(question_response)
+        message_text: str = ARQMessageTemplates.format_assistant_answer(question_response, arrow)
 
         await self.edit_message(
             user_telegram_id=user_telegram_id,
             old_message_id=old_message_id,
             message_text=message_text,
+            reply_markup=question_continue_keyboard(
+                question=question,
+                arrow=arrow
+            )
         )

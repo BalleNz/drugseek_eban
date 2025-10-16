@@ -7,6 +7,12 @@ from drug_search.core.schemas.drug_schemas import DrugSchema
 
 
 # [ Enums, types ]
+class UpdateDrugStatuses(str, Enum):
+    DRUG_UPDATING = "updating"
+    NOT_ENOUGH_TOKENS = "no_tokens"
+    NEED_PREMIUM = "need_premium"
+
+
 class BuyDrugStatuses(str, Enum):
     DRUG_CREATED = "created"  # and allowed
     DRUG_ALLOWED = "allowed"
@@ -48,3 +54,7 @@ class QuestionAssistantResponse(BaseModel):
 class BuyDrugResponse(BaseModel):
     status: BuyDrugStatuses
     drug_name: str | None = None
+
+
+class UpdateDrugResponse(BaseModel):
+    status: UpdateDrugStatuses

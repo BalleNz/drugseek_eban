@@ -6,14 +6,17 @@ from enum import Enum
 from arq import ArqRedis
 from arq.jobs import Job
 
-from drug_search.core.arq_tasks import DrugOperations, AssistantOperations
-
 logger = logging.getLogger(__name__)
 
 
 class ARQ_JOBS(str, Enum):
-    DRUG_OPERATIONS = "drug_operations"
-    ASSISTANT_OPERATIONS = "assistant_operations"
+    """
+    Функции из arq_tasks.py
+    """
+    DRUG_CREATE = "drug_create"
+    DRUG_UPDATE = "drug_update"
+    ASSISTANT_ANSWER = "assistant_answer"
+    ASSISTANT_ANSWER_CONTINUE = "assistant_answer_continue"
 
 
 class TaskService:
@@ -26,60 +29,96 @@ class TaskService:
         normalized: str = query.lower().strip()
         return hashlib.md5(normalized.encode()).hexdigest()[:8]
 
-    async def enqueue_drug_operations(
+    async def enqueue_drug_creation(
             self,
-            operation: DrugOperations,
             user_telegram_id: str,
             user_id: uuid.UUID,
-            drug_name: str
-    ):
-        job_id: str = self.generate_job_id(drug_name)  # один для всех задач с одним drug_name
+            drug_name: str,
+    ) -> dict:
+        job_id: str = self.generate_job_id(drug_name)
 
         job: Job = await self.arq_pool.enqueue_job(
-            ARQ_JOBS.DRUG_OPERATIONS.value,
-            operation,
+            ARQ_JOBS.DRUG_CREATE.value,
+            drug_name,
             user_telegram_id,
             user_id,
-            drug_name,
+            _job_id=job_id,
+            _expires=10
+        )
+
+        status: str = "already_exist"
+        if job:
+            status = "job_created"
+
+        return {
+            "status": status,
+            "job_id": job_id,
+            "drug_name": drug_name,
+            "telegram_id": user_telegram_id
+        }
+
+    async def enqueue_drug_update(
+            self,
+            user_telegram_id: str,
+            drug_id: uuid.UUID
+    ) -> dict:
+        job_id: str = self.generate_job_id(str(drug_id))
+
+        job: Job = await self.arq_pool.enqueue_job(
+            ARQ_JOBS.DRUG_UPDATE.value,
+            user_telegram_id,
+            drug_id,
             _job_id=job_id,
             _expires=10  # minutes
         )
-        if job:
-            return {
-                "status": "queued",
-                "job_id": job.job_id,
-                "drug_name": drug_name,
-                "operation": operation.value,
-                "message": "Задача поставлена в очередь!"
-            }
 
-        # TODO решить как будет отсылать уведомление, если другой человек уже создал задачу (в клиенте или здесь)
+        status: str = "already_exist"
+        if job:
+            status = "job_created"
+
         return {
-            "status": "already_queued",
+            "status": status,
             "job_id": job_id,
-            "drug_name": drug_name,
-            "operation": operation.value,
-            "message": "Задача уже в очереди или выполнена."
+            "drug_id": drug_id,
         }
 
-    async def enqueue_assistant_operations(
+        # TODO решить как будет отсылать уведомление, если другой человек уже создал задачу (в клиенте или здесь)
+
+    async def enqueue_assistant_answer(
             self,
-            operation: AssistantOperations,
             user_telegram_id: str,
             question: str,
             old_message_id: str,
     ):
-        """Задача не уникальная, то есть юзер может повторять запрос"""
+        """Задача не уникальная"""
         job: Job = await self.arq_pool.enqueue_job(
-            ARQ_JOBS.ASSISTANT_OPERATIONS.value,
-            operation,
+            ARQ_JOBS.ASSISTANT_ANSWER.value,
             user_telegram_id,
             question,
             old_message_id
         )
         return {
             "status": f"{await job.status()}",
-            "operation": operation.value,
             "user_id": user_telegram_id,
             "question": question
+        }
+
+    async def enqueue_assistant_answer_continue(
+            self,
+            user_telegram_id: str,
+            question: str,
+            old_message_id: str,
+    ):
+        """Задача не уникальная"""
+        job: Job = await self.arq_pool.enqueue_job(
+            ARQ_JOBS.ASSISTANT_ANSWER_CONTINUE.value,
+            user_telegram_id,
+            question,
+            old_message_id,
+        )
+        return {
+            "status": f"{await job.status()}",
+            "user_id": user_telegram_id,
+            "question": question,
+            "mode": 'continue'
         }

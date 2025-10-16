@@ -1,3 +1,4 @@
+import hashlib
 import uuid
 from datetime import datetime
 
@@ -5,10 +6,11 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 
 from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback, DescribeTypes,
                                        ArrowTypes, WrongDrugFoundedCallback)
-from drug_search.bot.keyboards.callbacks import BuyDrugRequestCallback
+from drug_search.bot.keyboards.callbacks import BuyDrugRequestCallback, AssistantQuestionContinue, \
+    DrugUpdateRequestCallback
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.core.lexicon.enums import SUBSCRIBE_TYPES, DANGER_CLASSIFICATION
-from drug_search.core.schemas.telegram_schemas import DrugBrieflySchema
+from drug_search.core.schemas import DrugBrieflySchema, DrugAnswer
 from drug_search.core.utils.funcs import may_update_drug
 
 # [Reply]
@@ -120,10 +122,8 @@ def drug_keyboard(
                 [
                     InlineKeyboardButton(
                         text=ButtonText.UPDATE_DRUG if user_subscribe_type != SUBSCRIBE_TYPES.PREMIUM else ButtonText.UPDATE_DRUG_FOR_PREMIUM,
-                        callback_data=DrugDescribeCallback(
-                            describe_type=DescribeTypes.BRIEFLY,
-                            drug_id=drug_id,
-                            page=page
+                        callback_data=DrugUpdateRequestCallback(
+                            drug_id=drug_id
                         ).pack()
                     )
                 ]
@@ -133,7 +133,8 @@ def drug_keyboard(
                 0,
                 [
                     InlineKeyboardButton(
-                        text=ButtonText.UPDATE_RESEARCHES
+                        text=ButtonText.UPDATE_RESEARCHES,
+                        callback_data=...
                     )
                 ]
             )
@@ -259,6 +260,25 @@ def buy_request_keyboard(
                         drug_id=drug_id if drug_id else None,
                         drug_name=drug_name,
                         danger_classification=danger_classification
+                    ).pack()
+                )
+            ]
+        ]
+    )
+
+
+def question_continue_keyboard(
+        question: str,
+        arrow: ArrowTypes
+) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=ButtonText.RIGHT_ARROW if arrow == arrow.FORWARD else ButtonText.LEFT_ARROW,
+                    callback_data=AssistantQuestionContinue(
+                        question=question,
+                        arrow=arrow
                     ).pack()
                 )
             ]

@@ -6,13 +6,13 @@ from drug_search.core.lexicon import DANGER_CLASSIFICATION
 from drug_search.core.schemas import (UserTelegramDataSchema, UserSchema, DrugExistingResponse,
                                       DrugSchema, QuestionAssistantResponse, AllowedDrugsSchema,
                                       SelectActionResponse, QuestionRequest, AddTokensRequest,
-                                      BuyDrugRequest, BuyDrugResponse)
+                                      BuyDrugRequest, BuyDrugResponse, UpdateDrugResponse, QuestionContinueRequest)
 
 
 class DrugSearchAPIClient(BaseHttpClient):
     """Универсальный клиент для DrugSearch API"""
 
-    # assistant handler
+    # [ Assistant handler ]
     async def assistant_get_action(self, access_token: str, query: str) -> SelectActionResponse:
         return await self._request(
             HTTPMethod.POST,
@@ -22,12 +22,12 @@ class DrugSearchAPIClient(BaseHttpClient):
             response_model=SelectActionResponse
         )
 
-    async def action_answer(
+    async def question_answer(
             self,
             access_token: str,
             user_telegram_id: str,
             question: str,
-            old_message_id: str
+            message_id: str
     ) -> QuestionAssistantResponse:
         return await self._request(
             HTTPMethod.POST,
@@ -35,12 +35,30 @@ class DrugSearchAPIClient(BaseHttpClient):
             request_body=QuestionRequest(
                 user_telegram_id=user_telegram_id,
                 question=question,
-                old_message_id=old_message_id,
+                old_message_id=message_id,
             ),
             access_token=access_token,
         )
 
-    # Auth endpoints
+    async def question_answer_continue(
+            self,
+            access_token: str,
+            user_telegram_id: str,
+            question: str,
+            message_id: str,
+    ) -> QuestionAssistantResponse:
+        return await self._request(
+            HTTPMethod.POST,
+            endpoint="/v1/assistant/actions/question_continue",
+            request_body=QuestionContinueRequest(
+                user_telegram_id=user_telegram_id,
+                question=question,
+                old_message_id=message_id,
+            ),
+            access_token=access_token
+        )
+
+    # [ Auth handler ]
     async def telegram_auth(self, telegram_user_data: UserTelegramDataSchema) -> str:
         response: dict = await self._request(
             HTTPMethod.POST,
@@ -49,7 +67,7 @@ class DrugSearchAPIClient(BaseHttpClient):
         )
         return response["token"]
 
-    # User endpoints
+    # [ User handler ]
     async def get_current_user(self, access_token: str) -> UserSchema:
         """Получение текущего пользователя"""
         return await self._request(
@@ -102,7 +120,19 @@ class DrugSearchAPIClient(BaseHttpClient):
             )
         )
 
-    # Drug endpoints
+    # [ Drug handler ]
+    async def update_drug(
+            self,
+            drug_id: uuid.UUID,
+            access_token: str
+    ):
+        return await self._request(
+            endpoint=f"/v1/drugs/update/{drug_id}",
+            method=HTTPMethod.POST,
+            access_token=access_token,
+            response_model=UpdateDrugResponse,
+        )
+
     async def search_drug(
             self,
             user_query: str,
@@ -130,9 +160,9 @@ class DrugSearchAPIClient(BaseHttpClient):
         )
 
     async def search_drug_without_trigrams(
-        self,
-        drug_name_query: str,
-        access_token: str
+            self,
+            drug_name_query: str,
+            access_token: str
     ):
         """Поиск препарата без триграмм"""
         return await self._request(

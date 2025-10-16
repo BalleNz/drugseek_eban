@@ -3,13 +3,11 @@ from typing import AsyncGenerator
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dependencies.cache_service_dep import get_cache_service
 from drug_search.core.dependencies.assistant_service_dep import get_assistant_service
 from drug_search.core.services.assistant_service import AssistantService
 from drug_search.core.services.user_service import UserService
 from drug_search.infrastructure.database.engine import get_async_session
 from drug_search.infrastructure.database.repository.user_repo import UserRepository
-from services.cache_service import CacheService
 
 
 async def get_user_repository(

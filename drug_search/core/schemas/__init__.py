@@ -1,5 +1,4 @@
-from drug_search.core.schemas.API_schemas.api_requests import UserTelegramDataSchema, UserRequestLogSchema, \
-    AddTokensRequest, QueryRequest, QuestionRequest, BuyDrugRequest
+from drug_search.core.schemas.API_schemas.api_requests import *
 from drug_search.core.schemas.API_schemas.api_response import *
 from drug_search.core.schemas.assistant_responses import *
 from drug_search.core.schemas.drug_schemas import *
@@ -41,12 +40,16 @@ __all__ = [
     'QueryRequest',
     'QuestionRequest',
     'BuyDrugRequest',
+    'QuestionContinueRequest',
     # [ API Responses ]
     'SelectActionResponse',
+    'UpdateDrugResponse',
     'BuyDrugResponse',
     'QuestionAssistantResponse',
+    'DrugAnswer',
     # [ Enums ]
     'BuyDrugStatuses',
+    'UpdateDrugStatuses',
     # [ Types ]
     'Pathway',
     'MechanismSummary',

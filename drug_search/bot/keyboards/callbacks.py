@@ -5,6 +5,7 @@ from typing import Optional
 from aiogram.filters.callback_data import CallbackData
 
 from drug_search.core.lexicon.enums import DANGER_CLASSIFICATION
+from drug_search.core.schemas import DrugAnswer
 
 
 # [ TYPES ]
@@ -36,7 +37,13 @@ class DrugListCallback(CallbackData, prefix="drug_list"):
 
 
 # [ drug_actions ]
-class DrugUpdateCallback(CallbackData, prefix="drug_update"):
+class DrugUpdateRequestCallback(CallbackData, prefix="drug_update"):
+    """Обновление препарата"""
+    drug_id: uuid.UUID
+
+
+class DrugResearchesUpdateCallback(CallbackData, prefix="drug_researches_update"):
+    """Обновление исследований препарата"""
     drug_id: uuid.UUID
 
 
@@ -47,9 +54,15 @@ class DrugDescribeCallback(CallbackData, prefix="drug_describe"):
     page: int | None  # страница с прошлого меню | None (если вне меню)
 
 
+# [ ACTIONS ]
 class WrongDrugFoundedCallback(CallbackData, prefix="wrong_drug"):
     # если найден неверный препарат
     drug_name_query: str
+
+
+class AssistantQuestionContinue(CallbackData, prefix="quest_cont"):
+    question: str
+    arrow: ArrowTypes
 
 
 # [ покупка препарата ]

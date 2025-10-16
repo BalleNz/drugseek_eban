@@ -4,7 +4,6 @@ from typing import Annotated
 from fastapi import APIRouter
 from fastapi.params import Depends
 
-from drug_search.core.arq_tasks import DrugOperations
 from drug_search.core.dependencies.cache_service_dep import get_cache_service
 from drug_search.core.dependencies.task_service_dep import get_task_service
 from drug_search.core.dependencies.user_service_dep import get_user_service
@@ -116,8 +115,7 @@ async def buy_drug(
     else:
         """Нужно его создать и разрешить"""
         logger.info(f"Юзер {user.telegram_id} купил препарат {request.drug_name}")
-        await task_service.enqueue_drug_operations(  # invalidation user data in task
-            DrugOperations.CREATE,
+        await task_service.enqueue_drug_creation(  # invalidation user data in task
             user_telegram_id=user.telegram_id,
             user_id=user.id,
             drug_name=request.drug_name

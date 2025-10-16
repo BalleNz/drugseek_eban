@@ -85,9 +85,17 @@ class MessageTemplates:
         "Скоро вы получите уведомление о его готовности!"
     )
 
-    NOT_ENOUGH_SEARCH_TOKENS: str = (
+    DRUG_UPDATING: str = (
+        "Препарат поставлен в очередь на обновление. Вы получите уведомление о завершении!"
+    )
+
+    NOT_ENOUGH_CREATE_TOKENS: str = (
         "У вас недостаточно токенов для покупки.\n\n"
         "Пополнить: /tokens"
+    )
+
+    NOT_ENOUGH_UPDATE_TOKENS: str = (
+        "У вас недостаточно токенов для обновления препарата"
     )
 
     NOT_ENOUGH_QUESTION_TOKENS: str = (
@@ -97,6 +105,11 @@ class MessageTemplates:
 
     NEED_SUBSCRIPTION: str = (
         "Для просмотра запрещенных препаратов необходима подписка.\n\n"
+        "Оформить подписку: /subscription"
+    )
+
+    NEED_SUBSCRIPTION_FOR_UPDATE: str = (
+        "Для обновления запрещенных препаратов необходима подписка.\n\n"
         "Оформить подписку: /subscription"
     )
 

@@ -6,13 +6,15 @@ from uuid import UUID
 from redis.asyncio import Redis
 
 from drug_search.config import config
-from drug_search.core.schemas import DrugSchema, AllowedDrugsSchema, UserSchema
+from drug_search.core.schemas import DrugSchema, AllowedDrugsSchema, UserSchema, QuestionAssistantResponse
 
 
 class CacheKeys(str, Enum):
     ALLOWED_DRUGS = "allowed_drugs_info"
     DRUG = "drug"
     USER_PROFILE = "user_profile"
+    ASSISTANT_ANSWER = "assistant_answer"
+    ASSISTANT_ANSWER_CONTINUE = "assistant_answer_continue"
 
 
 class RedisService:
@@ -34,6 +36,19 @@ class RedisService:
     @staticmethod
     def _get_user_profile_key(telegram_id: str):
         return f"user:{telegram_id}:{CacheKeys.USER_PROFILE}"
+
+    # [ ASSISTANT ]
+    @staticmethod
+    def _get_assistant_answer(query: str):
+        return f"assistant_answer:{query}:{CacheKeys.ASSISTANT_ANSWER}"
+
+    @staticmethod
+    def _get_assistant_answer_used_drugs(query: str):
+        return f"assistant_answer_used_drugs:{query}"
+
+    @staticmethod
+    def _get_assistant_answer_continue(query: str):
+        return f"assistant_answer:{query}:{CacheKeys.ASSISTANT_ANSWER_CONTINUE}"
 
     async def get_access_token(self, telegram_id: str) -> Optional[str]:
         """Получение access token из кэша"""
@@ -112,7 +127,7 @@ class RedisService:
             telegram_id: str,
             data: UserSchema,
             expire_seconds: int = 86400
-    ):
+    ) -> None:
         """Сохранение информации о профиле юзера"""
         cache_key: str = self._get_user_profile_key(telegram_id)
         await self.redis.set(
@@ -121,8 +136,77 @@ class RedisService:
             ex=expire_seconds
         )
 
+    # [ ASSISTANT ]
+    async def get_assistant_answer(
+            self,
+            question: str,
+    ) -> QuestionAssistantResponse | None:
+        """Ответ ассистента: ПОЛУЧЕНИЕ"""
+        cache_key: str = self._get_assistant_answer(question)
+        cache_data: str | None = await self.redis.get(cache_key)
+        if not cache_data:
+            return None
+        return QuestionAssistantResponse.model_validate_json(cache_data)
+
+    async def set_assistant_answer(
+            self,
+            assistant_response: QuestionAssistantResponse,
+            question: str,
+            expire_seconds: int = 86400
+    ) -> None:
+        """Ответ ассистента: СОХРАНЕНИЕ"""
+        cache_key: str = self._get_assistant_answer(question)
+        await self.redis.set(
+            name=cache_key,
+            value=assistant_response.model_dump_json(),
+            ex=expire_seconds
+        )
+
+    async def get_assistant_answer_continue(
+            self,
+            question: str
+    ) -> QuestionAssistantResponse | None:
+        """Продолжение ответа от ассистента: ПОЛУЧЕНИЕ"""
+        cache_key: str = self._get_assistant_answer_continue(question)
+        cache_data: str | None = await self.redis.get(name=cache_key)
+        if not cache_data:
+            return None
+        return QuestionAssistantResponse.model_validate_json(cache_data)
+
+    async def set_assistant_answer_continue(
+            self,
+            question: str,
+            assistant_response: QuestionAssistantResponse
+    ) -> None:
+        """Продолжение ответа от ассистента: ЗАПИСЬ"""
+        cache_key: str = self._get_assistant_answer_continue(question)
+        await self.redis.set(
+            name=cache_key,
+            value=assistant_response.model_dump_json()
+        )
+
+    async def get_assistant_used_drugs(
+            self,
+            question: str
+    ) -> str | None:
+        cache_key: str = self._get_assistant_answer_used_drugs(question)
+        return await self.redis.get(cache_key)
+
+    async def set_assistant_used_drugs(
+            self,
+            question: str,
+            used_drugs: str
+    ) -> None:
+        cache_key: str = self._get_assistant_answer_used_drugs(question)
+        await self.redis.set(
+            name=cache_key,
+            value=used_drugs
+        )
+
+    # [ INVALIDATE ]
     async def invalidate_drug(self, drug_id: UUID) -> None:
         """Инвалидация кэша информации о конкретном лекарстве"""
+        # TODO: when update in ARQ
         cache_key = self._get_drug_key(drug_id)
         await self.redis.delete(cache_key)
 

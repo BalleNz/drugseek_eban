@@ -293,16 +293,16 @@ class Prompts:
     DRUG_SEARCH_VALIDATION: str = """
     Ты — валидатор названий лекарственных препаратов. 
     Тебе на вход подается пользовательский запрос, который может быть просто названием препарата или содержать ошибки.
-    Ты должен найти действующее вещество предполагаемого препарата.
     
     Инструкция:
     1. Юзер может сильно сокращать английские/русскоязычные названия препарата
     2. Пользователь может использовать сленг
-    
+    3. Ты должен найти ОДНО действующее вещество предполагаемого препарата.
+
     Отвечай СТРОГО в формате JSON: 
     {
         "status": <exist/not exist>, 
-        "drug_name": <название ДВ на английском, если не существует — строго "None">,
+        "drug_name": <строго только одно название ДВ на английском, если не существует — строго "None">,
         "drug_name_ru": <название ДВ на русском, если не существует — строго "None">,
         "danger_classification": <классификация препарата>
     }
@@ -320,13 +320,10 @@ class Prompts:
     4. Регистр не имеет значения (aspirin = ASPIRIN = Аспирин = assпирин)
     5. Для комбинированных препаратов указывай основное ДВ
     6. Максимальная лаконичность
+    7. Если действующих веществ много — выбери один самый значимый
     
     Примеры:
-    - "аспирин" → {"status": "exist", "drug_name": "aspirin", "danger_classification": "0"}
-    - "asdfgh" → {"status": "not exist", "drug_name": "None"}
-    - "парацетамол" → {"status": "exist", "drug_name": "acetaminophen", "danger_classification": "0"}
-    - "primabolane" → {"status": "exist", "drug_name": "metenolone enanthate", "danger_classification": "1"}
-    - "мсм" → {"status": "exist", "drug_name": "methylsulfonylmethane", "danger_classification": "0"}
+    - "мсм" → {"status": "exist", "drug_name": "methylsulfonylmethane", "danger_classification": "SAFE", ...}
     """
 
     GET_PUBMED_SEARCH_QUERY: str = """

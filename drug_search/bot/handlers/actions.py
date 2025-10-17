@@ -1,6 +1,6 @@
 import logging
 
-from aiogram import Router, F
+from aiogram import Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, LinkPreviewOptions
 
@@ -9,11 +9,12 @@ from drug_search.bot.keyboards import WrongDrugFoundedCallback, drug_keyboard, D
 from drug_search.bot.keyboards.callbacks import DrugUpdateRequestCallback, BuyDrugRequestCallback, \
     AssistantQuestionContinue
 from drug_search.bot.lexicon import MessageTemplates
+from drug_search.bot.lexicon.types import ModeTypes
 from drug_search.bot.utils.format_message_text import DrugMessageFormatter
 from drug_search.core.dependencies.cache_service_dep import cache_service
+from drug_search.core.lexicon import ARROW_TYPES, JobStatuses
 from drug_search.core.schemas import (BuyDrugResponse, BuyDrugStatuses, UpdateDrugResponse,
                                       UpdateDrugStatuses, UserSchema, DrugExistingResponse)
-from drug_search.core.lexicon import ARROW_TYPES
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
@@ -66,9 +67,15 @@ async def drug_buy_request(
 
     match api_response.status:
         case BuyDrugStatuses.DRUG_CREATED:
-            await callback_query.message.edit_text(
-                text=MessageTemplates.DRUG_BUY_CREATED
-            )
+            if api_response.job_status == JobStatuses.CREATED:
+                logger.info(f"Юзер {callback_query.from_user.id} создал препарат {api_response.drug_name}")
+                await callback_query.message.edit_text(
+                    text=MessageTemplates.DRUG_BUY_CREATED
+                )
+            elif api_response.job_status == JobStatuses.QUEUED:
+                await callback_query.message.edit_text(
+                    text=MessageTemplates.DRUG_BUY_QUEUED
+                )
         case BuyDrugStatuses.DRUG_ALLOWED:
             await callback_query.message.edit_text(
                 text=MessageTemplates.DRUG_BUY_ALLOWED.format(drug_name=api_response.drug_name)
@@ -106,11 +113,10 @@ async def wrong_drug_founded(
             await callback_query.message.edit_text(
                 message_text,
                 reply_markup=drug_keyboard(
-                    drug_id=drug_response.drug.id,
+                    drug=drug_response.drug,
                     describe_type=DescribeTypes.BRIEFLY,
                     user_subscribe_type=user.subscription_type,
-                    drug_name=drug_response.drug.name,
-                    drug_last_update=drug_response.drug.updated_at
+                    mode=ModeTypes.WRONG_DRUG,
                 ),
                 link_preview_options=LinkPreviewOptions(is_disabled=True)
             )
@@ -138,7 +144,7 @@ async def assistant_question_listing(
         access_token: str,
         api_client: DrugSearchAPIClient
 ):
-    """Продолжить список ответа ассистента, но без найденных препаратов"""
+    """Продолжить список ответа ассистента"""
     arrow: ARROW_TYPES = ARROW_TYPES.FORWARD if callback_data.arrow == ARROW_TYPES.BACK else ARROW_TYPES.BACK
     await api_client.question_answer(
         access_token=access_token,

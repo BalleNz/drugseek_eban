@@ -1,6 +1,5 @@
 import logging
 import uuid
-from enum import Enum
 
 from drug_search.core.lexicon import ARROW_TYPES
 from drug_search.core.dependencies.containers.service_container import get_service_container
@@ -12,10 +11,6 @@ from drug_search.core.services.telegram_service import TelegramService
 from drug_search.core.services.user_service import UserService
 
 logger = logging.getLogger(__name__)
-
-
-class AssistantOperations(str, Enum):
-    QUESTION_REQUEST = "question"
 
 
 async def drug_create(

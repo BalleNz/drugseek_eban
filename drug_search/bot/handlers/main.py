@@ -7,6 +7,7 @@ from aiogram.types import Message, LinkPreviewOptions
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
 from drug_search.bot.keyboards import DescribeTypes, drug_keyboard, buy_request_keyboard
 from drug_search.bot.lexicon import MessageTemplates
+from drug_search.bot.lexicon.types import ModeTypes
 from drug_search.bot.utils.format_message_text import DrugMessageFormatter
 from drug_search.core.dependencies.cache_service_dep import cache_service
 from drug_search.core.lexicon import ACTIONS_FROM_ASSISTANT, ARROW_TYPES
@@ -40,11 +41,10 @@ async def main_action(
             await message.answer(
                 message_text,
                 reply_markup=drug_keyboard(
-                    drug_id=drug_response.drug.id,
+                    drug=drug_response.drug,
+                    mode=ModeTypes.SEARCH,
                     describe_type=DescribeTypes.BRIEFLY,
-                    user_subscribe_type=user.subscription_type,
-                    drug_name=message.text,
-                    drug_last_update=drug_response.drug.updated_at
+                    user_subscribe_type=user.subscription_type
                 ),
                 link_preview_options=LinkPreviewOptions(is_disabled=True)
             )
@@ -104,11 +104,10 @@ async def main_action(
                             drug=drug_existing_response.drug
                         ),
                         reply_markup=drug_keyboard(
-                            drug_id=drug_existing_response.drug.id,
+                            drug=drug_existing_response.drug,
+                            mode=ModeTypes.SEARCH,
                             describe_type=DescribeTypes(action_response.drug_menu),
-                            user_subscribe_type=user.subscription_type,
-                            drug_name=drug_existing_response.drug.name,
-                            drug_last_update=drug_response.drug.updated_at
+                            user_subscribe_type=user.subscription_type
                         ),
                         link_preview_options=LinkPreviewOptions(is_disabled=True)
                     )
@@ -140,11 +139,11 @@ async def main_action(
                     await message.answer(
                         message_text,
                         reply_markup=drug_keyboard(
-                                drug_id=drug_existing_response.drug.id,
-                                describe_type=DescribeTypes.BRIEFLY,
-                                user_subscribe_type=user.subscription_type,
-                                drug_last_update=drug_response.drug.updated_at
-                            ),
+                            drug=drug_existing_response.drug,
+                            describe_type=DescribeTypes.BRIEFLY,
+                            user_subscribe_type=user.subscription_type,
+                            mode=ModeTypes.SEARCH
+                        ),
                         link_preview_options=LinkPreviewOptions(is_disabled=True)
                     )
                 elif drug_existing_response.is_exist:

@@ -10,6 +10,7 @@ __all__ = [
     'EXIST_STATUS',
     'ACTIONS_FROM_ASSISTANT',
     'ARROW_TYPES',
+    'JobStatuses',
     # [ Limits ]
     'QUESTIONS_LIMIT_START',
     'DEFAULT_SEARCH_DAY_LIMIT',

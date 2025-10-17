@@ -2,7 +2,7 @@ from drug_search.bot.keyboards import DescribeTypes
 from drug_search.bot.lexicon.message_text import MessageTemplates
 from drug_search.core.lexicon.enums import SUBSCRIBE_TYPES
 from drug_search.core.schemas import AllowedDrugsSchema, UserSchema, DrugSchema, CombinationType
-from drug_search.bot.lexicon.types import SYMBOLS
+from drug_search.bot.lexicon.consts import SYMBOLS
 from drug_search.bot.utils.funcs import make_google_sources, get_subscription_name, days_text, get_time_when_refresh
 
 

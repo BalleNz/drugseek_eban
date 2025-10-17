@@ -29,3 +29,8 @@ class DANGER_CLASSIFICATION(str, Enum):
 class ARROW_TYPES(str, Enum):
     BACK = "back"
     FORWARD = "forward"
+
+
+class JobStatuses(str, Enum):
+    QUEUED = "queued"
+    CREATED = "created"

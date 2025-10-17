@@ -4,9 +4,9 @@ import uuid
 from enum import Enum
 
 from arq import ArqRedis
-from arq.jobs import Job
+from arq.jobs import Job, JobStatus
 
-from drug_search.core.lexicon import ARROW_TYPES
+from drug_search.core.lexicon import ARROW_TYPES, JobStatuses
 
 logger = logging.getLogger(__name__)
 
@@ -47,9 +47,9 @@ class TaskService:
             _expires=10
         )
 
-        status: str = "already_exist"
-        if job:
-            status = "job_created"
+        status: JobStatuses = JobStatuses.QUEUED
+        if job and job.status() == JobStatus.in_progress:
+            status = JobStatuses.CREATED
 
         return {
             "status": status,
@@ -73,17 +73,15 @@ class TaskService:
             _expires=10  # minutes
         )
 
-        status: str = "already_exist"
-        if job:
-            status = "job_created"
+        status: JobStatuses = JobStatuses.QUEUED
+        if job and job.status() == JobStatus.in_progress:
+            status = JobStatuses.CREATED
 
         return {
             "status": status,
             "job_id": job_id,
             "drug_id": drug_id,
         }
-
-        # TODO решить как будет отсылать уведомление, если другой человек уже создал задачу (в клиенте или здесь)
 
     async def enqueue_assistant_answer(
             self,

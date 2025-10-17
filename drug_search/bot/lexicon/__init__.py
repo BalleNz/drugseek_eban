@@ -2,6 +2,12 @@ from drug_search.bot.lexicon.message_text import MessageTemplates
 from drug_search.bot.utils.format_message_text import DrugMessageFormatter, UserProfileMessageFormatter
 
 
+__all__ = [
+    'MessageTemplates',
+    'MessageText'
+]
+
+
 class MessageText:
     """Класс, копирующий функции из *MessageFormatters
     """

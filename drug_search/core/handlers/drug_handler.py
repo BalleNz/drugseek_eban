@@ -27,7 +27,7 @@ drug_router = APIRouter(prefix="/drugs")
 @drug_router.post(
     "/new/{drug_name}",
     description="Создает новый препарат (в ARQ), затем отсылается уведомление с клавиатурой",
-)  # TODO: удалить  (в user buy онли)
+)
 async def new_drug(
         user: Annotated[UserSchema, Depends(get_auth_user)],
         task_service: Annotated[TaskService, Depends(get_task_service)],
@@ -195,7 +195,6 @@ async def search_drug_without_trigrams(
 async def update_old_drug(
         user: Annotated[UserSchema, Depends(get_auth_user)],
         task_service: Annotated[TaskService, Depends(get_task_service)],
-        drug_service: Annotated[DrugService, Depends(get_drug_service)],
         user_service: Annotated[UserService, Depends(get_user_service)],
         drug_id: UUID = Path(..., description="ID препарата в формате UUID")
 ):
@@ -212,16 +211,11 @@ async def update_old_drug(
     else:
         return UpdateDrugResponse(status=UpdateDrugStatuses.NOT_ENOUGH_TOKENS)
 
-    await task_service.enqueue_drug_update(
+    job_response: dict = await task_service.enqueue_drug_update(
         user.telegram_id,
-        user.id,
+        drug_id,
     )
-
-    ...
-    if user.allowed_search_requests:
-        drug: DrugSchema = await drug_service.update_drug(drug_id=drug_id)
-        return drug
-    return {"status": "User hasn't allowed requests"}
+    return job_response
 
 
 @drug_router.get(path="/{drug_id}", response_model=DrugSchema)
@@ -232,7 +226,7 @@ async def get_drug(
 ):
     """Возвращает препарат по его ID"""
     if not user.allowed_search_requests:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов")
 
     drug: DrugSchema | None = await drug_service.repo.get_with_all_relationships(drug_id)
     return drug
@@ -248,7 +242,7 @@ async def update_drug_researches(
     """Обновляет таблицу с исследованиями препарата. Возвращает схему препарата."""
     # TODO задачу в arq
     if not user.allowed_search_requests:
-        # TODO сделать обработку недостаточно токкенов в клиенте
+        # TODO сделать обработку недостаточно токенов в клиенте
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов.")
 
     await user_service.add_tokens(user.id, 1)

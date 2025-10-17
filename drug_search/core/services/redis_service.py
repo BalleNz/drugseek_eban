@@ -157,7 +157,6 @@ class RedisService:
     # [ INVALIDATE ]
     async def invalidate_drug(self, drug_id: UUID) -> None:
         """Инвалидация кэша информации о конкретном лекарстве"""
-        # TODO: when update in ARQ
         cache_key = self._get_drug_key(drug_id)
         await self.redis.delete(cache_key)
 

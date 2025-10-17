@@ -10,6 +10,7 @@ from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback,
                                        DescribeTypes, drug_keyboard)
 from drug_search.bot.lexicon import MessageText
 from drug_search.bot.lexicon.keyboard_words import ButtonText
+from drug_search.bot.lexicon.types import ModeTypes
 from drug_search.core.schemas import DrugSchema, AllowedDrugsSchema, UserSchema
 from drug_search.core.services.cache_service import CacheService
 
@@ -91,11 +92,11 @@ async def drug_describe_handler(
     await callback.message.edit_text(
         text=MessageText.format_by_type(describe_type, drug),
         reply_markup=drug_keyboard(
-            drug_id=drug_id,
+            drug=drug,
             page=page,
             describe_type=describe_type,
             user_subscribe_type=user.subscription_type,
-            drug_last_update=drug.updated_at
+            mode=ModeTypes.DATABASE
         ),
         link_preview_options=LinkPreviewOptions(is_disabled=True)
     )

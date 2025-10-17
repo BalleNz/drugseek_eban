@@ -52,14 +52,14 @@ class ServiceContainer:
             self._redis_service = get_redis()
         return self._redis_service
 
-    def get_drug_service(self) -> DrugService:
+    async def get_drug_service(self) -> DrugService:
         return DrugService(
             repo=DrugRepository(self.session),
-            assistant_service=self._assistant_service,
-            pubmed_service=self._pubmed_service
+            assistant_service=await self.assistant_service,
+            pubmed_service=await self.pubmed_service
         )
 
-    def get_user_service(self) -> UserService:
+    async def get_user_service(self) -> UserService:
         return UserService(repo=UserRepository(self.session))
 
 

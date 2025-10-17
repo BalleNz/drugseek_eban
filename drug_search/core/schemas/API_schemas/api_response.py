@@ -2,7 +2,7 @@ from enum import Enum
 
 from pydantic import BaseModel, Field
 
-from drug_search.core.lexicon.enums import ACTIONS_FROM_ASSISTANT, DANGER_CLASSIFICATION
+from drug_search.core.lexicon.enums import ACTIONS_FROM_ASSISTANT, DANGER_CLASSIFICATION, JobStatuses
 from drug_search.core.schemas.drug_schemas import DrugSchema
 
 
@@ -53,6 +53,7 @@ class QuestionAssistantResponse(BaseModel):
 
 class BuyDrugResponse(BaseModel):
     status: BuyDrugStatuses
+    job_status: JobStatuses | None = None
     drug_name: str | None = None
 
 

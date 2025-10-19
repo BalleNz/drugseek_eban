@@ -5,7 +5,7 @@ import uuid
 from typing import Sequence, Generator
 
 from drug_search.core.dependencies.containers.service_container import get_service_container
-from drug_search.core.lexicon import ADMIN_TG_IDS
+from drug_search.core.lexicon import ADMINS_TG_ID
 from drug_search.core.lexicon import ARROW_TYPES
 from drug_search.core.schemas import DrugSchema, QuestionAssistantResponse, UserSchema
 from drug_search.core.services.assistant_service import AssistantService
@@ -148,7 +148,7 @@ async def mailing(
         <b>Прошло времени:</b> {time.time() - time_start:.2f} секунд.
         """
 
-        for admin_id in ADMIN_TG_IDS:
+        for admin_id in ADMINS_TG_ID:
             await telegram_service.send_message(
                 user_telegram_id=admin_id,
                 message=message

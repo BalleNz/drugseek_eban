@@ -11,6 +11,7 @@ __all__ = [
     'ACTIONS_FROM_ASSISTANT',
     'ARROW_TYPES',
     'JobStatuses',
+    'MailingStatuses',
     # [ Limits ]
     'QUESTIONS_LIMIT_START',
     'DEFAULT_SEARCH_DAY_LIMIT',
@@ -21,5 +22,6 @@ __all__ = [
     'PREMIUM_QUESTIONS_DAY_LIMIT',
     # [ CONSTS ]
     'UPDATE_DRUG_COST',
+    'ADMIN_TG_IDS',
     'ASSISTANT_ANSWER_DRUG_COUNT_PER_PAGE'
 ]

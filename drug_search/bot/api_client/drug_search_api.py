@@ -6,13 +6,13 @@ from drug_search.core.lexicon import DANGER_CLASSIFICATION, ARROW_TYPES
 from drug_search.core.schemas import (UserTelegramDataSchema, UserSchema, DrugExistingResponse,
                                       DrugSchema, QuestionAssistantResponse, AllowedDrugsSchema,
                                       SelectActionResponse, QuestionRequest, AddTokensRequest,
-                                      BuyDrugRequest, BuyDrugResponse, UpdateDrugResponse)
+                                      BuyDrugRequest, BuyDrugResponse, UpdateDrugResponse, MailingRequest)
 
 
 class DrugSearchAPIClient(BaseHttpClient):
     """Универсальный клиент для DrugSearch API"""
 
-    # [ Assistant handler ]
+    # [ ASSISTANT ]
     async def assistant_get_action(self, access_token: str, query: str) -> SelectActionResponse:
         return await self._request(
             HTTPMethod.POST,
@@ -42,7 +42,7 @@ class DrugSearchAPIClient(BaseHttpClient):
             access_token=access_token,
         )
 
-    # [ Auth handler ]
+    # [ AUTH ]
     async def telegram_auth(self, telegram_user_data: UserTelegramDataSchema) -> str:
         response: dict = await self._request(
             HTTPMethod.POST,
@@ -51,7 +51,7 @@ class DrugSearchAPIClient(BaseHttpClient):
         )
         return response["token"]
 
-    # [ User handler ]
+    # [ USER ]
     async def get_current_user(self, access_token: str) -> UserSchema:
         """Получение текущего пользователя"""
         return await self._request(
@@ -104,7 +104,7 @@ class DrugSearchAPIClient(BaseHttpClient):
             )
         )
 
-    # [ Drug handler ]
+    # [ DRUG ]
     async def update_drug(
             self,
             drug_id: uuid.UUID,
@@ -201,5 +201,21 @@ class DrugSearchAPIClient(BaseHttpClient):
             HTTPMethod.POST,
             f"/v1/drugs/update/{drug_id}/researches",
             response_model=DrugSchema,
+            access_token=access_token
+        )
+
+    # [ Admin ]
+    async def mailing(
+            self,
+            message: str,
+            access_token: str
+    ):
+        """Массовая рассылка"""
+        return await self._request(
+            HTTPMethod.POST,
+            endpoint="/v1/admin/mailing",
+            request_body=MailingRequest(
+                message=message
+            ),
             access_token=access_token
         )

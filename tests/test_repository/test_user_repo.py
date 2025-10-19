@@ -1,20 +1,27 @@
-import pytest
 import uuid
-from unittest.mock import AsyncMock
+from datetime import datetime
 
-from drug_search.infrastructure.database.models.user import User
+import pytest
+
+from drug_search.core.lexicon import DEFAULT_SEARCH_DAY_LIMIT, SUBSCRIBE_TYPES, QUESTIONS_LIMIT_START
 from drug_search.core.schemas import UserTelegramDataSchema, UserSchema
+from drug_search.infrastructure.database.models.user import User
 
 
 def get_user() -> User:
     return User(
         id=uuid.uuid4(),
-        allowed_requests=3,
-        used_requests=0,
         telegram_id="1488221",
+        username="huesos",
         first_name="Оззи",
         last_name="озборн",
-        username="huesos",
+        subscription_type=SUBSCRIBE_TYPES.DEFAULT,
+        allowed_search_requests=DEFAULT_SEARCH_DAY_LIMIT,
+        allowed_question_requests=QUESTIONS_LIMIT_START,
+        used_requests=0,
+        requests_last_refresh=datetime.now(),
+        description=None,
+        created_at=datetime.now()
     )
 
 
@@ -107,3 +114,13 @@ async def test_decrement_user_requests(mock_user_repo):
 
     # Проверяем, что метод был вызван с правильными аргументами
     mock_user_repo.increment_user_requests.assert_called_once_with(user_id, 1)
+
+
+@pytest.mark.asyncio
+async def test_get_all_users(mock_user_repo):
+    user: UserSchema = get_user().get_schema
+    mock_user_repo.get_all.return_value = [user]
+
+    users = await mock_user_repo.get_all()
+
+    assert type(users[0]) is UserSchema

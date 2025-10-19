@@ -33,6 +33,7 @@ class QueryRequest(BaseModel):
     query: str
 
 
+# [ Question ]
 class QuestionRequest(BaseModel):
     user_telegram_id: str
     question: str
@@ -46,7 +47,13 @@ class QuestionContinueRequest(BaseModel):
     old_message_id: str
 
 
+# [ Actions ]
 class BuyDrugRequest(BaseModel):
     drug_id: uuid.UUID | None  # если нужно создавать: None
     drug_name: str  #
     danger_classification: DANGER_CLASSIFICATION
+
+
+# [ ADMIN ]
+class MailingRequest(BaseModel):
+    message: str

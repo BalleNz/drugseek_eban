@@ -34,3 +34,9 @@ class ARROW_TYPES(str, Enum):
 class JobStatuses(str, Enum):
     QUEUED = "queued"
     CREATED = "created"
+
+
+# [ api response ]
+class MailingStatuses(str, Enum):
+    SUCCESS = "success"
+    ONLY_FOR_ADMINS = "only_for_admins"

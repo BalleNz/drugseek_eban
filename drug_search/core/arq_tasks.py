@@ -1,14 +1,19 @@
+import asyncio
 import logging
+import time
 import uuid
+from typing import Sequence, Generator
 
-from drug_search.core.lexicon import ARROW_TYPES
 from drug_search.core.dependencies.containers.service_container import get_service_container
-from drug_search.core.schemas import DrugSchema, QuestionAssistantResponse
+from drug_search.core.lexicon import ADMIN_TG_IDS
+from drug_search.core.lexicon import ARROW_TYPES
+from drug_search.core.schemas import DrugSchema, QuestionAssistantResponse, UserSchema
 from drug_search.core.services.assistant_service import AssistantService
 from drug_search.core.services.drug_service import DrugService
 from drug_search.core.services.redis_service import RedisService
 from drug_search.core.services.telegram_service import TelegramService
 from drug_search.core.services.user_service import UserService
+from drug_search.infrastructure.database.repository.user_repo import UserRepository
 
 logger = logging.getLogger(__name__)
 
@@ -99,3 +104,52 @@ async def assistant_answer(
             question=question_key,
             arrow=arrow
         )
+
+
+async def mailing(
+        ctx,  # noqa
+        message: str
+):
+    time_start: float = time.time()
+
+    async with get_service_container() as container:
+        # [ deps ]
+        user_repo: UserRepository = await container.get_user_repo()
+        telegram_service: TelegramService = await container.telegram_service
+
+        # [ variables ]
+        users: Sequence[UserSchema] = await user_repo.get_all()
+        users_telegram_id: Generator[str] = (user.telegram_id for user in users)
+        banned_users = 0
+
+        # [ logic ]
+        for i, user_telegram_id in enumerate(users_telegram_id):
+
+            # каждые 30 сообщений задержка 1 сек
+            if i % 30 == 0:
+                await asyncio.sleep(1)
+            else:
+                await asyncio.sleep(0.05)  # 50ms между обычными сообщениями
+
+            try:
+                await telegram_service.send_message(
+                    user_telegram_id,
+                    message=message
+                )
+            except ValueError:
+                banned_users += 1
+
+        message: str = f"""
+        Отправка закончена.
+        
+        <b>Всего отправлено:</b> {users.__len__()}
+        <b>Заблокировали бота:</b> {banned_users} человек
+        
+        <b>Прошло времени:</b> {time.time() - time_start:.2f} секунд.
+        """
+
+        for admin_id in ADMIN_TG_IDS:
+            await telegram_service.send_message(
+                user_telegram_id=admin_id,
+                message=message
+            )

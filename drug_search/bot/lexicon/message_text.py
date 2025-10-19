@@ -1,4 +1,5 @@
 class MessageTemplates:
+
     # [ SECTIONS ]
     DRUG_INFO_BRIEFLY: str = (
         "<b>{drug_name_ru} ({drug_name}, {latin_name})</b>\n\n"
@@ -135,3 +136,8 @@ class MessageTemplates:
     ERROR_DRUG: str = "Произошла ошибка, такой препарат не существует.."
 
     ASSISTANT_WAITING: str = "Ожидание ответа на вопрос у ассистента.."
+
+    # [ Mailing ]
+    ONLY_FOR_ADMINS = "Эта команда доступна только для администрации."
+    SUCCESS_MAILING = "Рассылка передана брокеру задач.."
+

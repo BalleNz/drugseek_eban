@@ -62,6 +62,9 @@ class ServiceContainer:
     async def get_user_service(self) -> UserService:
         return UserService(repo=UserRepository(self.session))
 
+    async def get_user_repo(self) -> UserRepository:
+        return UserRepository(self.session)
+
 
 @asynccontextmanager
 async def get_session():

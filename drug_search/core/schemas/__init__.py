@@ -41,6 +41,7 @@ __all__ = [
     'QuestionRequest',
     'BuyDrugRequest',
     'QuestionContinueRequest',
+    'MailingRequest',
     # [ API Responses ]
     'SelectActionResponse',
     'UpdateDrugResponse',

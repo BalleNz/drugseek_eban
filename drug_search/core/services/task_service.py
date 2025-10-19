@@ -18,6 +18,7 @@ class ARQ_JOBS(str, Enum):
     DRUG_CREATE = "drug_create"
     DRUG_UPDATE = "drug_update"
     ASSISTANT_ANSWER = "assistant_answer"
+    MAILING = "mailing"
 
 
 class TaskService:
@@ -102,4 +103,18 @@ class TaskService:
             "status": f"{await job.status()}",
             "user_id": user_telegram_id,
             "question": question
+        }
+
+    async def enqueue_mailing(
+            self,
+            message: str
+    ):
+        job: Job = await self.arq_pool.enqueue_job(
+            ARQ_JOBS.MAILING.value,
+            message
+        )
+
+        return {
+            "status": str(await job.status()),
+            "message": message
         }

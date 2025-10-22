@@ -2,7 +2,7 @@ import logging
 
 from arq.connections import RedisSettings
 
-from drug_search.core.arq_tasks import drug_create, drug_update, assistant_answer, mailing
+from drug_search.core.services.tasks_logic.arq_tasks import drug_create, drug_update, assistant_answer, mailing
 from drug_search.config import config
 from drug_search.infrastructure.loggerConfig import configure_logging
 

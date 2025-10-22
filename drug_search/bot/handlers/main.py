@@ -1,6 +1,6 @@
 import logging
 
-from aiogram import Router
+from aiogram import Router, flags
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, LinkPreviewOptions
 
@@ -9,16 +9,16 @@ from drug_search.bot.keyboards import DescribeTypes, drug_keyboard, buy_request_
 from drug_search.bot.lexicon import MessageTemplates
 from drug_search.bot.lexicon.types import ModeTypes
 from drug_search.bot.utils.format_message_text import DrugMessageFormatter
-from drug_search.core.dependencies.cache_service_dep import cache_service
-from drug_search.core.lexicon import ACTIONS_FROM_ASSISTANT, ARROW_TYPES
-from drug_search.core.schemas import (SelectActionResponse,
-                                      DrugExistingResponse, UserSchema)
+from drug_search.core.dependencies.bot.cache_service_dep import cache_service
+from drug_search.core.lexicon import ACTIONS_FROM_ASSISTANT, ARROW_TYPES, MAX_MESSAGE_LENGTH_DEFAULT
+from drug_search.core.schemas import (SelectActionResponse, DrugExistingResponse, UserSchema)
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
 
 
 @router.message()
+@flags.antispam(True)
 async def main_action(
         message: Message,
         access_token: str,
@@ -26,6 +26,10 @@ async def main_action(
         api_client: DrugSearchAPIClient
 ):
     """Основная ручка для запросов юзера"""
+
+    if message.text.__len__() > MAX_MESSAGE_LENGTH_DEFAULT:
+        await message.answer(MessageTemplates.ANTISPAM_MESSAGE)
+        return
 
     user: UserSchema = await cache_service.get_user_profile(access_token=access_token, telegram_id=message.from_user.id)
 
@@ -44,21 +48,24 @@ async def main_action(
                     drug=drug_response.drug,
                     mode=ModeTypes.SEARCH,
                     describe_type=DescribeTypes.BRIEFLY,
-                    user_subscribe_type=user.subscription_type
+                    user_subscribe_type=user.subscription_type,
+                    user_query=message.text
                 ),
                 link_preview_options=LinkPreviewOptions(is_disabled=True)
             )
         else:
             # [ предложить купить препарат ]
-            await drug_response.edit_text(
+            await state.update_data(
+                purchase_drug_name=drug_response.drug_name,
+                purchase_drug_id=drug_response.drug.id if drug_response.drug else None,
+                purchase_danger_classification=drug_response.danger_classification
+            )
+
+            await message.answer(
                 text=MessageTemplates.DRUG_BUY_REQUEST.format(
                     drug_name_ru=drug_response.drug_name_ru
                 ),
-                reply_markup=buy_request_keyboard(
-                    drug_id=drug_response.drug.id if drug_response.drug else None,
-                    drug_name=drug_response.drug_name,
-                    danger_classification=drug_response.danger_classification
-                ),
+                reply_markup=buy_request_keyboard(maybe_wrong_drug=True, user_query=message.text),
             )
 
     # [ определяем действие юзера ]
@@ -91,7 +98,6 @@ async def main_action(
 
             case ACTIONS_FROM_ASSISTANT.DRUG_MENU:
                 # [ поиск препарата с конкретным разделом ]
-
                 drug_existing_response: DrugExistingResponse | None = await api_client.search_drug(
                     action_response.drug_name,
                     access_token=access_token
@@ -107,22 +113,25 @@ async def main_action(
                             drug=drug_existing_response.drug,
                             mode=ModeTypes.SEARCH,
                             describe_type=DescribeTypes(action_response.drug_menu),
-                            user_subscribe_type=user.subscription_type
+                            user_subscribe_type=user.subscription_type,
+                            user_query=message.text
                         ),
                         link_preview_options=LinkPreviewOptions(is_disabled=True)
                     )
 
                 elif drug_existing_response.is_exist:
                     # [ предложить купить препарат ]
+                    await state.update_data(
+                        purchase_drug_name=drug_existing_response.drug_name,
+                        purchase_drug_id=drug_existing_response.drug.id if drug_response.drug else None,
+                        purchase_danger_classification=drug_existing_response.danger_classification
+                    )
+
                     await message_request.edit_text(
                         text=MessageTemplates.DRUG_BUY_REQUEST.format(
                             drug_name_ru=action_response.drug_name
                         ),
-                        reply_markup=buy_request_keyboard(
-                            drug_id=drug_existing_response.drug.id if drug_existing_response.drug else None,
-                            drug_name=message.text,
-                            danger_classification=drug_existing_response.danger_classification
-                        ),
+                        reply_markup=buy_request_keyboard(),
                     )
                 else:
                     logger.error(f"Drug existing response error: {drug_existing_response}")
@@ -142,21 +151,24 @@ async def main_action(
                             drug=drug_existing_response.drug,
                             describe_type=DescribeTypes.BRIEFLY,
                             user_subscribe_type=user.subscription_type,
-                            mode=ModeTypes.SEARCH
+                            mode=ModeTypes.SEARCH,
+                            user_query=message.text
                         ),
                         link_preview_options=LinkPreviewOptions(is_disabled=True)
                     )
                 elif drug_existing_response.is_exist:
                     # [ купить препарат ]
+                    await state.update_data(
+                        purchase_drug_name=drug_existing_response.drug_name,
+                        purchase_drug_id=drug_existing_response.drug.id if drug_response.drug else None,
+                        purchase_danger_classification=drug_existing_response.danger_classification
+                    )
+
                     await message_request.edit_text(
                         text=MessageTemplates.DRUG_BUY_REQUEST.format(
                             drug_name_ru=drug_existing_response.drug_name_ru
                         ),
-                        reply_markup=buy_request_keyboard(
-                            drug_id=drug_existing_response.drug.id if drug_existing_response.drug else None,
-                            drug_name=message.text,
-                            danger_classification=drug_existing_response.danger_classification
-                        ),
+                        reply_markup=buy_request_keyboard(),
                     )
                 else:
                     await message.answer(MessageTemplates.DRUG_IS_NOT_EXIST)

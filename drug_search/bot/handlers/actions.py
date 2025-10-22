@@ -11,7 +11,7 @@ from drug_search.bot.keyboards.callbacks import DrugUpdateRequestCallback, BuyDr
 from drug_search.bot.lexicon import MessageTemplates
 from drug_search.bot.lexicon.types import ModeTypes
 from drug_search.bot.utils.format_message_text import DrugMessageFormatter
-from drug_search.core.dependencies.cache_service_dep import cache_service
+from drug_search.core.dependencies.bot.cache_service_dep import cache_service
 from drug_search.core.lexicon import ARROW_TYPES, JobStatuses
 from drug_search.core.schemas import (BuyDrugResponse, BuyDrugStatuses, UpdateDrugResponse,
                                       UpdateDrugStatuses, UserSchema, DrugExistingResponse)
@@ -52,16 +52,29 @@ async def drug_update(
 @router.callback_query(BuyDrugRequestCallback.filter())
 async def drug_buy_request(
         callback_query: CallbackQuery,
-        callback_data: BuyDrugRequestCallback,
         access_token: str,
         state: FSMContext,  # noqa
         api_client: DrugSearchAPIClient
 ):
     """Обработка покупки препарата"""
+
+    # [ получаем данные из state ]
+    state_data = await state.get_data()
+
+    drug_name = state_data.get("purchase_drug_name")
+    drug_id = state_data.get("purchase_drug_id")
+    danger_classification = state_data.get("purchase_danger_classification")
+
+    if not all([drug_name, danger_classification]):
+        await callback_query.answer("Данные о препарате устарели", show_alert=True)
+        return
+
+    await state.clear()
+
     api_response: BuyDrugResponse = await api_client.buy_drug(
-        callback_data.drug_name,
-        callback_data.drug_id,
-        callback_data.danger_classification,
+        drug_name,
+        drug_id,
+        danger_classification,
         access_token=access_token
     )
 
@@ -122,15 +135,17 @@ async def wrong_drug_founded(
             )
         else:
             # [ предложить купить препарат ]
+            await state.update_data(
+                purchase_drug_name=drug_response.drug_name,
+                purchase_drug_id=drug_response.drug.id if drug_response.drug else None,
+                purchase_danger_classification=drug_response.danger_classification
+            )
+
             await callback_query.message.edit_text(
                 text=MessageTemplates.DRUG_BUY_REQUEST.format(
                     drug_name_ru=drug_response.drug_name_ru
                 ),
-                reply_markup=buy_request_keyboard(
-                    drug_id=drug_response.drug.id if drug_response.drug else None,
-                    drug_name=drug_response.drug_name,
-                    danger_classification=drug_response.danger_classification
-                ),
+                reply_markup=buy_request_keyboard(),
             )
     else:
         await callback_query.message.edit_text(MessageTemplates.DRUG_IS_NOT_EXIST)

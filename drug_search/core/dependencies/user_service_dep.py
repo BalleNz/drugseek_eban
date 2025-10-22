@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from drug_search.core.dependencies.assistant_service_dep import get_assistant_service
 from drug_search.core.services.assistant_service import AssistantService
-from drug_search.core.services.user_service import UserService
+from services.models_service.user_service import UserService
 from drug_search.infrastructure.database.engine import get_async_session
 from drug_search.infrastructure.database.repository.user_repo import UserRepository
 

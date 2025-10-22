@@ -61,9 +61,7 @@ class AssistantQuestionContinue(CallbackData, prefix="quest_cont"):
 
 # [ покупка препарата ]
 class BuyDrugRequestCallback(CallbackData, prefix="buy_drug"):
-    drug_name: str  # если нужно предварительно создать
-    drug_id: uuid.UUID | None  # если есть в БД
-    danger_classification: DANGER_CLASSIFICATION
+    pass
 
 
 class CancelDrugBuyingCallback(CallbackData, prefix="cancel_buying_drug"):

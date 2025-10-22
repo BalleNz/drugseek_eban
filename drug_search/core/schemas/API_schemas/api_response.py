@@ -1,9 +1,11 @@
 from enum import Enum
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
 from drug_search.core.lexicon.enums import ACTIONS_FROM_ASSISTANT, DANGER_CLASSIFICATION, JobStatuses
 from drug_search.core.schemas.drug_schemas import DrugSchema
+from drug_search.core.schemas.telegram_schemas import DrugBrieflySchema
 
 
 # [ Enums, types ]
@@ -59,3 +61,9 @@ class BuyDrugResponse(BaseModel):
 
 class UpdateDrugResponse(BaseModel):
     status: UpdateDrugStatuses
+
+
+class AllowedDrugsInfoSchema(BaseModel):
+    drugs_count: int = Field(..., description="количество препаратов в базе данных")
+    allowed_drugs_count: int = Field(..., description="количество разрешенных препаратов")
+    allowed_drugs: Optional[list[DrugBrieflySchema]] = Field(None, description="о препарате кратко")

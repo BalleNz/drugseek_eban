@@ -48,9 +48,9 @@ class TaskService:
             _expires=10
         )
 
-        status: JobStatuses = JobStatuses.QUEUED
-        if job and job.status() == JobStatus.in_progress:
-            status = JobStatuses.CREATED
+        status: JobStatuses = JobStatuses.CREATED
+        if job and await job.status() == JobStatus.in_progress:
+            status = JobStatuses.QUEUED
 
         return {
             "status": status,

@@ -1,5 +1,3 @@
-import uuid
-
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
 from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback, DescribeTypes,
@@ -8,7 +6,18 @@ from drug_search.bot.keyboards.callbacks import BuyDrugRequestCallback, Assistan
     DrugUpdateRequestCallback
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.bot.lexicon.types import ModeTypes
-from drug_search.core.lexicon import SUBSCRIBE_TYPES, DANGER_CLASSIFICATION, ARROW_TYPES
+from drug_search.core.lexicon import SUBSCRIBE_TYPES, ARROW_TYPES
+from drug_search.core.schemas import DrugBrieflySchema, DrugSchema
+from drug_search.core.utils.funcs import may_update_drug
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+
+from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback, DescribeTypes,
+                                       WrongDrugFoundedCallback)
+from drug_search.bot.keyboards.callbacks import BuyDrugRequestCallback, AssistantQuestionContinue, \
+    DrugUpdateRequestCallback
+from drug_search.bot.lexicon.keyboard_words import ButtonText
+from drug_search.bot.lexicon.types import ModeTypes
+from drug_search.core.lexicon import SUBSCRIBE_TYPES, ARROW_TYPES
 from drug_search.core.schemas import DrugBrieflySchema, DrugSchema
 from drug_search.core.utils.funcs import may_update_drug
 
@@ -16,25 +25,14 @@ from drug_search.core.utils.funcs import may_update_drug
 menu_keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text=ButtonText.PROFILE)],
-        [KeyboardButton(text=ButtonText.DRUG_DATABASE)]
+        [KeyboardButton(text=ButtonText.HELP)],
+        [KeyboardButton(text=ButtonText.DRUG_DATABASE)],
     ],
     resize_keyboard=True,
 )
+
 
 # [Inline]
-drug_database_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [
-            InlineKeyboardButton(
-                text=ButtonText.FULL_LIST,
-                callback_data=DrugListCallback(page=0).pack()
-            )
-        ]
-    ],
-    resize_keyboard=True,
-)
-
-
 def drug_list_keyboard(drugs: list[DrugBrieflySchema], page: int) -> InlineKeyboardMarkup:
     """
     Клавиатура с названиями препов и CallbackData
@@ -93,6 +91,7 @@ def drug_keyboard(
         user_subscribe_type: SUBSCRIBE_TYPES,
         mode: ModeTypes,
         page: int | None = None,  # страница с прошлого меню
+        user_query: str | None = None
 ) -> InlineKeyboardMarkup:
     """
     Возвращает клавиатуру по describe_type:
@@ -219,7 +218,7 @@ def drug_keyboard(
         keyboard.inline_keyboard.append(
             [
                 InlineKeyboardButton(
-                    text=ButtonText.RIGHT_ARROW,
+                    text=ButtonText.LEFT_ARROW,
                     callback_data=DrugListCallback(
                         page=page
                     ).pack()
@@ -233,7 +232,7 @@ def drug_keyboard(
                 InlineKeyboardButton(
                     text=ButtonText.WRONG_DRUG_FOUNDED,
                     callback_data=WrongDrugFoundedCallback(
-                        drug_name_query=drug.name
+                        drug_name_query=user_query
                     ).pack()
                 )
             ]
@@ -242,27 +241,35 @@ def drug_keyboard(
 
 
 def buy_request_keyboard(
-        drug_name: str,
-        drug_id: uuid.UUID | None,  # Может не быть —> создается новый препарат.
-        danger_classification: DANGER_CLASSIFICATION
+        maybe_wrong_drug: bool = False,
+        user_query: str = None
 ) -> InlineKeyboardMarkup:
     """
     Клавиатура с покупкой препарата.
     """
-    return InlineKeyboardMarkup(
+    keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
                     text=ButtonText.BUY_DRUG,
-                    callback_data=BuyDrugRequestCallback(
-                        drug_id=drug_id if drug_id else None,
-                        drug_name=drug_name,
-                        danger_classification=danger_classification
-                    ).pack()
+                    callback_data=BuyDrugRequestCallback().pack()
                 )
             ]
         ]
     )
+
+    if maybe_wrong_drug:
+        keyboard.inline_keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text=ButtonText.WRONG_DRUG_FOUNDED,
+                    callback_data=WrongDrugFoundedCallback(
+                        drug_name_query=user_query
+                    ).pack()
+                )
+            ]
+        )
+    return keyboard
 
 
 def question_continue_keyboard(

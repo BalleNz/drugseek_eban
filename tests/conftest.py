@@ -1,9 +1,9 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from drug_search.core.services.drug_service import DrugService
-from drug_search.core.services.user_service import UserService
+from services.models_service.drug_service import DrugService
+from services.models_service.user_service import UserService
 from drug_search.infrastructure.database.repository.drug_repo import DrugRepository
 from drug_search.infrastructure.database.repository.user_repo import UserRepository
 

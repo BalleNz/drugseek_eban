@@ -5,14 +5,14 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, LinkPreviewOptions
 
-from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback,
-                                       drug_database_keyboard, drug_list_keyboard,
+from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback, drug_list_keyboard,
                                        DescribeTypes, drug_keyboard)
 from drug_search.bot.lexicon import MessageText
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.bot.lexicon.types import ModeTypes
-from drug_search.core.schemas import DrugSchema, AllowedDrugsSchema, UserSchema
-from drug_search.core.services.cache_service import CacheService
+from drug_search.core.schemas import DrugSchema, UserSchema
+from schemas import AllowedDrugsInfoSchema
+from drug_search.core.services.cache_logic.cache_service import CacheService
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
@@ -25,17 +25,20 @@ async def drug_menu_handler(
         access_token: str,
         state: FSMContext,  # noqa
 ):
-    """Отображает сообщение и позволяет листать препараты (после подтверждения)"""
+    """Отображает первую страницу препаратов"""
     user_id = str(message.from_user.id)
 
-    allowed_drugs_info: AllowedDrugsSchema = await cache_service.get_allowed_drugs(
+    allowed_drugs_info: AllowedDrugsInfoSchema = await cache_service.get_allowed_drugs(
         access_token=access_token,
         telegram_id=user_id
     )
 
     await message.answer(
         text=MessageText.format_drugs_info(allowed_drugs_info),
-        reply_markup=drug_database_keyboard
+        reply_markup=drug_list_keyboard(
+            drugs=allowed_drugs_info.allowed_drugs,
+            page=0
+        )
     )
 
 
@@ -46,10 +49,10 @@ async def drug_list_handler(
         access_token: str,
         callback_data: DrugListCallback,
 ):
-    """Листинг препаратов"""
+    """Листинг препаратов (стрелочки)"""
     user_id = str(callback.from_user.id)
 
-    allowed_drugs_info: AllowedDrugsSchema = await cache_service.get_allowed_drugs(
+    allowed_drugs_info: AllowedDrugsInfoSchema = await cache_service.get_allowed_drugs(
         access_token=access_token,
         telegram_id=user_id
     )

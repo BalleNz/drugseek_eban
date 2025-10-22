@@ -118,7 +118,7 @@ async def test_decrement_user_requests(mock_user_repo):
 
 @pytest.mark.asyncio
 async def test_get_all_users(mock_user_repo):
-    user: UserSchema = get_user().get_schema
+    user: UserSchema = get_user().get_schema()
     mock_user_repo.get_all.return_value = [user]
 
     users = await mock_user_repo.get_all()

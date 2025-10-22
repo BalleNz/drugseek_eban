@@ -11,7 +11,7 @@ from starlette import status
 
 from drug_search.config import config
 from drug_search.core.schemas import UserSchema
-from drug_search.core.services.user_service import UserService
+from services.models_service.user_service import UserService
 from drug_search.core.dependencies.user_service_dep import get_user_service
 
 logger = logging.getLogger(__name__)

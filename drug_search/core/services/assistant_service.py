@@ -117,9 +117,8 @@ class AssistantService(AssistantInterface):
         return await self.get_response(input_query=drug_name, prompt=Prompts.GET_DRUG_COMBINATIONS,
                                        pydantic_model=AssistantResponseCombinations)
 
-    async def get_user_description(self, user_name: str, user_drug_names: Sequence[str]) -> ...:
-        user_drug_names_text = ', '.join(user_drug_names)
-        user_query = user_name + ' ' + user_drug_names_text
+    async def get_user_description(self, user_name: str, user_drugs_name: str) -> str:
+        user_query = user_name + ' ' + user_drugs_name
         return await self.get_response(input_query=user_query, prompt=Prompts.GET_USER_DESCRIPTION,
                                        pydantic_model=None)
 

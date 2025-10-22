@@ -9,10 +9,10 @@ from drug_search.core.lexicon import ADMINS_TG_ID
 from drug_search.core.lexicon import ARROW_TYPES
 from drug_search.core.schemas import DrugSchema, QuestionAssistantResponse, UserSchema
 from drug_search.core.services.assistant_service import AssistantService
-from drug_search.core.services.drug_service import DrugService
-from drug_search.core.services.redis_service import RedisService
+from drug_search.core.services.cache_logic.redis_service import RedisService
+from drug_search.core.services.models_service.drug_service import DrugService
+from drug_search.core.services.models_service.user_service import UserService
 from drug_search.core.services.telegram_service import TelegramService
-from drug_search.core.services.user_service import UserService
 from drug_search.infrastructure.database.repository.user_repo import UserRepository
 
 logger = logging.getLogger(__name__)

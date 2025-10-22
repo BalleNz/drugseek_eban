@@ -2,6 +2,7 @@ class ButtonText:
     # [ REPLY ]
     DRUG_DATABASE = "База препаратов"
     PROFILE = "Профиль"
+    HELP = "Что умеет бот?"
 
     # [ INLINE ]
     BUY_DRUG = "Купить"

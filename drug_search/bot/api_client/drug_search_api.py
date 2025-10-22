@@ -4,9 +4,8 @@ from uuid import UUID
 from drug_search.bot.api_client.base_http_client import BaseHttpClient, HTTPMethod
 from drug_search.core.lexicon import DANGER_CLASSIFICATION, ARROW_TYPES
 from drug_search.core.schemas import (UserTelegramDataSchema, UserSchema, DrugExistingResponse,
-                                      DrugSchema, QuestionAssistantResponse, AllowedDrugsSchema,
-                                      SelectActionResponse, QuestionRequest, AddTokensRequest,
-                                      BuyDrugRequest, BuyDrugResponse, UpdateDrugResponse, MailingRequest)
+                                      DrugSchema, QuestionAssistantResponse, SelectActionResponse, QuestionRequest, AddTokensRequest,
+                                      BuyDrugRequest, BuyDrugResponse, UpdateDrugResponse, MailingRequest, AllowedDrugsInfoSchema)
 
 
 class DrugSearchAPIClient(BaseHttpClient):
@@ -61,12 +60,12 @@ class DrugSearchAPIClient(BaseHttpClient):
             access_token=access_token
         )
 
-    async def get_allowed_drugs(self, access_token: str) -> AllowedDrugsSchema:
+    async def get_allowed_drugs(self, access_token: str) -> AllowedDrugsInfoSchema:
         """Получение разрешенных препаратов"""
         return await self._request(
             HTTPMethod.GET,
             "/v1/user/allowed",
-            response_model=AllowedDrugsSchema,
+            response_model=AllowedDrugsInfoSchema,
             access_token=access_token
         )
 
@@ -172,7 +171,7 @@ class DrugSearchAPIClient(BaseHttpClient):
     async def buy_drug(
             self,
             drug_name: str,
-            drug_id: uuid.UUID | None,  # exist in database
+            drug_id: str | None,  # is existing in database
             danger_classification: DANGER_CLASSIFICATION,
             access_token: str
     ) -> BuyDrugResponse:

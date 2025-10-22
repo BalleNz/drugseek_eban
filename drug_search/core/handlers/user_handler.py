@@ -4,15 +4,15 @@ from typing import Annotated
 from fastapi import APIRouter
 from fastapi.params import Depends
 
-from drug_search.core.dependencies.cache_service_dep import get_cache_service
+from drug_search.core.dependencies.bot.cache_service_dep import get_cache_service
 from drug_search.core.dependencies.task_service_dep import get_task_service
-from drug_search.core.dependencies.user_service_dep import get_user_service
+from drug_search.core.dependencies.user_service_dep import get_user_service, get_user_service_with_assistant
 from drug_search.core.lexicon import SUBSCRIBE_TYPES, DANGER_CLASSIFICATION
-from drug_search.core.schemas import (UserSchema, AllowedDrugsSchema, AddTokensRequest, BuyDrugRequest, BuyDrugResponse,
-                                      BuyDrugStatuses)
-from drug_search.core.services.cache_service import CacheService
-from drug_search.core.services.task_service import TaskService
-from drug_search.core.services.user_service import UserService
+from drug_search.core.schemas import (UserSchema, AddTokensRequest, BuyDrugRequest, BuyDrugResponse,
+                                      BuyDrugStatuses, AllowedDrugsInfoSchema)
+from drug_search.core.services.cache_logic.cache_service import CacheService
+from drug_search.core.services.models_service.user_service import UserService
+from drug_search.core.services.tasks_logic.task_service import TaskService
 from drug_search.core.utils.auth import get_auth_user
 
 user_router = APIRouter(prefix="/user")
@@ -33,7 +33,7 @@ async def get_user(
 @user_router.get(
     path="/allowed",
     description="Получение всех разрешенных препаратов, а также общее количество препаратов в базе.",
-    response_model=AllowedDrugsSchema
+    response_model=AllowedDrugsInfoSchema
 )
 async def get_drugs(
         user: Annotated[UserSchema, Depends(get_auth_user)],
@@ -75,7 +75,7 @@ async def reduce_tokens(
 @user_router.post(path="/buy_drug")
 async def buy_drug(
         user: Annotated[UserSchema, Depends(get_auth_user)],
-        user_service: Annotated[UserService, Depends(get_user_service)],
+        user_service: Annotated[UserService, Depends(get_user_service_with_assistant)],
         task_service: Annotated[TaskService, Depends(get_task_service)],
         cache_service: Annotated[CacheService, Depends(get_cache_service)],
         request: BuyDrugRequest
@@ -112,6 +112,10 @@ async def buy_drug(
         logger.info(f"Юзер {user.telegram_id} купил препарат {request.drug_name}")
         await user_service.allow_drug_to_user(user.id, request.drug_id)
         await cache_service.redis_service.invalidate_user_data(telegram_id=user.telegram_id)
+        return BuyDrugResponse(
+            status=BuyDrugStatuses.DRUG_ALLOWED,
+            drug_name=request.drug_name
+        )
     else:
         """Нужно его создать и разрешить"""
         logger.info(f"Юзер {user.telegram_id} купил препарат {request.drug_name}")

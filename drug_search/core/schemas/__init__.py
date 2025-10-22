@@ -32,9 +32,9 @@ __all__ = [
     # [ User ]
     'UserSchema',
     'UserTelegramDataSchema',
-    'AllowedDrugsSchema',
     'UserRequestLogSchema',
     'AllowedDrugSchema',
+    'AllowedDrugsInfoSchema',
     # [ API Requests ]
     'AddTokensRequest',
     'QueryRequest',

@@ -1,7 +1,7 @@
 import uuid
 from uuid import UUID
 
-from drug_search.core.schemas import AllowedDrugsSchema, UserSchema
+from drug_search.core.schemas import UserSchema, AllowedDrugsInfoSchema
 from drug_search.core.services.assistant_service import AssistantService
 from drug_search.infrastructure.database.repository.user_repo import UserRepository
 
@@ -23,11 +23,17 @@ class UserService:
         """Обновляет информацию описания юзера."""
         # TODO в Arq
         user: UserSchema = await self.repo.get(user_id)
-        user_drugs = await self.repo.get_allowed_drug_names(user_id=user.id)
+        user_drugs = await self.repo.get_allowed_drugs_info(user_id=user.id)
+        user_drugs_name: str = ', '.join(drug.drug_name_ru for drug in user_drugs.allowed_drugs)
+
+        if user.last_name:
+            user_name: str = user.first_name + user.last_name
+        else:
+            user_name: str = user.first_name if user.first_name else user.username
 
         user_description: str = await self.assistant.get_user_description(
-            user_name=user.first_name + user.last_name,
-            user_drug_names=user_drugs
+            user_name=user_name,
+            user_drugs_name=user_drugs_name
         )
         await self.repo.update_user_description(description=user_description, user_id=user.id)
 
@@ -56,6 +62,6 @@ class UserService:
     async def add_request_log(self, user_id: uuid.UUID, query: str):
         ...
 
-    async def get_allowed_drugs_info(self, user_id: uuid.UUID) -> AllowedDrugsSchema:
+    async def get_allowed_drugs_info(self, user_id: uuid.UUID) -> AllowedDrugsInfoSchema:
         """Возвращает количество препаратов в базе, количество разрешенных и краткую информацию о каждом разрешенном."""
         return await self.repo.get_allowed_drugs_info(user_id=user_id)

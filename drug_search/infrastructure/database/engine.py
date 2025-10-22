@@ -34,7 +34,7 @@ def create_async_db_engine_and_session(
 
 engine, async_session_maker = create_async_db_engine_and_session(
     database_url=DATABASE_URL,
-    echo=True if DEBUG else False,
+    echo=False,
     pool_size=5,
     max_overflow=10,
     pool_timeout=30,

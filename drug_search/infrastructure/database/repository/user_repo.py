@@ -1,9 +1,8 @@
 import datetime
 import logging
 import uuid
-from typing import Any, Sequence
 
-from sqlalchemy import select, text, Row, RowMapping, update
+from sqlalchemy import select, text, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -11,7 +10,7 @@ from sqlalchemy.orm import selectinload
 from drug_search.core.lexicon import (PREMIUM_SEARCH_DAY_LIMIT, DEFAULT_SEARCH_DAY_LIMIT,
                                       SUBSCRIBE_TYPES, DEFAULT_QUESTIONS_DAY_LIMIT, LITE_QUESTIONS_DAY_LIMIT,
                                       LITE_SEARCH_DAY_LIMIT, PREMIUM_QUESTIONS_DAY_LIMIT)
-from drug_search.core.schemas import UserTelegramDataSchema, UserSchema, AllowedDrugsSchema, DrugBrieflySchema
+from drug_search.core.schemas import UserTelegramDataSchema, UserSchema, DrugBrieflySchema, AllowedDrugsInfoSchema
 from drug_search.infrastructure.database.models.user import AllowedDrugs, User
 from drug_search.infrastructure.database.repository.base_repo import BaseRepository
 
@@ -61,7 +60,7 @@ class UserRepository(BaseRepository):
         # refresh day limits
         if (datetime.datetime.now() - user.requests_last_refresh).days >= 1:
             await self.__refresh_requests(user)
-        return user.get_schema
+        return user.get_schema()
 
     async def get_or_create_from_telegram(self, telegram_user: UserTelegramDataSchema) -> UserSchema | None:
         """
@@ -104,20 +103,7 @@ class UserRepository(BaseRepository):
             logger.exception(f"Ошибка при разрешении препарата пользователю: {ex}")
             raise ex
 
-    async def get_allowed_drug_names(self, user_id: uuid.UUID) -> Sequence[Row[Any] | RowMapping | Any]:
-        """
-        Возвращает список имен разрешенных препаратов для юзера.
-        """
-        stmt = text(f"""
-            SELECT drugs.id, drugs.name_ru AS _drug_name
-            FROM allowed_drugs
-            JOIN drugs ON drugs.id = allowed_drugs.drug_id
-            WHERE allowed_drugs.user_id = '{user_id}'
-        """)
-        result = await self.session.execute(stmt)
-        return result.scalars().all()
-
-    async def get_allowed_drugs_info(self, user_id: uuid.UUID) -> AllowedDrugsSchema:
+    async def get_allowed_drugs_info(self, user_id: uuid.UUID) -> AllowedDrugsInfoSchema:
         """
         Возвращает информацию о разрешенных препаратах для юзера в формате AllowedDrugsSchema.
         """
@@ -142,7 +128,7 @@ class UserRepository(BaseRepository):
             )
             allowed_drugs.append(drug_briefly)
 
-        return AllowedDrugsSchema(
+        return AllowedDrugsInfoSchema(
             drugs_count=drugs_count,
             allowed_drugs_count=len(allowed_drugs),
             allowed_drugs=allowed_drugs if allowed_drugs else None

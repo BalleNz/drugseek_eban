@@ -7,7 +7,7 @@ from aiogram.types import Message
 from drug_search.bot.lexicon import MessageText
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.bot.states.states import States
-from drug_search.core.services.cache_service import CacheService
+from services.cache_logic.cache_service import CacheService
 
 logger = logging.getLogger(__name__)
 router = Router(name=__name__)

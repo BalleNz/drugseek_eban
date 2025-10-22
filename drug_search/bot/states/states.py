@@ -7,3 +7,6 @@ class States(StatesGroup):
 
     # Payments
     PAYMENT = State()
+
+    # MAIN
+    IN_PROCESS = State()

@@ -3,6 +3,7 @@ import json
 import logging
 from datetime import datetime
 from typing import Type, TypeVar, Optional, Union
+from uuid import UUID
 
 import aiohttp
 from pydantic import BaseModel
@@ -90,4 +91,6 @@ class BaseHttpClient:
         """Кастомный сериализатор для обработки datetime"""
         if isinstance(obj, datetime):
             return obj.isoformat()
+        elif isinstance(obj, UUID):
+            return str(obj)
         raise TypeError(f"Object of type {type(obj)} is not JSON serializable")

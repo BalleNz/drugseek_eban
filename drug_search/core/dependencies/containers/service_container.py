@@ -5,14 +5,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from drug_search.core.dependencies.assistant_service_dep import get_assistant_service
 from drug_search.core.dependencies.pubmed_service_dep import get_pubmed_service
-from drug_search.core.dependencies.redis_service_dep import get_redis
+from drug_search.core.dependencies.redis_service_dep import get_redis_service
 from drug_search.core.dependencies.telegram_service_dep import get_telegram_service
 from drug_search.core.services.assistant_service import AssistantService
-from drug_search.core.services.drug_service import DrugService
+from drug_search.core.services.cache_logic.redis_service import RedisService
+from drug_search.core.services.models_service.drug_service import DrugService
+from drug_search.core.services.models_service.user_service import UserService
 from drug_search.core.services.pubmed_service import PubmedService
-from drug_search.core.services.redis_service import RedisService
 from drug_search.core.services.telegram_service import TelegramService
-from drug_search.core.services.user_service import UserService
 from drug_search.infrastructure.database.engine import get_async_session
 from drug_search.infrastructure.database.repository.drug_repo import DrugRepository
 from drug_search.infrastructure.database.repository.user_repo import UserRepository
@@ -49,7 +49,7 @@ class ServiceContainer:
     @property
     async def redis_service(self) -> RedisService:
         if self._redis_service is None:
-            self._redis_service = get_redis()
+            self._redis_service = get_redis_service()
         return self._redis_service
 
     async def get_drug_service(self) -> DrugService:

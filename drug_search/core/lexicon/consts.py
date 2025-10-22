@@ -1,7 +1,7 @@
 # [Subscription rules]
 DEFAULT_SEARCH_DAY_LIMIT: int = 3
 LITE_SEARCH_DAY_LIMIT: int = 10
-PREMIUM_SEARCH_DAY_LIMIT: int = 100
+PREMIUM_SEARCH_DAY_LIMIT: int = 30
 
 QUESTIONS_LIMIT_START: int = 1  # при регистрации
 DEFAULT_QUESTIONS_DAY_LIMIT: int = 0
@@ -36,3 +36,28 @@ ASSISTANT_ANSWER_DRUG_COUNT_PER_PAGE: int = 3
 ADMINS_TG_ID = [
     "1257313065"
 ]
+
+# [ MESSAGE ANTI_SPAM ]
+ANTISPAM_DEFAULT = {
+    "max_requests": 2,
+    "time_limit": 60*5
+}
+ANTISPAM_LITE = {
+    "max_requests": 5,
+    "time_limit": 60
+}
+ANTISPAM_PREMIUM = {
+    "max_requests": 10,
+    "time_limit": 60
+}
+
+# [ WEEK LIMITS ]
+LIMITS_DEFAULT = {
+    "max_requests": 10,
+    "time_limit": 86400 * 7  # one week
+}
+
+# [ LIMITS ]
+MAX_MESSAGE_LENGTH_DEFAULT = 15  # символов
+MAX_MESSAGE_LENGTH_LITE = 50
+MAX_MESSAGE_LENGTH_PREMIUM = 100

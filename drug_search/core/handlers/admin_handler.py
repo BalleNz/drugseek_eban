@@ -6,7 +6,7 @@ from fastapi.params import Depends
 from drug_search.core.dependencies.task_service_dep import get_task_service
 from drug_search.core.lexicon import ADMINS_TG_ID, MailingStatuses
 from drug_search.core.schemas import MailingRequest, UserSchema
-from drug_search.core.services.task_service import TaskService
+from services.tasks_logic.task_service import TaskService
 from drug_search.core.utils.auth import get_auth_user
 
 admin_router = APIRouter(prefix="/admin")

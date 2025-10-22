@@ -3,8 +3,8 @@ from typing import Optional
 from uuid import UUID
 
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
-from drug_search.core.schemas import UserTelegramDataSchema, AllowedDrugsSchema, DrugSchema, UserSchema
-from drug_search.core.services.redis_service import RedisService
+from drug_search.core.schemas import UserTelegramDataSchema, DrugSchema, UserSchema, AllowedDrugsInfoSchema
+from drug_search.core.services.cache_logic.redis_service import RedisService
 
 logger = logging.getLogger(__name__)
 
@@ -44,9 +44,9 @@ class CacheService:
             access_token: str,
             telegram_id: str,
             expiry: int = 86400
-    ) -> AllowedDrugsSchema:
+    ) -> AllowedDrugsInfoSchema:
         """Получение списка разрешенных лекарств с кэшированием"""
-        cached_data: Optional[AllowedDrugsSchema] = await self.redis_service.get_allowed_drugs(telegram_id)
+        cached_data: Optional[AllowedDrugsInfoSchema] = await self.redis_service.get_allowed_drugs(telegram_id)
         if cached_data:
             return cached_data
 

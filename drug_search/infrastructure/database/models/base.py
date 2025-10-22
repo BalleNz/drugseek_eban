@@ -73,7 +73,6 @@ class IDMixin(DeclarativeBase):
                 setattr(model, rel_name, related_objects)
         return model
 
-    @classmethod
     def get_schema(self) -> Union[S, list[None]]:
         model_data = {}
         schema_fields = self.schema_class.model_fields.keys()

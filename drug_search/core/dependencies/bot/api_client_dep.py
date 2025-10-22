@@ -6,4 +6,5 @@ client = DrugSearchAPIClient(base_url=API_BASE_URL)
 
 
 def get_api_client() -> DrugSearchAPIClient:
+    """Singleton"""
     return client

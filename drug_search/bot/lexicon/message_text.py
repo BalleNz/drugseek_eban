@@ -1,5 +1,4 @@
 class MessageTemplates:
-
     # [ SECTIONS ]
     DRUG_INFO_BRIEFLY: str = (
         "<b>{drug_name_ru} ({drug_name}, {latin_name})</b>\n\n"
@@ -82,8 +81,7 @@ class MessageTemplates:
     )
 
     DRUG_BUY_CREATED: str = (
-        "Вы приобрели препарат.\n\n"
-        "Скоро вы получите уведомление о его готовности!"
+        "Препарат генерируется, вы получите когда он будет создан."
     )
 
     DRUG_BUY_QUEUED: str = (
@@ -96,7 +94,7 @@ class MessageTemplates:
 
     NOT_ENOUGH_CREATE_TOKENS: str = (
         "У вас недостаточно токенов для покупки.\n\n"
-        "Пополнить: /tokens"
+        "Пополнить: /tokens"  # TODO INLINE
     )
 
     NOT_ENOUGH_UPDATE_TOKENS: str = (
@@ -141,3 +139,13 @@ class MessageTemplates:
     ONLY_FOR_ADMINS = "Эта команда доступна только для администрации."
     SUCCESS_MAILING = "Рассылка передана брокеру задач.."
 
+    # [ antispam ]
+    ANTISPAM_MESSAGE = (
+        "⚠️ <b>Лимит сообщений превышен!</b>\n\n"
+        "Следующее сообщение можно отправить через:\n"
+        "— <b>{time_left}</b>\n\n"
+        "⚡ Текущий тариф:\n"
+        "— <u>{what_subscription}</u>, {message_rate}"
+    )
+
+    MAIN_ACTION_IN_PROCESS = "Пожалуйста, дождитесь ответа на прошлый запрос"

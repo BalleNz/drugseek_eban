@@ -5,7 +5,7 @@ from fastapi import Depends
 
 from drug_search.config import config
 
-from drug_search.core.services.task_service import TaskService
+from drug_search.core.services.tasks_logic.task_service import TaskService
 
 
 async def get_arq_pool():

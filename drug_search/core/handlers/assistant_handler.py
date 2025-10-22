@@ -7,7 +7,7 @@ from drug_search.core.dependencies.assistant_service_dep import get_assistant_se
 from drug_search.core.dependencies.task_service_dep import get_task_service
 from drug_search.core.schemas import QueryRequest, SelectActionResponse, QuestionRequest
 from drug_search.core.services.assistant_service import AssistantService
-from drug_search.core.services.task_service import TaskService
+from services.tasks_logic.task_service import TaskService
 
 assistant_router = APIRouter(prefix="/assistant")
 

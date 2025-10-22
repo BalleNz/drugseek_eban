@@ -50,7 +50,7 @@ class CacheService:
         if cached_data:
             return cached_data
 
-        fresh_data = await self.api_client.get_allowed_drugs(access_token=access_token)
+        fresh_data: AllowedDrugsInfoSchema = await self.api_client.get_allowed_drugs(access_token=access_token)
 
         await self.redis_service.set_allowed_drugs(
             telegram_id,

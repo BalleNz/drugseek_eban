@@ -65,7 +65,6 @@ class User(IDMixin, TimestampsMixin):
         lazy="selectin"
     )
 
-    @property
     def get_schema(self) -> Union[S, list[None]]:
         return UserSchema(
             id=self.id,

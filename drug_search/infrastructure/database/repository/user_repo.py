@@ -57,7 +57,7 @@ class UserRepository(BaseRepository):
         if not user:
             return None
 
-        # refresh day limits
+        # refresh daily tokens
         if (datetime.datetime.now() - user.requests_last_refresh).days >= 1:
             await self.__refresh_requests(user)
         return user.get_schema()
@@ -116,6 +116,7 @@ class UserRepository(BaseRepository):
             FROM allowed_drugs
             JOIN drugs ON drugs.id = allowed_drugs.drug_id
             WHERE allowed_drugs.user_id = '{user_id}'
+            ORDER BY LOWER(drugs.name_ru)
         """)
         result = await self.session.execute(stmt)
         allowed_drugs_rows = result.fetchall()

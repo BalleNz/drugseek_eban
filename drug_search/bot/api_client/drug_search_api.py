@@ -61,7 +61,10 @@ class DrugSearchAPIClient(BaseHttpClient):
         )
 
     async def get_allowed_drugs(self, access_token: str) -> AllowedDrugsInfoSchema:
-        """Получение разрешенных препаратов"""
+        """Получение разрешенных препаратов
+
+        endpoint: /v1/user/allowed"
+        """
         return await self._request(
             HTTPMethod.GET,
             "/v1/user/allowed",

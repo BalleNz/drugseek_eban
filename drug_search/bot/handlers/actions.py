@@ -6,15 +6,17 @@ from aiogram.types import CallbackQuery, LinkPreviewOptions
 
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
 from drug_search.bot.keyboards import WrongDrugFoundedCallback, drug_keyboard, DescribeTypes, buy_request_keyboard
-from drug_search.bot.keyboards.callbacks import DrugUpdateRequestCallback, BuyDrugRequestCallback, \
-    AssistantQuestionContinue
+from drug_search.bot.keyboards.callbacks import (DrugUpdateRequestCallback, BuyDrugRequestCallback,
+                                                 AssistantQuestionContinue)
 from drug_search.bot.lexicon import MessageTemplates
-from drug_search.bot.lexicon.types import ModeTypes
+from drug_search.bot.lexicon.enums import ModeTypes
+from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.bot.utils.format_message_text import DrugMessageFormatter
 from drug_search.core.dependencies.bot.cache_service_dep import cache_service
 from drug_search.core.lexicon import ARROW_TYPES, JobStatuses
-from drug_search.core.schemas import (BuyDrugResponse, BuyDrugStatuses, UpdateDrugResponse,
-                                      UpdateDrugStatuses, UserSchema, DrugExistingResponse)
+from drug_search.core.schemas import (BuyDrugResponse, BuyDrugStatuses,
+                                      UpdateDrugResponse, UpdateDrugStatuses,
+                                      UserSchema, DrugExistingResponse)
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
@@ -37,15 +39,15 @@ async def drug_update(
     match api_response.status:
         case UpdateDrugStatuses.DRUG_UPDATING:
             await callback_query.message.edit_text(
-                text=MessageTemplates.DRUG_UPDATING
+                text=MessageText.DRUG_UPDATING
             )
         case UpdateDrugStatuses.NOT_ENOUGH_TOKENS:
             await callback_query.message.edit_text(
-                text=MessageTemplates.NOT_ENOUGH_UPDATE_TOKENS
+                text=MessageText.NOT_ENOUGH_UPDATE_TOKENS
             )
         case UpdateDrugStatuses.NEED_PREMIUM:
             await callback_query.message.edit_text(
-                text=MessageTemplates.NEED_SUBSCRIPTION_FOR_UPDATE
+                text=MessageText.NEED_SUBSCRIPTION_FOR_UPDATE
             )
 
 
@@ -66,7 +68,7 @@ async def drug_buy_request(
     danger_classification = state_data.get("purchase_danger_classification")
 
     if not all([drug_name, danger_classification]):
-        await callback_query.answer("Данные о препарате устарели", show_alert=True)
+        await callback_query.message.answer("Данные о препарате устарели")
         return
 
     await state.clear()
@@ -83,27 +85,27 @@ async def drug_buy_request(
             if api_response.job_status == JobStatuses.CREATED:
                 logger.info(f"Юзер {callback_query.from_user.id} создал препарат {api_response.drug_name}")
                 await callback_query.message.edit_text(
-                    text=MessageTemplates.DRUG_BUY_CREATED
+                    text=MessageText.DRUG_BUY_CREATED
                 )
             elif api_response.job_status == JobStatuses.QUEUED:
                 await callback_query.message.edit_text(
-                    text=MessageTemplates.DRUG_BUY_QUEUED
+                    text=MessageText.DRUG_BUY_QUEUED
                 )
         case BuyDrugStatuses.DRUG_ALLOWED:
             await callback_query.message.edit_text(
-                text=MessageTemplates.DRUG_BUY_ALLOWED.format(drug_name=api_response.drug_name)
+                text=MessageText.DRUG_BUY_ALLOWED.format(drug_name=api_response.drug_name)
             )
         case BuyDrugStatuses.NOT_ENOUGH_TOKENS:
             await callback_query.message.edit_text(
-                text=MessageTemplates.NOT_ENOUGH_CREATE_TOKENS
+                text=MessageText.NOT_ENOUGH_CREATE_TOKENS
             )
         case BuyDrugStatuses.NEED_PREMIUM:
             await callback_query.message.edit_text(
-                text=MessageTemplates.NEED_SUBSCRIPTION
+                text=MessageText.NEED_SUBSCRIPTION
             )
         case BuyDrugStatuses.DANGER:
             await callback_query.message.edit_text(
-                text=MessageTemplates.DRUG_IS_BANNED
+                text=MessageText.DRUG_IS_BANNED
             )
 
 
@@ -116,10 +118,13 @@ async def wrong_drug_founded(
         api_client: DrugSearchAPIClient
 ):
     user: UserSchema = await cache_service.get_user_profile(access_token, callback_query.from_user.id)
-    await callback_query.message.edit_text(MessageTemplates.DRUG_MANUAL_SEARCHING)
+    await callback_query.message.edit_text(MessageText.DRUG_MANUAL_SEARCHING)
 
-    drug_response: DrugExistingResponse = await api_client.search_drug_without_trigrams(callback_data.drug_name_query,
-                                                                                        access_token)
+    drug_response: DrugExistingResponse = await api_client.search_drug_without_trigrams(
+        callback_data.drug_name_query,
+        access_token
+    )
+    logger.info(f"Юзер заново ищет препарат: {callback_data.drug_name_query}")
     if drug_response.is_exist:
         if drug_response.is_allowed:
             message_text: str = DrugMessageFormatter.format_drug_briefly(drug_response.drug)
@@ -148,7 +153,7 @@ async def wrong_drug_founded(
                 reply_markup=buy_request_keyboard(),
             )
     else:
-        await callback_query.message.edit_text(MessageTemplates.DRUG_IS_NOT_EXIST)
+        await callback_query.message.edit_text(MessageText.DRUG_IS_NOT_EXIST)
 
 
 @router.callback_query(AssistantQuestionContinue.filter())

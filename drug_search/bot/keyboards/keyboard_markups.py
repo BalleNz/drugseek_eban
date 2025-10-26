@@ -3,20 +3,9 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback, DescribeTypes,
                                        WrongDrugFoundedCallback)
 from drug_search.bot.keyboards.callbacks import BuyDrugRequestCallback, AssistantQuestionContinue, \
-    DrugUpdateRequestCallback
+    DrugUpdateRequestCallback, UserDescriptionCallback, HelpSectionCallback
+from drug_search.bot.lexicon.enums import ModeTypes, UserDescriptionMode, HelpSectionMode
 from drug_search.bot.lexicon.keyboard_words import ButtonText
-from drug_search.bot.lexicon.types import ModeTypes
-from drug_search.core.lexicon import SUBSCRIBE_TYPES, ARROW_TYPES
-from drug_search.core.schemas import DrugBrieflySchema, DrugSchema
-from drug_search.core.utils.funcs import may_update_drug
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
-
-from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback, DescribeTypes,
-                                       WrongDrugFoundedCallback)
-from drug_search.bot.keyboards.callbacks import BuyDrugRequestCallback, AssistantQuestionContinue, \
-    DrugUpdateRequestCallback
-from drug_search.bot.lexicon.keyboard_words import ButtonText
-from drug_search.bot.lexicon.types import ModeTypes
 from drug_search.core.lexicon import SUBSCRIBE_TYPES, ARROW_TYPES
 from drug_search.core.schemas import DrugBrieflySchema, DrugSchema
 from drug_search.core.utils.funcs import may_update_drug
@@ -131,7 +120,7 @@ def drug_keyboard(
                 [
                     InlineKeyboardButton(
                         text=ButtonText.UPDATE_RESEARCHES,
-                        callback_data=...
+                        callback_data=...  # TODO
                     )
                 ]
             )
@@ -232,7 +221,7 @@ def drug_keyboard(
                 InlineKeyboardButton(
                     text=ButtonText.WRONG_DRUG_FOUNDED,
                     callback_data=WrongDrugFoundedCallback(
-                        drug_name_query=user_query
+                        drug_name_query=user_query if user_query.__len__() < 25 else user_query[:25]
                     ).pack()
                 )
             ]
@@ -288,4 +277,97 @@ def question_continue_keyboard(
                 )
             ]
         ]
+    )
+
+
+# [ USER PROFILE ]
+def user_description_keyboard(
+        mode: UserDescriptionMode
+) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=ButtonText.LEFT_ARROW if mode == UserDescriptionMode.BACK_TO_PROFILE else ButtonText.SHOW_DESCRIPTION,
+                    callback_data=UserDescriptionCallback(
+                        mode=mode
+                    ).pack()
+                )
+            ]
+        ]
+    )
+
+
+def get_help_keyboard(
+        help_mode: HelpSectionMode
+):
+    keyboard: InlineKeyboardMarkup
+
+    menu_buttons = {
+        HelpSectionMode.MAIN: [
+            (ButtonText.HELP_QUERIES, HelpSectionMode.QUERIES),
+            (ButtonText.HELP_TOKENS, HelpSectionMode.TOKENS),
+            (ButtonText.HELP_SUBSCRIPTION, HelpSectionMode.SUBSCRIPTION),
+        ],
+        HelpSectionMode.QUERIES: [
+            (ButtonText.HELP_QUERIES_DRUG_SEARCH, HelpSectionMode.QUERIES_DRUG_SEARCH),
+            (ButtonText.HELP_QUERIES_PHARMA, HelpSectionMode.QUERIES_PHARMA_QUESTIONS),
+            (ButtonText.HELP_QUERIES_QUESTIONS, HelpSectionMode.QUERIES_QUESTIONS),
+        ],
+        HelpSectionMode.TOKENS: [
+            (ButtonText.HELP_TOKENS_FREE, HelpSectionMode.TOKENS_FREE)
+        ]
+    }
+
+    # возврат Назад
+    back_navigation = {
+        HelpSectionMode.QUERIES: HelpSectionMode.MAIN,
+        HelpSectionMode.TOKENS: HelpSectionMode.MAIN,
+        HelpSectionMode.SUBSCRIPTION: HelpSectionMode.MAIN,
+        HelpSectionMode.QUERIES_QUESTIONS: HelpSectionMode.QUERIES,
+        HelpSectionMode.QUERIES_PHARMA_QUESTIONS: HelpSectionMode.QUERIES,
+        HelpSectionMode.QUERIES_DRUG_SEARCH: HelpSectionMode.QUERIES,
+        HelpSectionMode.TOKENS_FREE: HelpSectionMode.TOKENS
+    }
+
+    buttons: list[InlineKeyboardButton | list[InlineKeyboardButton]] = []
+    if help_mode in menu_buttons:
+        row_buttons: list = []
+        for text, mode in menu_buttons[help_mode]:
+            if help_mode == HelpSectionMode.SUBSCRIPTION:
+                # все кнопки в одном ряду
+                row_buttons = [InlineKeyboardButton(
+                    text=text,
+                    callback_data=HelpSectionCallback(mode=mode).pack()
+                )]
+                buttons.append(row_buttons)
+            elif help_mode == HelpSectionMode.MAIN:
+                buttons.append([InlineKeyboardButton(
+                            text=text,
+                            callback_data=HelpSectionCallback(mode=mode).pack()
+                )])
+                if len(row_buttons) > 1:
+                    buttons.append(row_buttons.copy())
+                    row_buttons.clear()
+            else:
+                # каждая кнопка в отдельном ряду
+                buttons.append([InlineKeyboardButton(
+                        text=text,
+                        callback_data=HelpSectionCallback(mode=mode).pack()
+                    )])
+
+    if help_mode in back_navigation:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text=ButtonText.LEFT_ARROW,
+                    callback_data=HelpSectionCallback(
+                        mode=back_navigation[help_mode]
+                    ).pack()
+                )
+            ]
+        )
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=buttons
     )

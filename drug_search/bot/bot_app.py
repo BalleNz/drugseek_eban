@@ -14,6 +14,7 @@ from drug_search.bot.handlers.database import router as database_router
 from drug_search.bot.handlers.main import router as actions_router
 from drug_search.bot.handlers.profile import router as profile_router
 from drug_search.bot.handlers.start import router as start_router
+from drug_search.bot.handlers.help import router as help_router
 from drug_search.bot.middlewares.depends_injectors import DependencyInjectionMiddleware
 from drug_search.bot.middlewares.limits import MessageLimitsMiddleware
 from drug_search.config import config
@@ -29,6 +30,7 @@ def setup_auth(dp: Dispatcher):
     # Регистрация хендлеров (порядок важен)
     for router in [
         start_router,
+        help_router,
         admin_router,
         database_router,
         profile_router,

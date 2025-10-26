@@ -6,9 +6,9 @@ from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup
 from drug_search.bot.keyboards.keyboard_markups import question_continue_keyboard
 from drug_search.config import config
 from drug_search.core.lexicon import ARROW_TYPES
+from drug_search.core.lexicon.message_templates import MessageTemplates
 from drug_search.core.schemas import DrugSchema, QuestionAssistantResponse
 from drug_search.core.utils.formatter import ARQMessageTemplates
-from drug_search.core.utils.message_templates import MessageTemplates
 
 
 class TelegramService:
@@ -112,6 +112,14 @@ class TelegramService:
     ):
         """Оповещение об обновлении препарата"""
         message: str = MessageTemplates.DRUG_UPDATED_NOTIFICATION.format(name_ru=drug.name_ru)
+        await self.send_message(user_telegram_id, message=message, reply_markup=None)
+
+    async def send_user_description_updated(
+            self,
+            user_telegram_id: str
+    ):
+        """Оповещение об обновлении профиля юзера"""
+        message: str = MessageTemplates.USER_DESCRIPTION_UPDATED
         await self.send_message(user_telegram_id, message=message, reply_markup=None)
 
     async def edit_message_with_assistant_answer(

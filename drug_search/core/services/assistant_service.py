@@ -1,7 +1,7 @@
 import logging
 import threading
 from abc import ABC, abstractmethod
-from typing import Union, Type, Sequence
+from typing import Union, Type
 
 from openai import OpenAI, APIError
 from pydantic import ValidationError
@@ -11,7 +11,8 @@ from drug_search.core.lexicon import Prompts
 from drug_search.core.schemas import (AssistantResponseDrugResearches, AssistantResponsePubmedQuery,
                                       AssistantDosageDescriptionResponse, AssistantResponseCombinations,
                                       AssistantResponseDrugPathways, AssistantResponseDrugValidation,
-                                      ClearResearchesRequest, SelectActionResponse, QuestionAssistantResponse)
+                                      ClearResearchesRequest, SelectActionResponse, QuestionAssistantResponse,
+                                      AssistantResponseUserDescription)
 from drug_search.core.utils import assistant_utils
 from drug_search.core.utils.exceptions import AssistantResponseError
 
@@ -117,10 +118,10 @@ class AssistantService(AssistantInterface):
         return await self.get_response(input_query=drug_name, prompt=Prompts.GET_DRUG_COMBINATIONS,
                                        pydantic_model=AssistantResponseCombinations)
 
-    async def get_user_description(self, user_name: str, user_drugs_name: str) -> str:
+    async def get_user_description(self, user_name: str, user_drugs_name: str) -> AssistantResponseUserDescription:
         user_query = user_name + ' ' + user_drugs_name
         return await self.get_response(input_query=user_query, prompt=Prompts.GET_USER_DESCRIPTION,
-                                       pydantic_model=None)
+                                       pydantic_model=AssistantResponseUserDescription)
 
     async def get_user_query_validation(self, user_query: str) -> AssistantResponseDrugValidation:
         """

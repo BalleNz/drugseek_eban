@@ -1,9 +1,9 @@
 from drug_search.bot.keyboards import DescribeTypes
-from drug_search.bot.lexicon.message_text import MessageTemplates
+from drug_search.bot.lexicon.consts import SYMBOLS
+from drug_search.bot.lexicon.message_templates import MessageTemplates
+from drug_search.bot.utils.funcs import make_google_sources, get_subscription_name, days_text, get_time_when_refresh
 from drug_search.core.lexicon.enums import SUBSCRIBE_TYPES
 from drug_search.core.schemas import UserSchema, DrugSchema, CombinationType, AllowedDrugsInfoSchema
-from drug_search.bot.lexicon.consts import SYMBOLS
-from drug_search.bot.utils.funcs import make_google_sources, get_subscription_name, days_text, get_time_when_refresh
 
 
 class DrugMessageFormatter:
@@ -237,6 +237,24 @@ class UserProfileMessageFormatter:
             allowed_search_requests=user.allowed_search_requests,
             allowed_question_requests=user.allowed_question_requests,
             refresh_section=refresh_section,
-            description_section=user.description if user.description else "",
             subscription_section=subscription_section
+        )
+
+    @staticmethod
+    def format_user_description_profile(user: UserSchema):
+        """Описание юзера в его профиле"""
+        profile_icon: str = ""
+        match user.subscription_type:
+            case SUBSCRIBE_TYPES.DEFAULT:
+                profile_icon = "🪰"
+            case SUBSCRIBE_TYPES.LITE:
+                profile_icon = "🧢"
+            case SUBSCRIBE_TYPES.PREMIUM:
+                profile_icon = "👑"
+
+        user_description: str = '.\n\n'.join(user.description.split(". ")) if user.description else ""
+
+        return MessageTemplates.USER_PROFILE_DESCRIPTION.format(
+            profile_icon=profile_icon,
+            description_section=user_description,
         )

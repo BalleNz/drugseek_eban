@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from sqlalchemy import String, ForeignKey, Text, Index, func, DateTime, Integer, UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from drug_search.core.lexicon import SUBSCRIBE_TYPES, DEFAULT_SEARCH_DAY_LIMIT, QUESTIONS_LIMIT_START
+from drug_search.core.lexicon import SUBSCRIBE_TYPES, DEFAULT_SEARCH_DAY_LIMIT, ASSISTANT_TOKENS_START
 from drug_search.core.schemas import UserSchema, UserRequestLogSchema, AllowedDrugSchema
 from drug_search.infrastructure.database.models.base import IDMixin, TimestampsMixin
 from drug_search.infrastructure.database.models.types import UserSubscriptionTypes
@@ -40,8 +40,8 @@ class User(IDMixin, TimestampsMixin):
     )
     allowed_question_requests: Mapped[int] = mapped_column(
         Integer,
-        default=QUESTIONS_LIMIT_START,
-        server_default=f"{QUESTIONS_LIMIT_START}",
+        default=ASSISTANT_TOKENS_START,
+        server_default=f"{ASSISTANT_TOKENS_START}",
         comment="Оставшиеся запросы на вопросы"
     )
 
@@ -94,7 +94,7 @@ class User(IDMixin, TimestampsMixin):
 
 
 class UserRequestLog(IDMixin):
-    """Логирование исрасходованных запросов пользователя"""
+    """Логирование израсходованных запросов пользователя"""
     __tablename__ = "user_request_logs"
 
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))

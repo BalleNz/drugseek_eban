@@ -7,11 +7,10 @@ from aiogram.types import Message, CallbackQuery, LinkPreviewOptions
 
 from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback, drug_list_keyboard,
                                        DescribeTypes, drug_keyboard)
-from drug_search.bot.lexicon import MessageText
+from drug_search.bot.lexicon.enums import ModeTypes
 from drug_search.bot.lexicon.keyboard_words import ButtonText
-from drug_search.bot.lexicon.types import ModeTypes
-from drug_search.core.schemas import DrugSchema, UserSchema
-from schemas import AllowedDrugsInfoSchema
+from drug_search.bot.lexicon.message_text import MessageText
+from drug_search.core.schemas import DrugSchema, UserSchema, AllowedDrugsInfoSchema
 from drug_search.core.services.cache_logic.cache_service import CacheService
 
 router = Router(name=__name__)
@@ -34,7 +33,7 @@ async def drug_menu_handler(
     )
 
     await message.answer(
-        text=MessageText.format_drugs_info(allowed_drugs_info),
+        text=MessageText.formatters.DRUGS_INFO(allowed_drugs_info=allowed_drugs_info),
         reply_markup=drug_list_keyboard(
             drugs=allowed_drugs_info.allowed_drugs,
             page=0
@@ -50,6 +49,8 @@ async def drug_list_handler(
         callback_data: DrugListCallback,
 ):
     """Листинг препаратов (стрелочки)"""
+    await callback.answer()
+
     user_id = str(callback.from_user.id)
 
     allowed_drugs_info: AllowedDrugsInfoSchema = await cache_service.get_allowed_drugs(
@@ -58,7 +59,7 @@ async def drug_list_handler(
     )
 
     await callback.message.edit_text(
-        text=MessageText.format_drugs_info(allowed_drugs_info),
+        text=MessageText.formatters.DRUGS_INFO(allowed_drugs_info=allowed_drugs_info),
         reply_markup=drug_list_keyboard(
             drugs=allowed_drugs_info.allowed_drugs,
             page=callback_data.page
@@ -78,7 +79,9 @@ async def drug_describe_handler(
     Описание препарата в зависимости от Describe_type.
     Тут также передается page для плавного возвращения в меню
     """
-    # callback data
+    await callback.answer()
+
+    # [ callback data ]
     drug_id: UUID = callback_data.drug_id
     describe_type: DescribeTypes = callback_data.describe_type
     page: int = callback_data.page
@@ -93,7 +96,7 @@ async def drug_describe_handler(
     )
 
     await callback.message.edit_text(
-        text=MessageText.format_by_type(describe_type, drug),
+        text=MessageText.formatters.DRUG_BY_TYPE(describe_type=describe_type, drug=drug),
         reply_markup=drug_keyboard(
             drug=drug,
             page=page,

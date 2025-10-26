@@ -6,14 +6,14 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
+from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.core.lexicon import MailingStatuses
-from drug_search.bot.lexicon import MessageTemplates
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
 
 
-@router.message(Command("mailing"))
+@router.message(Command("mailing", "mail"))
 async def mailing(
         message: Message,
         command: CommandObject,  # получаем объект команды
@@ -29,10 +29,10 @@ async def mailing(
     match api_response["status"]:
         case MailingStatuses.ONLY_FOR_ADMINS:
             await message.answer(
-                MessageTemplates.ONLY_FOR_ADMINS
+                MessageText.ONLY_FOR_ADMINS
             )
 
         case MailingStatuses.SUCCESS:
             await message.answer(
-                MessageTemplates.SUCCESS_MAILING
+                MessageText.SUCCESS_MAILING
             )

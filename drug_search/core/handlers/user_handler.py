@@ -103,9 +103,9 @@ async def buy_drug(
 
     await user_service.reduce_tokens(user.id, 1)
 
-    if len(user.allowed_drugs) > 9:
+    if not (len(user.allowed_drugs) + 1) % 5:
         """Обновляем описание юзера"""
-        await user_service.update_user_description(user_id=user.id)
+        await task_service.enqueue_user_description_update(user_id=user.id, user_telegram_id=user.telegram_id)
 
     if request.drug_id:
         """Препарат уже есть в базе"""

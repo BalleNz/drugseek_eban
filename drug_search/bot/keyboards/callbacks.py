@@ -4,7 +4,8 @@ from typing import Optional
 
 from aiogram.filters.callback_data import CallbackData
 
-from drug_search.core.lexicon.enums import DANGER_CLASSIFICATION, ARROW_TYPES
+from drug_search.bot.lexicon.enums import UserDescriptionMode, HelpSectionMode
+from drug_search.core.lexicon.enums import ARROW_TYPES
 
 
 # [ TYPES ]
@@ -66,3 +67,13 @@ class BuyDrugRequestCallback(CallbackData, prefix="buy_drug"):
 
 class CancelDrugBuyingCallback(CallbackData, prefix="cancel_buying_drug"):
     pass
+
+
+# [ USER PROFILE ]
+class UserDescriptionCallback(CallbackData, prefix="user_description"):
+    mode: UserDescriptionMode
+
+
+# [ HELP ]
+class HelpSectionCallback(CallbackData, prefix="help"):
+    mode: HelpSectionMode

@@ -35,7 +35,11 @@ def days_text(day: datetime):
         else f"{days} дней"
 
 
-def get_time_when_refresh(last_update: datetime) -> str:
+def get_time_when_refresh(_datetime: datetime) -> str:
+    """
+    Returns:
+        "<i>({time_to_update} {time_format} до сброса)</i>"
+    """
     def __get_time_name_format(count: int, time_type: str):
         """Преобразование datetime.hours | .minutes в русскоязычный формат"""
         if time_type == "minutes":
@@ -55,7 +59,7 @@ def get_time_when_refresh(last_update: datetime) -> str:
 
     text: str = "<i>({time_to_update} {time_format} до сброса)</i>"
 
-    time_diff: timedelta = (last_update + timedelta(hours=24)) - datetime.now()
+    time_diff: timedelta = (_datetime + timedelta(hours=24)) - datetime.now()
     if time_diff <= timedelta(hours=1):
         time_to_update: int = time_diff.seconds // 60
         return text.format(
@@ -75,7 +79,8 @@ async def get_telegram_schema_from_data(user: User) -> UserTelegramDataSchema:
         telegram_id=str(user.id),
         username=user.username,
         first_name=user.first_name,
-        last_name=user.last_name
+        last_name=user.last_name,
+        auth_date=None
     )
 
 

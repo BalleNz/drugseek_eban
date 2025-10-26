@@ -17,7 +17,7 @@ class UserTelegramDataSchema(BaseModel):
     username: str = Field(..., description="Имя пользователя (логин) для идентификации.")
     first_name: Optional[str] = Field(None, description="first name")
     last_name: Optional[str] = Field(None, description="last name")
-    auth_date: Optional[datetime] = Field(datetime.now(), description="дата авторизации")
+    auth_date: datetime | None = Field(datetime.now(), description="дата авторизации")
 
     class Config:
         from_attributes = True

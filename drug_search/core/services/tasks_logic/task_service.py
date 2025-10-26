@@ -19,6 +19,7 @@ class ARQ_JOBS(str, Enum):
     DRUG_UPDATE = "drug_update"
     ASSISTANT_ANSWER = "assistant_answer"
     MAILING = "mailing"
+    USER_DESCRIPTION_UPDATE = "user_description_update"
 
 
 class TaskService:
@@ -52,6 +53,9 @@ class TaskService:
         if job and await job.status() == JobStatus.in_progress:
             status = JobStatuses.QUEUED
 
+        logger.info(f"Задача на создание препарата поставлена в очередь!")
+
+
         return {
             "status": status,
             "job_id": job_id,
@@ -78,6 +82,9 @@ class TaskService:
         if job and job.status() == JobStatus.in_progress:
             status = JobStatuses.CREATED
 
+        logger.info(f"Задача на обновление препарата поставлена в очередь!")
+
+
         return {
             "status": status,
             "job_id": job_id,
@@ -99,6 +106,8 @@ class TaskService:
             old_message_id,
             arrow,
         )
+        logger.info(f"Задача на вопрос ассистенту поставлена в очередь!")
+
         return {
             "status": f"{await job.status()}",
             "user_id": user_telegram_id,
@@ -113,8 +122,25 @@ class TaskService:
             ARQ_JOBS.MAILING.value,
             message
         )
+        logger.info(f"Задача на рассылку поставлена в очередь!")
 
         return {
             "status": str(await job.status()),
             "message": message
+        }
+
+    async def enqueue_user_description_update(
+            self,
+            user_id: uuid.UUID,
+            user_telegram_id: str
+    ):
+        job: Job = await self.arq_pool.enqueue_job(
+            ARQ_JOBS.USER_DESCRIPTION_UPDATE,
+            user_id,
+            user_telegram_id
+        )
+        logger.info(f"Задача на обновление описания юзера поставлена в очередь!")
+
+        return {
+            "status": str(await job.status())
         }

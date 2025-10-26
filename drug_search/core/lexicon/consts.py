@@ -1,12 +1,14 @@
 # [Subscription rules]
-DEFAULT_SEARCH_DAY_LIMIT: int = 3
+DEFAULT_SEARCH_DAY_LIMIT: int = 0
 LITE_SEARCH_DAY_LIMIT: int = 10
 PREMIUM_SEARCH_DAY_LIMIT: int = 30
 
-QUESTIONS_LIMIT_START: int = 1  # при регистрации
-DEFAULT_QUESTIONS_DAY_LIMIT: int = 0
-LITE_QUESTIONS_DAY_LIMIT: int = 10
-PREMIUM_QUESTIONS_DAY_LIMIT: int = 50
+DEFAULT_ASSISTANT_DAY_LIMIT: int = 0
+LITE_ASSISTANT_DAY_LIMIT: int = 10
+PREMIUM_ASSISTANT_DAY_LIMIT: int = 50
+
+SEARCH_TOKENS_START: int = 3
+ASSISTANT_TOKENS_START: int = 1  # при регистрации
 
 # [платежные пакеты для запросов]
 # SMALL packet
@@ -40,14 +42,10 @@ ADMINS_TG_ID = [
 # [ MESSAGE ANTI_SPAM ]
 ANTISPAM_DEFAULT = {
     "max_requests": 2,
-    "time_limit": 60*5
+    "time_limit": 60
 }
 ANTISPAM_LITE = {
     "max_requests": 5,
-    "time_limit": 60
-}
-ANTISPAM_PREMIUM = {
-    "max_requests": 10,
     "time_limit": 60
 }
 

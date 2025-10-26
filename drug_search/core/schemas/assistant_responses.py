@@ -96,3 +96,7 @@ class AssistantResponseDrugResearches(BaseModel):
 class AssistantResponsePubmedQuery(BaseModel):
     """Нужна для получения оптимизированного поискового запроса для PubMed ассистенту."""
     pubmed_query: str = Field(...)
+
+
+class AssistantResponseUserDescription(BaseModel):
+    user_description: str = Field(...)

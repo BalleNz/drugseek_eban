@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from drug_search.bot.keyboards.keyboard_markups import menu_keyboard
-from drug_search.bot.lexicon import MessageText
+from lexicon.message_text import MessageText
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)

@@ -1,7 +1,3 @@
-# TODO:
-# 1. Для FREE: 1-2 сообщения в минуту
-# 2. Для LITE: 10 в минуту
-# 3. Для PREMIUM: 30 в минуту
 import logging
 import time
 from typing import Callable, Any, Awaitable
@@ -10,11 +6,11 @@ from aiogram import BaseMiddleware, Bot
 from aiogram.dispatcher.flags import get_flag
 from aiogram.types import TelegramObject, User
 
-from drug_search.bot.lexicon import MessageTemplates
+from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.bot.utils.funcs import get_telegram_schema_from_data, format_time, format_rate_limit, what_subscription
 from drug_search.core.dependencies.bot.cache_service_dep import get_cache_service
 from drug_search.core.dependencies.redis_service_dep import get_redis_service
-from drug_search.core.lexicon import SUBSCRIBE_TYPES, ANTISPAM_DEFAULT, ANTISPAM_LITE, ANTISPAM_PREMIUM
+from drug_search.core.lexicon import SUBSCRIBE_TYPES, ANTISPAM_DEFAULT, ANTISPAM_LITE
 from drug_search.core.schemas import UserSchema, UserTelegramDataSchema
 from drug_search.core.services.cache_logic.cache_service import CacheService
 from drug_search.core.services.cache_logic.redis_service import RedisService
@@ -28,7 +24,6 @@ class MessageLimitsMiddleware(BaseMiddleware):
         self.limits = {
             SUBSCRIBE_TYPES.DEFAULT: ANTISPAM_DEFAULT,
             SUBSCRIBE_TYPES.LITE: ANTISPAM_LITE,
-            SUBSCRIBE_TYPES.PREMIUM: ANTISPAM_PREMIUM,
         }
 
     async def __call__(
@@ -125,7 +120,7 @@ class MessageLimitsMiddleware(BaseMiddleware):
         """Отправляем информационное сообщение о лимите"""
         max_requests, time_window = self.limits[user_subscription].values()
 
-        message = MessageTemplates.ANTISPAM_MESSAGE.format(
+        message = MessageText.ANTISPAM_MESSAGE.format(
             time_left=format_time(remaining_time),
             what_subscription=what_subscription(user_subscription),
             message_rate=format_rate_limit(message_count=max_requests, interval_seconds=time_window)

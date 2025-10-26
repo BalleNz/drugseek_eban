@@ -4,11 +4,15 @@ class ButtonText:
     PROFILE = "Профиль"
     HELP = "Что умеет бот?"
 
+    BUY_SUBSCRIPTION = "Купить подписку"  # TODO: при покупке высылать сообщение с новой REPLY клавиатурой
+    UPGRADE_SUBSCRIPTION = "Улучшить подписку"
+
     # [ INLINE ]
     BUY_DRUG = "Купить"
     FULL_LIST = "Полный список"
+    SHOW_DESCRIPTION = "Показать описание профиля"
 
-    # [ drug sections ]
+    # [ DRUGS SECTION ]
     DOSAGES = "Дозировки"
     METABOLISM = "Метаболизм"
     COMBINATIONS = "Комбинации"
@@ -23,6 +27,17 @@ class ButtonText:
 
     UPDATE_RESEARCHES = "Загрузить исследования"
 
-    # [ arrows ]
+    # [ ARROWS ]
     LEFT_ARROW: str = "<——"
     RIGHT_ARROW: str = "——>"
+
+    # [ HELP ]
+    HELP_QUERIES = "Запросы"
+    HELP_TOKENS = "Токены"
+    HELP_SUBSCRIPTION = "Подписка"
+
+    HELP_QUERIES_QUESTIONS = "Вопросы по фарме"
+    HELP_QUERIES_PHARMA = "Фарм рекомендации"
+    HELP_QUERIES_DRUG_SEARCH = "Поиск препаратов"
+
+    HELP_TOKENS_FREE = "Как получать токены?"

@@ -69,7 +69,7 @@ class CacheService:
         """Получение информации о лекарстве с кэшированием"""
         cached_data: Optional[DrugSchema] = await self.redis_service.get_drug(drug_id)
         if cached_data:
-            logger.info(f"Cache: получен Drug {cached_data}")
+            logger.info(f"Cache: drug получен {cached_data.name} — {cached_data.id}")
             return cached_data
 
         fresh_data: DrugSchema = await self.api_client.get_drug(

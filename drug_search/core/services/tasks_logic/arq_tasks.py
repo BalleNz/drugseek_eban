@@ -5,8 +5,7 @@ import uuid
 from typing import Sequence, Generator
 
 from drug_search.core.dependencies.containers.service_container import get_service_container
-from drug_search.core.lexicon import ADMINS_TG_ID
-from drug_search.core.lexicon import ARROW_TYPES
+from drug_search.core.lexicon import ADMINS_TG_ID, ARROW_TYPES
 from drug_search.core.schemas import DrugSchema, QuestionAssistantResponse, UserSchema
 from drug_search.core.services.assistant_service import AssistantService
 from drug_search.core.services.cache_logic.redis_service import RedisService
@@ -30,14 +29,18 @@ async def drug_create(
         drug_service: DrugService = await container.get_drug_service()
         telegram_service: TelegramService = await container.telegram_service
         user_service: UserService = await container.get_user_service()
+        redis_service: RedisService = await container.redis_service
 
         drug: DrugSchema = await drug_service.new_drug(drug_name)
         logger.info(f"Successfully created drug '{drug_name}' with ID: {drug.id}")
+
         await telegram_service.send_drug_created_notification(
             user_telegram_id=user_telegram_id,
             drug=drug,
         )
         await user_service.allow_drug_to_user(user_id=user_id, drug_id=drug.id)
+
+        await redis_service.invalidate_user_data(user_telegram_id)
 
 
 async def drug_update(
@@ -153,3 +156,20 @@ async def mailing(
                 user_telegram_id=admin_id,
                 message=message
             )
+
+
+async def user_description_update(
+        ctx,  # noqa
+        user_id: uuid.UUID,
+        user_tg_id: str,
+):
+    async with get_service_container() as container:
+        user_service: UserService = await container.get_user_service_with_assistant()
+        telegram_service: TelegramService = await container.telegram_service
+        redis_service: RedisService = await container.redis_service
+
+        await user_service.update_user_description(user_id)
+
+        await redis_service.invalidate_user_data(user_tg_id)
+
+        await telegram_service.send_user_description_updated(user_telegram_id=user_tg_id)

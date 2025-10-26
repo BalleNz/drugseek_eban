@@ -68,7 +68,7 @@ class DrugRepository(BaseRepository):
                 func.similarity(
                     func.lower(DrugSynonym.synonym),
                     func.lower(user_query)
-                ) > 0.35
+                ) > 0.55
             )
             .order_by(
                 func.similarity(

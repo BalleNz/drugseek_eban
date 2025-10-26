@@ -8,8 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from drug_search.core.lexicon import (PREMIUM_SEARCH_DAY_LIMIT, DEFAULT_SEARCH_DAY_LIMIT,
-                                      SUBSCRIBE_TYPES, DEFAULT_QUESTIONS_DAY_LIMIT, LITE_QUESTIONS_DAY_LIMIT,
-                                      LITE_SEARCH_DAY_LIMIT, PREMIUM_QUESTIONS_DAY_LIMIT)
+                                      SUBSCRIBE_TYPES, DEFAULT_ASSISTANT_DAY_LIMIT, LITE_ASSISTANT_DAY_LIMIT,
+                                      LITE_SEARCH_DAY_LIMIT, PREMIUM_ASSISTANT_DAY_LIMIT)
 from drug_search.core.schemas import UserTelegramDataSchema, UserSchema, DrugBrieflySchema, AllowedDrugsInfoSchema
 from drug_search.infrastructure.database.models.user import AllowedDrugs, User
 from drug_search.infrastructure.database.repository.base_repo import BaseRepository
@@ -30,15 +30,15 @@ class UserRepository(BaseRepository):
         match user.subscription_type:
             case SUBSCRIBE_TYPES.DEFAULT:
                 user.allowed_search_requests = DEFAULT_SEARCH_DAY_LIMIT
-                user.allowed_question_requests = DEFAULT_QUESTIONS_DAY_LIMIT
+                user.allowed_question_requests = DEFAULT_ASSISTANT_DAY_LIMIT
 
             case SUBSCRIBE_TYPES.LITE:
                 user.allowed_search_requests = LITE_SEARCH_DAY_LIMIT
-                user.allowed_question_requests = LITE_QUESTIONS_DAY_LIMIT
+                user.allowed_question_requests = LITE_ASSISTANT_DAY_LIMIT
 
             case SUBSCRIBE_TYPES.PREMIUM:
                 user.allowed_search_requests = PREMIUM_SEARCH_DAY_LIMIT
-                user.allowed_question_requests = PREMIUM_QUESTIONS_DAY_LIMIT
+                user.allowed_question_requests = PREMIUM_ASSISTANT_DAY_LIMIT
 
         await self.session.commit()
 

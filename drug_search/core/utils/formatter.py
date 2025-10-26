@@ -1,6 +1,6 @@
 from drug_search.core.lexicon import ASSISTANT_ANSWER_DRUG_COUNT_PER_PAGE, ARROW_TYPES
+from drug_search.core.lexicon.message_templates import MessageTemplates
 from drug_search.core.schemas import QuestionAssistantResponse
-from drug_search.core.utils.message_templates import MessageTemplates
 
 
 class ARQMessageTemplates:

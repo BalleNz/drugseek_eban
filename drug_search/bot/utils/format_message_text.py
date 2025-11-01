@@ -4,6 +4,7 @@ from drug_search.bot.lexicon.message_templates import MessageTemplates
 from drug_search.bot.utils.funcs import make_google_sources, get_subscription_name, days_text, get_time_when_refresh
 from drug_search.core.lexicon.enums import SUBSCRIBE_TYPES
 from drug_search.core.schemas import UserSchema, DrugSchema, CombinationType, AllowedDrugsInfoSchema
+from schemas import DrugDosageSchema
 
 
 class DrugMessageFormatter:
@@ -93,30 +94,50 @@ class DrugMessageFormatter:
     @staticmethod
     def format_dosages(drug: DrugSchema) -> str:
         """Форматирование информации о дозировках"""
-        dosages_list = ""
 
-        google_sources: list[dict] = make_google_sources(drug.dosage_sources)
-        sources_num: list = [
-            f"<a href='{source["google_url"]}'><b>{i}</b></a>" for i, source in
-            enumerate(google_sources, start=1)
-        ]
-        sources_section: str = ' '.join(sources_num)
+        def format_dosage_info(
+                dosage: DrugDosageSchema,
+                symbol: str
+        ) -> str:
+            """Форматирует информацию об одной дозировке"""
+            sections = [
+                f"<b>{symbol} <u>{dosage.method.capitalize()}</u></b>",
 
-        for i, dosage in enumerate(drug.dosages):
-            # проходит по списку дозировок и делает красивую строку
-            dosage_info: str = ""
-            dosage_info += f"<b> {SYMBOLS[i]} <u>{dosage.method.capitalize()}</u></b>\n"
+                f"<b>Разовая дозировка:</b> {dosage.per_time} <i>"
+                f"{f'({dosage.per_time_weight_based})' if dosage.per_time_weight_based else ''}</i>" if dosage.per_time else None,
 
-            per_time_weight: str = f"({dosage.per_time_weight_based})" if dosage.per_time_weight_based else ""
-            max_day_weight: str = f"({dosage.max_day_weight_based})" if dosage.max_day_weight_based else ""
-            dosage_info += f"      <b>Разовая дозировка:</b> {dosage.per_time} <i>  {per_time_weight}</i>\n" if dosage.per_time else ""
-            dosage_info += f"      <b>Макс. в сутки:</b> {dosage.max_day} <i>  {max_day_weight}</i>\n" if dosage.max_day else ""
-            dosage_info += f"      <b>Время начала действия:</b> {dosage.onset}\n" if dosage.onset else ""
-            dosage_info += f"      <b>Период полувыведения:</b> {dosage.half_life}\n" if dosage.half_life else ""
-            dosage_info += f"      <b>Продолжительность действия:</b> {dosage.duration}\n" if dosage.duration else ""
-            dosage_info += f"      {dosage.notes}\n" if dosage.notes else ""
+                f"<b>Макс. в сутки:</b> {dosage.max_day} <i>"
+                f"{f'({dosage.max_day_weight_based})' if dosage.max_day_weight_based else ''}</i>" if dosage.max_day else None,
 
-            dosages_list += dosage_info + "\n"
+                f"<b>Время начала действия:</b> {dosage.onset}" if dosage.onset else None,
+                f"<b>Период полувыведения:</b> {dosage.half_life}" if dosage.half_life else None,
+                f"<b>Продолжительность действия:</b> {dosage.duration}" if dosage.duration else None,
+
+                dosage.notes if dosage.notes else None
+            ]
+
+            return "\n".join(filter(None, sections))
+
+        def create_sources_section(sources: list[dict]) -> str:
+            """Создает секцию с источниками в виде пронумерованных ссылок"""
+            source_links = [
+                f"<a href='{source['google_url']}'><b>{i}</b></a>"
+                for i, source in enumerate(sources, start=1)
+            ]
+            return ' '.join(source_links)
+
+        # [ формирование секции с источниками ]
+        google_sources = make_google_sources(drug.dosage_sources)
+        sources_section = create_sources_section(google_sources)
+
+        # [ формирование списка всех дозировок ]
+        dosages_list = "\n\n".join(
+            format_dosage_info(dosage, SYMBOLS[i])
+            for i, dosage in enumerate(drug.dosages)
+        )
+
+        if dosages_list:
+            dosages_list += "\n\n"
 
         dosage_fun_fact_section = f"{drug.dosages_fun_fact}\n\n" if drug.dosages_fun_fact else ""
 

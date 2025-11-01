@@ -124,7 +124,9 @@ async def wrong_drug_founded(
         callback_data.drug_name_query,
         access_token
     )
+
     logger.info(f"Юзер заново ищет препарат: {callback_data.drug_name_query}")
+
     if drug_response.is_exist:
         if drug_response.is_allowed:
             message_text: str = DrugMessageFormatter.format_drug_briefly(drug_response.drug)

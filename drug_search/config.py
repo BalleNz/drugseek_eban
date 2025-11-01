@@ -25,6 +25,7 @@ class Config(BaseSettings):
 
     # Deepseek API
     DEEPSEEK_API_KEY: ClassVar[str] = environ.get("DEEPSEEK_API_KEY", "")
+    MINIMUM_USD_ON_BALANCE: ClassVar[float] = 1
 
     # Database
     DATABASE_URL: str = environ.get("DATABASE_URL", "")

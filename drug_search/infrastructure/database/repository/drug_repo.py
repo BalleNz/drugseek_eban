@@ -68,7 +68,7 @@ class DrugRepository(BaseRepository):
                 func.similarity(
                     func.lower(DrugSynonym.synonym),
                     func.lower(user_query)
-                ) > 0.55
+                ) > 0.43
             )
             .order_by(
                 func.similarity(
@@ -146,6 +146,8 @@ class DrugRepository(BaseRepository):
             - Обновляет синонимы.
             - Обновляет аналоги препарата.
         """
+        logger.info(f"UpdateDosages: {drug.model_json_schema()}")
+
         drug: Drug = self.model.from_pydantic(drug)
         try:
             drug.name = assistant_response.drug_name
@@ -163,7 +165,7 @@ class DrugRepository(BaseRepository):
             drug.elimination = assistant_response.elimination
             drug.time_to_peak = assistant_response.time_to_peak
             drug.danger_classification = assistant_response.danger_classification
-            dosages_data = []
+            dosages_data = []  #TODO чекнуть дебаг поля некоторые не обновляются
             for route, methods in assistant_response.dosages.items():
                 if methods and route:
                     for method, params in methods.items():

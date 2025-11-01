@@ -3,7 +3,8 @@ import threading
 from abc import ABC, abstractmethod
 from typing import Union, Type
 
-from openai import OpenAI, APIError
+import requests
+from openai import OpenAI
 from pydantic import ValidationError
 
 from drug_search.config import config
@@ -14,7 +15,7 @@ from drug_search.core.schemas import (AssistantResponseDrugResearches, Assistant
                                       ClearResearchesRequest, SelectActionResponse, QuestionAssistantResponse,
                                       AssistantResponseUserDescription)
 from drug_search.core.utils import assistant_utils
-from drug_search.core.utils.exceptions import AssistantResponseError
+from drug_search.core.utils.exceptions import AssistantResponseError, APIError
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +67,31 @@ class AssistantService(AssistantInterface):
                 self.actions = self.UserActions(self)
                 self._initialized = True
 
+    async def check_balance(self):
+        payload = {}
+        headers = {
+            'Accept': 'application/json',
+            'Authorization': f'Bearer {config.DEEPSEEK_API_KEY}'
+        }
+
+        response = requests.request(
+            method="GET",
+            url="https://api.deepseek.com/user/balance",
+            headers=headers,
+            data=payload
+        )
+
+        balance_data = response.json()
+        usd_balance_info = next((item for item in balance_data["balance_infos"] if item["currency"] == "USD"), None)
+        balance_now: float = float(usd_balance_info["total_balance"]) if usd_balance_info else 0.0
+
+        if balance_now > config.MINIMUM_USD_ON_BALANCE:
+            logger.info(f"Выполняется запрос, на балансе: {balance_now}")
+            return
+
+        logger.error(f"На балансе недостаточно денег: {balance_now} < {config.MINIMUM_USD_ON_BALANCE}")
+        raise APIError("На балансе DeepseekAPI недостаточно денег!")
+
     async def get_response(
             self,
             input_query: str,
@@ -73,8 +99,9 @@ class AssistantService(AssistantInterface):
             pydantic_model: Type[AssistantResponseModel],
             temperature: float = 0.3
     ):
-        # TODO: обработка нулевого баланса (отдельный метод) + Обработка если дипсик не работает (server is busy)
         try:
+            await self.check_balance()
+
             response = self.client.chat.completions.create(
                 model="deepseek-chat",
                 messages=[
@@ -101,8 +128,6 @@ class AssistantService(AssistantInterface):
                              f"Model: {pydantic_model}")
                 raise ValueError(f"Invalid assistant response: {e}")
 
-        except APIError as e:
-            raise e
         except Exception as ex:
             raise ex
 

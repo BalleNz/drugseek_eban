@@ -8,7 +8,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from drug_search.core.schemas import (AssistantResponseCombinations, DrugSchema, AssistantDosageDescriptionResponse,
+from drug_search.core.schemas import (AssistantResponseCombinations, DrugSchema, DrugBrieflyAssistantResponse,
                                       AssistantResponseDrugPathways, AssistantResponseDrugResearch)
 from drug_search.core.utils.exceptions import AssistantResponseError, DrugNotFound
 from drug_search.infrastructure.database.engine import get_async_session
@@ -138,7 +138,7 @@ class DrugRepository(BaseRepository):
     async def update_dosages(
             self,
             drug: DrugSchema,
-            assistant_response: AssistantDosageDescriptionResponse
+            assistant_response: DrugBrieflyAssistantResponse
     ) -> DrugSchema:
         """
         Обновляет три смежные таблицы:

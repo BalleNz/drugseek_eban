@@ -48,9 +48,9 @@ class DrugService:
         try:
             # параллельное выполнение клиента ассистента
             assistant_response_dosages, assistant_response_pathways, assistant_response_combinations = await asyncio.gather(
-                self.assistant.get_dosage(drug_name=drug_in_process.name),
+                self.assistant.get_drug_dosages(drug_name=drug_in_process.name),
                 self.assistant.get_pathways(drug_name=drug_in_process.name),
-                self.assistant.get_synergists(drug_name=drug_in_process.name)
+                self.assistant.get_combinations(drug_name=drug_in_process.name)
             )
 
             drug_after_dosages: DrugSchema = await self.repo.update_dosages(

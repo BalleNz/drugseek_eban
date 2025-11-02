@@ -9,7 +9,7 @@ from drug_search.core.schemas.pubmed_schema import ClearResearchesRequest, Pubme
 __all__ = [
     # [ Assistant ]
     'AssistantResponseDrugValidation',
-    'AssistantDosageDescriptionResponse',
+    'DrugBrieflyAssistantResponse',
     'AssistantResponseCombinations',
     'AssistantResponseDrugPathways',
     'AssistantResponseDrugResearch',
@@ -21,7 +21,7 @@ __all__ = [
     'DrugBrieflySchema',
     'DrugSchema',
     'DrugDosageSchema',
-    'DrugPathwaySchema',
+    'Pathway',
     'DrugSynonymSchema',
     'DrugAnalogSchema',
     'DrugAnalogSchema',

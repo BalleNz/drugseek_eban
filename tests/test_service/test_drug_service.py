@@ -22,7 +22,7 @@ async def test_update_dosages_and_analogs(drug_service):
 
     drug = await drug_service.repo.create(drug_model)
 
-    assistant_response = assistant.get_dosage(drug.name)
+    assistant_response = assistant.get_drug_dosages(drug.name)
     await drug_service.repo.update_dosages(drug.id, assistant_response=assistant_response)
 
     assert drug_model
@@ -95,7 +95,7 @@ async def test_update_combinations(drug_service):
     )
     drug = await drug_service.repo.create(drug_model)
 
-    assistant_response = assistant.get_synergists(drug.name)
+    assistant_response = assistant.get_combinations(drug.name)
     await drug_service.repo.update_combinations(
         drug_id=drug.id,
         assistant_response=assistant_response

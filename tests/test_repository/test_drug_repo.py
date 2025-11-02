@@ -102,7 +102,7 @@ async def test_get_with_all_relationships(mock_drug_repo):
             DrugSynonymSchema(synonym="Парацетамол")
         ],
         pathways=[
-            DrugPathwaySchema(
+            Pathway(
                 receptor="aue4-рецептор",
                 binding_affinity="Ki = 2.28 нМ",
                 affinity_description="очень сильное связывание",

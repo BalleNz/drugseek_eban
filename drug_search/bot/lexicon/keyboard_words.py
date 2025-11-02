@@ -17,7 +17,7 @@ class ButtonText:
     METABOLISM = "Метаболизм"
     COMBINATIONS = "Комбинации"
     ANALOGS = "Аналоги"
-    MECHANISM = "Механизм действия | Пути активации"
+    MECHANISM = "Пути активации"
     RESEARCHES = "Научные исследования"
 
     WRONG_DRUG_FOUNDED = "Найден не тот препарат"

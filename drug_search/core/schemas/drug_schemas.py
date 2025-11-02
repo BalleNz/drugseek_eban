@@ -30,11 +30,11 @@ class DrugAnalogSchema(BaseModel):
 
 
 class DrugCombinationSchema(BaseModel):
-    combination_type: CombinationType
-    substance: str
-    effect: str
-    products: Optional[List[str]] = Field(default=None)  # only for good
-    risks: Optional[str] = Field(default=None)  # only for bad
+    combination_type: CombinationType = Field(...)
+    substance: str = Field(..., description="ДВ или классификация")
+    effect: str = Field(..., description="Эффект комбинации")
+    products: list[str] | None = Field(None, description="Торговые названия (только для good)")
+    risks: str | None = Field(None, description="Риски (только для bad)")
 
     class Config:
         from_attributes = True
@@ -60,7 +60,7 @@ class DrugDosageSchema(BaseModel):
         from_attributes = True
 
 
-class DrugPathwaySchema(BaseModel):
+class Pathway(BaseModel):
     """Схема одной записи из таблицы drug_pathways"""
     receptor: str = Field(...)
     binding_affinity: Optional[str] = Field(default=None)
@@ -126,7 +126,7 @@ class DrugSchema(BaseModel):
 
     synonyms: Optional[list[DrugSynonymSchema]] = Field(default_factory=list)  # в планах не подгружать лишний раз таблицу , пока будет пустая
     dosages: Optional[list[DrugDosageSchema]] = Field(default_factory=list)
-    pathways: Optional[list[DrugPathwaySchema]] = Field(default_factory=list)
+    pathways: Optional[list[Pathway]] = Field(default_factory=list)
     analogs: Optional[list[DrugAnalogSchema]] = Field(default_factory=list)
     combinations: Optional[list[DrugCombinationSchema]] = Field(default_factory=list)
     researches: Optional[list[DrugResearchSchema]] = Field(default_factory=list)
@@ -144,20 +144,6 @@ class DrugSchema(BaseModel):
     updated_at: Optional[datetime] = Field(default=None)
 
     danger_classification: Optional[DANGER_CLASSIFICATION] = Field(default=None, description="класс опасности 0/1/2")
-
-    class Config:
-        from_attributes = True
-
-
-class Pathway(BaseModel):
-    receptor: str = Field(...)
-    binding_affinity: Optional[str] = None
-    affinity_description: str = Field(...)
-    activation_type: str = Field(...)
-    pathway: str = Field(...)
-    effect: str = Field(...)
-
-    note: str = Field(...)
 
     class Config:
         from_attributes = True

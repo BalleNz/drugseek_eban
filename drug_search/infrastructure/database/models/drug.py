@@ -7,7 +7,7 @@ from sqlalchemy import String, Float, ForeignKey, Text, UniqueConstraint, ARRAY,
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID  # Важно импортировать UUID для PostgreSQL
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from drug_search.core.schemas import DrugAnalogSchema, DrugCombinationSchema, DrugPathwaySchema, \
+from drug_search.core.schemas import DrugAnalogSchema, DrugCombinationSchema, Pathway, \
     DrugResearchSchema, DrugSynonymSchema, DrugDosageSchema, DrugSchema
 from drug_search.infrastructure.database.models.base import TimestampsMixin, IDMixin
 from drug_search.infrastructure.database.models.types import DangerClassificationEnum
@@ -22,15 +22,18 @@ class Drug(IDMixin, TimestampsMixin):
     name: Mapped[str] = mapped_column(String(100), unique=True)  # ДВ на англ
     name_ru: Mapped[Optional[str]] = mapped_column(String(100))  # ДВ на русском
     latin_name: Mapped[Optional[str]] = mapped_column(String(100))
+
+    # [ briefly info ]
     description: Mapped[Optional[str]] = mapped_column(Text)
     classification: Mapped[Optional[str]] = mapped_column(Text)
-    fun_fact: Mapped[Optional[str]] = mapped_column(Text)
+    fact: Mapped[Optional[str]] = mapped_column(Text)
 
-    # analogs
+    # следующие поля не выношу в отдельные таблицы, это негативно влияет на производительность в моем случае
+    # [ analogs ]
     analogs_description: Mapped[Optional[str]] = mapped_column(Text)
 
-    # dosages info
-    dosages_fun_fact: Mapped[Optional[str]] = mapped_column(Text)
+    # [ dosages info ]
+    dosages_fun_facts: Mapped[list[str] | None] = mapped_column(ARRAY(Text))
 
     danger_classification: Mapped[DangerClassificationEnum] = mapped_column(
         DangerClassificationEnum,
@@ -40,22 +43,23 @@ class Drug(IDMixin, TimestampsMixin):
                 "DANGER - запрещен в рф"
     )
 
-    # pharmacokinetics
-    absorption: Mapped[Optional[str]] = mapped_column(Text)
-    metabolism: Mapped[Optional[str]] = mapped_column(Text)
+    # [ pharmacokinetics ]
+    absorption: Mapped[list[str] | None] = mapped_column(ARRAY[Text])
+    metabolism: Mapped[list[str] | None] = mapped_column(ARRAY[Text])
     elimination: Mapped[Optional[str]] = mapped_column(Text)
     time_to_peak: Mapped[Optional[str]] = mapped_column(String(100))
     metabolism_description: Mapped[Optional[str]] = mapped_column(Text)
 
-    # pathways generation
+    # [ pathways ]
     primary_action: Mapped[Optional[str]] = mapped_column(Text)
     secondary_actions: Mapped[Optional[str]] = mapped_column(Text)
     clinical_effects: Mapped[Optional[str]] = mapped_column(Text)
 
-    pathways_sources: Mapped[Optional[list[str]]] = mapped_column(ARRAY(String))
-    dosage_sources: Mapped[Optional[list[str]]] = mapped_column(ARRAY(String))
+    # [ sources ]
+    pathways_sources: Mapped[Optional[list[str]]] = mapped_column(ARRAY(Text))
+    dosage_sources: Mapped[Optional[list[str]]] = mapped_column(ARRAY(Text))
 
-    # Отношение к DrugDosage
+    # [ relationships ]
     dosages: Mapped[list["DrugDosage"]] = relationship(
         back_populates="drug",
         cascade="all, delete-orphan",
@@ -78,7 +82,7 @@ class Drug(IDMixin, TimestampsMixin):
         back_populates="drug",
         cascade="all, delete-orphan",
         lazy="selectin"
-    )  # CHECK: Возможно, следует сделать lazy = ... чтобы не загружось все сразу
+    )  # CHECK: Возможно, следует сделать lazy = ... чтобы не загружалось все сразу
 
     analogs: Mapped[list["DrugAnalog"]] = relationship(
         back_populates="drug",
@@ -248,7 +252,7 @@ class DrugPathway(IDMixin):
 
     @property
     def schema_class(cls) -> Type[S]:
-        return DrugPathwaySchema
+        return Pathway
 
 
 class DrugPrice(IDMixin, TimestampsMixin):

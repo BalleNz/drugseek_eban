@@ -1,6 +1,5 @@
 import logging
 import threading
-from abc import ABC, abstractmethod
 from typing import Union, Type
 
 import requests
@@ -9,11 +8,13 @@ from pydantic import ValidationError
 
 from drug_search.config import config
 from drug_search.core.lexicon import Prompts
-from drug_search.core.schemas import (AssistantResponseDrugResearches, AssistantResponsePubmedQuery,
-                                      AssistantDosageDescriptionResponse, AssistantResponseCombinations,
-                                      AssistantResponseDrugPathways, AssistantResponseDrugValidation,
-                                      ClearResearchesRequest, SelectActionResponse, QuestionAssistantResponse,
-                                      AssistantResponseUserDescription)
+from drug_search.core.schemas import (
+    AssistantResponseDrugResearches, AssistantResponsePubmedQuery,
+    DrugBrieflyAssistantResponse, AssistantResponseCombinations,
+    AssistantResponseDrugPathways, AssistantResponseDrugValidation,
+    ClearResearchesRequest, SelectActionResponse, QuestionAssistantResponse,
+    AssistantResponseUserDescription
+)
 from drug_search.core.utils import assistant_utils
 from drug_search.core.utils.exceptions import AssistantResponseError, APIError
 
@@ -21,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 AssistantResponseModel = Union[
     AssistantResponseDrugPathways,
-    AssistantDosageDescriptionResponse,
+    DrugBrieflyAssistantResponse,
     AssistantResponseCombinations,
     AssistantResponseDrugValidation,
     AssistantResponseDrugResearches,
@@ -29,27 +30,7 @@ AssistantResponseModel = Union[
 ]
 
 
-class AssistantInterface(ABC):
-    @abstractmethod
-    async def get_dosage(self, drug_name) -> AssistantDosageDescriptionResponse:
-        """
-        Первый запрос для нового препарата.
-        Возвращает рекомендуемые дозировки препарата для разных способов приема + описание.
-        """
-        ...
-
-    @abstractmethod
-    async def get_pathways(self, drug_name: str) -> AssistantResponseDrugPathways:
-        """Возвращает все пути активации."""
-        ...
-
-    @abstractmethod
-    async def get_synergists(self, drug_name: str) -> dict:
-        """Возвращает хорошие и негативные комбинации с описанием эффектов."""
-        ...
-
-
-class AssistantService(AssistantInterface):
+class AssistantService:
     _instance = None
     _lock = threading.Lock()
 
@@ -65,9 +46,11 @@ class AssistantService(AssistantInterface):
             if not self._initialized:
                 self.client = OpenAI(api_key=config.DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
                 self.actions = self.UserActions(self)
+                self.drug_creation = self.DrugCreation(self)
                 self._initialized = True
 
-    async def check_balance(self):
+    @staticmethod
+    async def check_balance():
         payload = {}
         headers = {
             'Accept': 'application/json',
@@ -131,17 +114,51 @@ class AssistantService(AssistantInterface):
         except Exception as ex:
             raise ex
 
-    async def get_dosage(self, drug_name: str) -> AssistantDosageDescriptionResponse:
-        return await self.get_response(input_query=drug_name, prompt=Prompts.GET_DRUG_DESCRIPTION,
-                                       pydantic_model=AssistantDosageDescriptionResponse)
+    class DrugCreation:
+        def __init__(self, assistant_service):
+            self.assistant_service = assistant_service
 
-    async def get_pathways(self, drug_name: str) -> AssistantResponseDrugPathways:
-        return await self.get_response(input_query=drug_name, prompt=Prompts.GET_DRUG_PATHWAYS,
-                                       pydantic_model=AssistantResponseDrugPathways)
+        async def get_drug_briefly_info(self, drug_name: str) -> DrugBrieflyAssistantResponse:
+            return await self.assistant_service.get_response(
+                input_query=drug_name,
+                prompt=Prompts.GET_DRUG_BRIEFLY_INFO,
+                pydantic_model=DrugBrieflyAssistantResponse
+            )
 
-    async def get_synergists(self, drug_name: str) -> AssistantResponseCombinations:
-        return await self.get_response(input_query=drug_name, prompt=Prompts.GET_DRUG_COMBINATIONS,
-                                       pydantic_model=AssistantResponseCombinations)
+        async def get_drug_dosages(self, drug_name: str) -> DrugBrieflyAssistantResponse:
+            return await self.assistant_service.get_response(
+                input_query=drug_name,
+                prompt=Prompts.GET_DRUG_DOSAGES,
+                pydantic_model=DrugBrieflyAssistantResponse
+            )
+
+        async def get_analogs(self, drug_name: str) -> DrugBrieflyAssistantResponse:
+            return await self.assistant_service.get_response(
+                input_query=drug_name,
+                prompt=Prompts.GET_DRUG_ANALOGS,
+                pydantic_model=DrugBrieflyAssistantResponse
+            )
+
+        async def get_metabolism(self, drug_name: str) -> DrugBrieflyAssistantResponse:
+            return await self.assistant_service.get_response(
+                input_query=drug_name,
+                prompt=Prompts.GET_DRUG_METABOLISM,
+                pydantic_model=DrugBrieflyAssistantResponse
+            )
+
+        async def get_pathways(self, drug_name: str) -> AssistantResponseDrugPathways:
+            return await self.assistant_service.get_response(
+                input_query=drug_name,
+                prompt=Prompts.GET_DRUG_PATHWAYS,
+                pydantic_model=AssistantResponseDrugPathways
+            )
+
+        async def get_combinations(self, drug_name: str) -> AssistantResponseCombinations:
+            return await self.assistant_service.get_response(
+                input_query=drug_name,
+                prompt=Prompts.GET_DRUG_COMBINATIONS,
+                pydantic_model=AssistantResponseCombinations
+            )
 
     async def get_user_description(self, user_name: str, user_drugs_name: str) -> AssistantResponseUserDescription:
         user_query = user_name + ' ' + user_drugs_name

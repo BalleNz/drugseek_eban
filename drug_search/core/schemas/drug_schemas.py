@@ -1,6 +1,6 @@
 from datetime import datetime, date
 from enum import Enum
-from typing import Optional, List
+from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -75,6 +75,15 @@ class Pathway(BaseModel):
         from_attributes = True
 
 
+class MechanismSummary(BaseModel):
+    primary_action: str = Field(...)
+    secondary_actions: Optional[str] = Field(None, )
+    clinical_effects: str = Field(...)
+
+    class Config:
+        from_attributes = True
+
+
 class DrugPriceSchema(BaseModel):
     """Схема цены препарата"""
     # FUTURE
@@ -90,16 +99,17 @@ class DrugPriceSchema(BaseModel):
 
 
 class DrugResearchSchema(BaseModel):
-    name: str = Field(..., description="название исследования")
-    description: str = Field(..., description="описание исследования")
-    publication_date: date = Field(..., description="дата публикации")
-    url: str = Field(..., description="ссылка на исследование")
-    summary: Optional[str] = Field(None, description="вывод исследования")
-    journal: str = Field(..., description="журнал")
-    doi: str = Field(..., description="DOI")
-    authors: Optional[str] = Field(None, description="авторы")
-    study_type: Optional[str] = Field(None, description="тип исследования")
-    interest: float = Field(..., description="уровень интереса")
+    """объект из таблицы drug_researches"""
+    name: str = Field(..., description="Название исследования")
+    description: str = Field(..., description="Описание исследования")
+    publication_date: date = Field(..., description="Дата публикации")
+    url: str = Field(..., description="Ссылка на исследование")
+    summary: Optional[str] = Field(None, description="Основной вывод")
+    journal: str = Field(..., description="Название журнала")
+    doi: str = Field(..., description="DOI статьи")
+    authors: Optional[str] = Field(None, description="Авторы")
+    study_type: Optional[str] = Field(None, description="Тип исследования")
+    interest: float = Field(..., description="Оценка интереса 0.00-1.00")
 
     class Config:
         from_attributes = True
@@ -108,51 +118,51 @@ class DrugResearchSchema(BaseModel):
 class DrugSchema(BaseModel):
     """Полная схема препарата"""
     id: UUID = Field(...)
+
+    # [ briefly info ]
     name: str = Field(...)
-    latin_name: Optional[str] = Field(default=None)
-    name_ru: Optional[str] = Field(default=None)
-    description: Optional[str] = Field(default=None)
-    classification: Optional[str] = Field(default=None)
-    dosages_fun_fact: Optional[str] = Field(default=None)
-    fun_fact: Optional[str] = Field(default=None)
+    latin_name: str = Field(...)
+    name_ru: str = Field(...)
+    description: str = Field(...)
+    classification: str = Field(...)
+    fact: str = Field(...)
+    synonyms: list[DrugSynonymSchema] = Field(...)
 
-    analogs_description: Optional[str] = Field(default=None)
-    metabolism_description: Optional[str] = Field(default=None)
+    danger_classification: DANGER_CLASSIFICATION = Field(..., description="класс опасности 0/1/2")
 
-    absorption: Optional[str] = Field(default=None, description="процент биодоступности")
-    metabolism: Optional[str] = Field(default=None, description="основные пути метаболизма")
-    elimination: Optional[str] = Field(default=None, description="ТОП 3 (примерно) путей выведения...")
-    time_to_peak: Optional[str] = Field(default=None, description="время до достижения Cmax")
+    # [ metabolism ]
+    absorption: list[str] = Field(..., description="процент биодоступности")
+    metabolism: list[str] = Field(..., description="основные пути метаболизма")
+    elimination: str = Field(..., description="ТОП 3 (примерно) путей выведения...")
+    time_to_peak: str = Field(..., description="время до достижения Cmax")
+    metabolism_description: str = Field(...)
 
-    synonyms: Optional[list[DrugSynonymSchema]] = Field(default_factory=list)  # в планах не подгружать лишний раз таблицу , пока будет пустая
-    dosages: Optional[list[DrugDosageSchema]] = Field(default_factory=list)
-    pathways: Optional[list[Pathway]] = Field(default_factory=list)
-    analogs: Optional[list[DrugAnalogSchema]] = Field(default_factory=list)
-    combinations: Optional[list[DrugCombinationSchema]] = Field(default_factory=list)
-    researches: Optional[list[DrugResearchSchema]] = Field(default_factory=list)
+    # [ dosages ]
+    dosages: list[DrugDosageSchema] = Field(...)
+    dosages_fun_facts: list[str] = Field(...)
+    dosage_sources: list[str] = Field(...)
 
-    prices: Optional[list[DrugPriceSchema]] = Field(default=None)  # FUTURE
-
-    pathways_sources: Optional[list[str]] = Field(default_factory=list)  # TODO удалить
-    dosage_sources: Optional[list[str]] = Field(default_factory=list)
-
-    primary_action: Optional[str] = Field(default=None)
-    secondary_actions: Optional[str] = Field(default=None)
-    clinical_effects: Optional[str] = Field(default=None)
-
-    created_at: Optional[datetime] = Field(default=None)
-    updated_at: Optional[datetime] = Field(default=None)
-
-    danger_classification: Optional[DANGER_CLASSIFICATION] = Field(default=None, description="класс опасности 0/1/2")
-
-    class Config:
-        from_attributes = True
-
-
-class MechanismSummary(BaseModel):
+    # [ pathways ]
+    pathways: list[Pathway] = Field(...)
+    pathways_sources: list[str] = Field(...)
     primary_action: str = Field(...)
-    secondary_actions: Optional[str] = Field(None, )
+    secondary_actions: str = Field(...)
     clinical_effects: str = Field(...)
+
+    # [ analogs ]
+    analogs: list[DrugAnalogSchema] = Field(...)
+    analogs_description: str = Field(...)
+
+    # [ combinations ]
+    combinations: list[DrugCombinationSchema] = Field(...)
+
+    # [ researches ]
+    researches: list[DrugResearchSchema] = Field(...)
+
+    prices: list[DrugPriceSchema] | None = Field(None)
+
+    created_at: datetime = Field(...)
+    updated_at: datetime = Field(...)
 
     class Config:
         from_attributes = True

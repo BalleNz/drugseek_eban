@@ -13,9 +13,9 @@ from drug_search.core.lexicon import EXIST_STATUS, UPDATE_DRUG_COST
 from drug_search.core.schemas import (UserSchema, DrugExistingResponse,
                                       AssistantResponseDrugValidation, DrugSchema, UpdateDrugResponse, UpdateDrugStatuses)
 from drug_search.core.services.assistant_service import AssistantService
-from services.models_service.drug_service import DrugService
-from services.tasks_logic.task_service import TaskService
-from services.models_service.user_service import UserService
+from drug_search.core.services.models_service.drug_service import DrugService
+from drug_search.core.services.tasks_logic.task_service import TaskService
+from drug_search.core.services.models_service.user_service import UserService
 from drug_search.core.utils.auth import get_auth_user
 from drug_search.core.utils.funcs import layout_converter
 

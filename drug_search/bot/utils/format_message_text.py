@@ -20,7 +20,7 @@ class DrugMessageFormatter:
             classification=drug.classification,
             description=drug.description,
             clinical_effects=drug.clinical_effects,
-            fun_fact=drug.fun_fact or ""
+            fun_fact=drug.fact or ""
         )
 
     @staticmethod
@@ -139,7 +139,7 @@ class DrugMessageFormatter:
         if dosages_list:
             dosages_list += "\n\n"
 
-        dosage_fun_fact_section = f"{drug.dosages_fun_fact}\n\n" if drug.dosages_fun_fact else ""
+        dosage_fun_fact_section = f"{drug.dosages_fun_facts}\n\n" if drug.dosages_fun_facts else ""
 
         return MessageTemplates.DRUG_INFO_DOSAGES.format(
             drug_name_ru=drug.name_ru,

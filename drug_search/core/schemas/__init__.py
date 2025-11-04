@@ -1,6 +1,6 @@
 from drug_search.core.schemas.API_schemas.api_requests import *
 from drug_search.core.schemas.API_schemas.api_response import *
-from drug_search.core.schemas.assistant_responses import *
+from drug_search.core.schemas.assistant_schemas.assistant_responses import *
 from drug_search.core.schemas.drug_schemas import *
 from drug_search.core.schemas.telegram_schemas import *
 from drug_search.core.schemas.user_schemas import *
@@ -10,13 +10,15 @@ __all__ = [
     # [ Assistant ]
     'AssistantResponseDrugValidation',
     'DrugBrieflyAssistantResponse',
-    'AssistantResponseCombinations',
-    'AssistantResponseDrugPathways',
-    'AssistantResponseDrugResearch',
-    'AssistantResponseDrugResearches',
+    'DrugCombinationsAssistantResponse',
+    'DrugPathwaysAssistantResponse',
+    'DrugResearchSchema',
+    'DrugResearchesAssistantResponse',
     'AssistantResponsePubmedQuery',
     'AssistantResponseUserDescription',
-    'ClearResearchesRequest',
+    'DrugDosagesAssistantResponse',
+    'DrugAnalogsAssistantResponse',
+    'DrugMetabolismAssistantResponse',
     # [ Drug ]
     'DrugBrieflySchema',
     'DrugSchema',
@@ -43,6 +45,7 @@ __all__ = [
     'BuyDrugRequest',
     'QuestionContinueRequest',
     'MailingRequest',
+    'ClearResearchesRequest',
     # [ API Responses ]
     'SelectActionResponse',
     'UpdateDrugResponse',

@@ -2,18 +2,20 @@ import logging
 import threading
 from typing import Union, Type
 
+import aiohttp
 import requests
-from openai import OpenAI
+from openai import OpenAI, AsyncOpenAI
 from pydantic import ValidationError
 
 from drug_search.config import config
 from drug_search.core.lexicon import Prompts
 from drug_search.core.schemas import (
-    AssistantResponseDrugResearches, AssistantResponsePubmedQuery,
-    DrugBrieflyAssistantResponse, AssistantResponseCombinations,
-    AssistantResponseDrugPathways, AssistantResponseDrugValidation,
-    ClearResearchesRequest, SelectActionResponse, QuestionAssistantResponse,
-    AssistantResponseUserDescription
+    DrugResearchesAssistantResponse, AssistantResponsePubmedQuery,
+    DrugBrieflyAssistantResponse, DrugCombinationsAssistantResponse,
+    DrugPathwaysAssistantResponse, AssistantResponseDrugValidation,
+    SelectActionResponse, QuestionAssistantResponse,
+    AssistantResponseUserDescription, DrugDosagesAssistantResponse, DrugAnalogsAssistantResponse,
+    DrugMetabolismAssistantResponse, ClearResearchesRequest
 )
 from drug_search.core.utils import assistant_utils
 from drug_search.core.utils.exceptions import AssistantResponseError, APIError
@@ -21,59 +23,65 @@ from drug_search.core.utils.exceptions import AssistantResponseError, APIError
 logger = logging.getLogger(__name__)
 
 AssistantResponseModel = Union[
-    AssistantResponseDrugPathways,
+    DrugPathwaysAssistantResponse,
     DrugBrieflyAssistantResponse,
-    AssistantResponseCombinations,
+    DrugCombinationsAssistantResponse,
     AssistantResponseDrugValidation,
-    AssistantResponseDrugResearches,
+    DrugResearchesAssistantResponse,
     None,
 ]
 
 
 class AssistantService:
-    _instance = None
-    _lock = threading.Lock()
-
-    def __new__(cls):
-        with cls._lock:
-            if cls._instance is None:
-                cls._instance = super().__new__(cls)
-                cls._instance._initialized = False
-        return cls._instance
-
     def __init__(self):
-        with self._lock:
-            if not self._initialized:
-                self.client = OpenAI(api_key=config.DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
-                self.actions = self.UserActions(self)
-                self.drug_creation = self.DrugCreation(self)
-                self._initialized = True
+        self.client = AsyncOpenAI(api_key=config.DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
+        self.actions = self.Actions(self)
+        self.drug_creation = self.DrugCreation(self)
+        self._session: aiohttp.ClientSession | None = None
 
-    @staticmethod
-    async def check_balance():
-        payload = {}
-        headers = {
-            'Accept': 'application/json',
-            'Authorization': f'Bearer {config.DEEPSEEK_API_KEY}'
-        }
+    async def __aenter__(self):
+        return self
 
-        response = requests.request(
-            method="GET",
-            url="https://api.deepseek.com/user/balance",
-            headers=headers,
-            data=payload
-        )
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if self._session:
+            await self._session.close()
 
-        balance_data = response.json()
-        usd_balance_info = next((item for item in balance_data["balance_infos"] if item["currency"] == "USD"), None)
-        balance_now: float = float(usd_balance_info["total_balance"]) if usd_balance_info else 0.0
+    async def _get_session(self) -> aiohttp.ClientSession:
+        """Ленивая инициализация aiohttp сессии"""
+        if self._session is None:
+            self._session = aiohttp.ClientSession()
+        return self._session
 
-        if balance_now > config.MINIMUM_USD_ON_BALANCE:
-            logger.info(f"Выполняется запрос, на балансе: {balance_now}")
+    async def check_balance(self):
+        """Асинхронная проверка баланса"""
+        session = await self._get_session()
+
+        try:
+            async with session.get(
+                    "https://api.deepseek.com/user/balance",
+                    headers={
+                        'Accept': 'application/json',
+                        'Authorization': f'Bearer {config.DEEPSEEK_API_KEY}'
+                    }
+            ) as response:
+                balance_data = await response.json()
+
+                usd_balance_info = next(
+                    (item for item in balance_data["balance_infos"] if item["currency"] == "USD"),
+                    None
+                )
+                balance_now: float = float(usd_balance_info["total_balance"]) if usd_balance_info else 0.0
+
+                if balance_now > config.MINIMUM_USD_ON_BALANCE:
+                    logger.info(f"Выполняется запрос, на балансе: {balance_now}")
+                    return
+
+                logger.error(f"На балансе недостаточно денег: {balance_now} < {config.MINIMUM_USD_ON_BALANCE}")
+                raise APIError("На балансе DeepseekAPI недостаточно денег!")
+
+        except aiohttp.ClientError as e:
+            logger.error(f"Ошибка при проверке баланса: {e}")
             return
-
-        logger.error(f"На балансе недостаточно денег: {balance_now} < {config.MINIMUM_USD_ON_BALANCE}")
-        raise APIError("На балансе DeepseekAPI недостаточно денег!")
 
     async def get_response(
             self,
@@ -85,7 +93,7 @@ class AssistantService:
         try:
             await self.check_balance()
 
-            response = self.client.chat.completions.create(
+            response = await self.client.chat.completions.create(
                 model="deepseek-chat",
                 messages=[
                     {"role": "system", "content": f"{prompt}"},
@@ -112,7 +120,8 @@ class AssistantService:
                 raise ValueError(f"Invalid assistant response: {e}")
 
         except Exception as ex:
-            raise ex
+            logger.error(f"Error in get_response: {ex}")
+            raise
 
     class DrugCreation:
         def __init__(self, assistant_service):
@@ -125,42 +134,62 @@ class AssistantService:
                 pydantic_model=DrugBrieflyAssistantResponse
             )
 
-        async def get_drug_dosages(self, drug_name: str) -> DrugBrieflyAssistantResponse:
+        async def get_drug_dosages(self, drug_name: str) -> DrugDosagesAssistantResponse:
             return await self.assistant_service.get_response(
                 input_query=drug_name,
                 prompt=Prompts.GET_DRUG_DOSAGES,
-                pydantic_model=DrugBrieflyAssistantResponse
+                pydantic_model=DrugDosagesAssistantResponse
             )
 
-        async def get_analogs(self, drug_name: str) -> DrugBrieflyAssistantResponse:
+        async def get_analogs(self, drug_name: str) -> DrugAnalogsAssistantResponse:
             return await self.assistant_service.get_response(
                 input_query=drug_name,
                 prompt=Prompts.GET_DRUG_ANALOGS,
-                pydantic_model=DrugBrieflyAssistantResponse
+                pydantic_model=DrugAnalogsAssistantResponse
             )
 
-        async def get_metabolism(self, drug_name: str) -> DrugBrieflyAssistantResponse:
+        async def get_metabolism(self, drug_name: str) -> DrugMetabolismAssistantResponse:
             return await self.assistant_service.get_response(
                 input_query=drug_name,
                 prompt=Prompts.GET_DRUG_METABOLISM,
-                pydantic_model=DrugBrieflyAssistantResponse
+                pydantic_model=DrugMetabolismAssistantResponse
             )
 
-        async def get_pathways(self, drug_name: str) -> AssistantResponseDrugPathways:
+        async def get_pathways(self, drug_name: str) -> DrugPathwaysAssistantResponse:
             return await self.assistant_service.get_response(
                 input_query=drug_name,
                 prompt=Prompts.GET_DRUG_PATHWAYS,
-                pydantic_model=AssistantResponseDrugPathways
+                pydantic_model=DrugPathwaysAssistantResponse
             )
 
-        async def get_combinations(self, drug_name: str) -> AssistantResponseCombinations:
+        async def get_combinations(self, drug_name: str) -> DrugCombinationsAssistantResponse:
             return await self.assistant_service.get_response(
                 input_query=drug_name,
                 prompt=Prompts.GET_DRUG_COMBINATIONS,
-                pydantic_model=AssistantResponseCombinations
+                pydantic_model=DrugCombinationsAssistantResponse
             )
 
+    async def get_clear_researches(
+            self,
+            pubmed_researches_with_drug_name: ClearResearchesRequest
+    ) -> DrugResearchesAssistantResponse:
+        """
+        Возвращает отфильтрованные исследования в лаконичном виде.
+        :param pubmed_researches_with_drug_name: Схема с исследованиями и названием ДВ.
+        :return: Схема с лаконичным видом исследований.
+        """
+
+        input_query = assistant_utils.serialize_researches_request(request=pubmed_researches_with_drug_name)
+        return await self.get_response(
+            input_query=input_query,
+            prompt=Prompts.GET_DRUG_RESEARCHES,
+            pydantic_model=DrugResearchesAssistantResponse
+        )
+
     async def get_user_description(self, user_name: str, user_drugs_name: str) -> AssistantResponseUserDescription:
+        """
+        Получить описание пользователя
+        """
         user_query = user_name + ' ' + user_drugs_name
         return await self.get_response(input_query=user_query, prompt=Prompts.GET_USER_DESCRIPTION,
                                        pydantic_model=AssistantResponseUserDescription)
@@ -174,20 +203,6 @@ class AssistantService:
         return await self.get_response(input_query=user_query, prompt=Prompts.DRUG_SEARCH_VALIDATION,
                                        pydantic_model=AssistantResponseDrugValidation, temperature=0.7)
 
-    async def get_clear_researches(
-            self,
-            pubmed_researches_with_drug_name: ClearResearchesRequest
-    ) -> AssistantResponseDrugResearches:
-        """
-        Возвращает отфильтрованные исследования в лаконичном виде.
-        :param pubmed_researches_with_drug_name: Схема с исследованиями и названием ДВ.
-        :return: Схема с лаконичным видом исследований.
-        """
-
-        input_query = assistant_utils.serialize_researches_request(request=pubmed_researches_with_drug_name)
-        return await self.get_response(input_query=input_query, prompt=Prompts.GET_DRUG_RESEARCHES,
-                                       pydantic_model=AssistantResponseDrugResearches)
-
     async def get_pubmed_query(self, drug_name: str) -> AssistantResponsePubmedQuery:
         """
         Возвращает оптимизированный поисковой запрос для Pubmed исходя из названия действующего вещества.
@@ -195,7 +210,7 @@ class AssistantService:
         return await self.get_response(input_query=drug_name, prompt=Prompts.GET_PUBMED_SEARCH_QUERY,
                                        pydantic_model=AssistantResponsePubmedQuery)
 
-    class UserActions:
+    class Actions:
         """Класс для взаимодействием с действиями пользователя:
 
         Actions:

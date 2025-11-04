@@ -1,6 +1,6 @@
 import json
 
-from drug_search.core.schemas import ClearResearchesRequest
+from drug_search.core.schemas.assistant_schemas.assistant_requests import ClearResearchesRequest
 
 
 def serialize_researches_request(request: ClearResearchesRequest) -> str:

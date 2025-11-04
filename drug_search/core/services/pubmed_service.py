@@ -4,7 +4,7 @@ from typing import Optional
 from pymed import PubMed
 
 from drug_search.core.schemas import (AssistantResponsePubmedQuery, ClearResearchesRequest,
-                                      AssistantResponseDrugResearches, PubmedResearchSchema, AssistantResponseDrugResearch)
+                                      DrugResearchesAssistantResponse, PubmedResearchSchema, DrugResearchSchema)
 from drug_search.core.services.assistant_service import AssistantService
 
 
@@ -81,7 +81,7 @@ class PubmedService:
             )
         return researches[:10]  # первые 10 исследований, чтобы не перегружать нейронку
 
-    async def get_researches_clearly(self, drug_name: str) -> list[AssistantResponseDrugResearch]:
+    async def get_researches_clearly(self, drug_name: str) -> list[DrugResearchSchema]:
         """Возвращает исследования в красивом виде после обработки ИИ"""
         researches: list[Optional[PubmedResearchSchema]] = await self.get_researches_dirty(
             drug_name=drug_name
@@ -91,6 +91,6 @@ class PubmedService:
             drug_name=drug_name
         )
 
-        clear_researches: AssistantResponseDrugResearches = await self.assistant_service.get_clear_researches(
+        clear_researches: DrugResearchesAssistantResponse = await self.assistant_service.get_clear_researches(
             researches_request_to_assistant)
         return clear_researches.researches

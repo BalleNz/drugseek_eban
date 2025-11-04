@@ -44,8 +44,8 @@ class Drug(IDMixin, TimestampsMixin):
     )
 
     # [ pharmacokinetics ]
-    absorption: Mapped[list[str] | None] = mapped_column(ARRAY[Text])
-    metabolism: Mapped[list[str] | None] = mapped_column(ARRAY[Text])
+    absorption: Mapped[list[str] | None] = mapped_column(ARRAY(Text))
+    metabolism: Mapped[list[str] | None] = mapped_column(ARRAY(Text))
     elimination: Mapped[Optional[str]] = mapped_column(Text)
     time_to_peak: Mapped[Optional[str]] = mapped_column(String(100))
     metabolism_description: Mapped[Optional[str]] = mapped_column(Text)
@@ -120,9 +120,9 @@ class Drug(IDMixin, TimestampsMixin):
             name_ru=self.name_ru,
             description=self.description,
             classification=self.classification,
-            dosages_fun_fact=self.dosages_fun_fact,
+            dosages_fun_facts=self.dosages_fun_facts,
 
-            fun_fact=self.fun_fact,
+            fact=self.fact,
             analogs_description=self.analogs_description,
             metabolism_description=self.metabolism_description,
 
@@ -240,15 +240,14 @@ class DrugPathway(IDMixin):
     )
     drug: Mapped["Drug"] = relationship(back_populates="pathways")
 
-    # Основные поля для хранения данных о путях активации
-    receptor: Mapped[str] = mapped_column(String(100), nullable=False)  # название рецептора
-    binding_affinity: Mapped[Optional[str]] = mapped_column(String(200))  # сила связывания
-    affinity_description: Mapped[Optional[str]] = mapped_column(String(200))  # сила связывания
-    activation_type: Mapped[str] = mapped_column(String(200), nullable=False)  # тип активации
-    pathway: Mapped[Optional[str]] = mapped_column(String(200))  # сигнальный путь
-    effect: Mapped[Optional[str]] = mapped_column(String(200))  # физиологический эффект
+    receptor: Mapped[str] = mapped_column(String(100), nullable=False, comment="название рецептора")
+    binding_affinity: Mapped[Optional[str]] = mapped_column(String(200), comment="сила связывания")
+    affinity_description: Mapped[Optional[str]] = mapped_column(String(200), comment="сила связывания")
+    activation_type: Mapped[str] = mapped_column(String(200), nullable=False, comment="тип активации")
+    pathway: Mapped[Optional[str]] = mapped_column(String(200), comment="сигнальный путь")
+    effect: Mapped[Optional[str]] = mapped_column(String(200), comment="физиологический эффект")
 
-    note: Mapped[Optional[str]] = mapped_column(Text)  # дополнительные примечания
+    note: Mapped[Optional[str]] = mapped_column(Text, comment="дополнительные примечания")
 
     @property
     def schema_class(cls) -> Type[S]:

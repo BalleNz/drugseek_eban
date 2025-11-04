@@ -103,6 +103,7 @@ async def buy_drug(
 
     await user_service.reduce_tokens(user.id, 1)
 
+    # [ если количество препаратов кратно 5 ]
     if not (len(user.allowed_drugs) + 1) % 5:
         """Обновляем описание юзера"""
         await task_service.enqueue_user_description_update(user_id=user.id, user_telegram_id=user.telegram_id)
@@ -119,7 +120,7 @@ async def buy_drug(
     else:
         """Нужно его создать и разрешить"""
         logger.info(f"Юзер {user.telegram_id} купил препарат {request.drug_name}")
-        job_response: dict = await task_service.enqueue_drug_creation(  # invalidation user data in task
+        job_response: dict = await task_service.enqueue_drug_creation(  # + invalidation user data in task
             user_telegram_id=user.telegram_id,
             user_id=user.id,
             drug_name=request.drug_name

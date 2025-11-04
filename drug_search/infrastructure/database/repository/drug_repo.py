@@ -1,16 +1,20 @@
+import asyncio
 import logging
 import uuid
 from datetime import datetime
 from typing import Optional, Union, AsyncGenerator
 
 from fastapi import Depends
-from sqlalchemy import select, func
+from sqlalchemy import select, func, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from drug_search.core.schemas import (AssistantResponseCombinations, DrugSchema, DrugBrieflyAssistantResponse,
-                                      AssistantResponseDrugPathways, AssistantResponseDrugResearch)
-from drug_search.core.utils.exceptions import AssistantResponseError, DrugNotFound
+from drug_search.core.schemas import (
+    DrugCombinationsAssistantResponse, DrugSchema, DrugBrieflyAssistantResponse,
+    DrugPathwaysAssistantResponse, DrugDosagesAssistantResponse,
+    DrugAnalogsAssistantResponse, DrugMetabolismAssistantResponse,
+    DrugResearchesAssistantResponse
+)
 from drug_search.infrastructure.database.engine import get_async_session
 from drug_search.infrastructure.database.models.drug import (Drug, DrugSynonym, DrugCombination, DrugPathway,
                                                              DrugAnalog, DrugDosage, DrugResearch)
@@ -22,6 +26,7 @@ logger = logging.getLogger(__name__)
 class DrugRepository(BaseRepository):
     def __init__(self, session: AsyncSession):
         super().__init__(model=Drug, session=session)
+        self.DrugCreation = self.DrugCreation(session)
 
     async def find_drug_without_trigrams(
             self,
@@ -135,172 +140,253 @@ class DrugRepository(BaseRepository):
 
         return drug.get_schema()
 
-    async def update_dosages(
-            self,
-            drug: DrugSchema,
-            assistant_response: DrugBrieflyAssistantResponse
-    ) -> DrugSchema:
-        """
-        Обновляет три смежные таблицы:
-            - Обновляет данные о дозировках препарата.
-            - Обновляет синонимы.
-            - Обновляет аналоги препарата.
-        """
-        logger.info(f"UpdateDosages: {drug.model_json_schema()}")
+    class DrugCreation:
+        def __init__(self, session: AsyncSession):
+            self.session = session
 
-        drug: Drug = self.model.from_pydantic(drug)
-        try:
-            drug.name = assistant_response.drug_name
-            drug.name_ru = assistant_response.drug_name_ru
-            drug.latin_name = assistant_response.latin_name
-            drug.description = assistant_response.description
-            drug.classification = assistant_response.classification
-            drug.dosages_fun_fact = assistant_response.dosages_fun_fact
-            drug.fun_fact = assistant_response.fun_fact
-            drug.analogs_description = assistant_response.analogs_description
-            drug.metabolism_description = assistant_response.metabolism_description
-            drug.dosage_sources = assistant_response.dosage_sources
-            drug.absorption = assistant_response.absorption
-            drug.metabolism = assistant_response.metabolism
-            drug.elimination = assistant_response.elimination
-            drug.time_to_peak = assistant_response.time_to_peak
-            drug.danger_classification = assistant_response.danger_classification
-            dosages_data = []  #TODO чекнуть дебаг поля некоторые не обновляются
-            for route, methods in assistant_response.dosages.items():
-                if methods and route:
-                    for method, params in methods.items():
-                        if params:
-                            dosage = DrugDosage(
-                                drug_id=drug.id,
-                                route=route,
-                                method=method,
-                                **params.model_dump(exclude_none=True)
-                            )
-                            dosages_data.append(dosage)
-            drug.dosages = dosages_data
-            drug.synonyms = [
-                DrugSynonym(
-                    synonym=synonym
-                )
-                for synonym in assistant_response.synonyms
-            ]
-            drug.analogs = [
-                DrugAnalog(
-                    analog_name=analog.analog_name,
-                    percent=analog.percent,
-                    difference=analog.difference
-                )
-                for analog in assistant_response.analogs
-            ]
-            drug.updated_at = datetime.now()
-        except Exception as ex:
-            logger.error(f"Failed to update dosages for {drug.name}: {str(ex)}")
-            raise ex
-        return drug.get_schema()
+        async def update_or_create_drug(
+                self,
+                briefly_info: DrugBrieflyAssistantResponse,
+                dosages: DrugDosagesAssistantResponse,
+                analogs: DrugAnalogsAssistantResponse,
+                metabolism: DrugMetabolismAssistantResponse,
+                pathways: DrugPathwaysAssistantResponse,
+                combinations: DrugCombinationsAssistantResponse,
+                drug_id: uuid.UUID | None = None
+        ) -> DrugSchema:
+            """
+            Создает или обновляет препарат в базе данных на основе данных от ассистента.
+            Выполняет обновления параллельно для повышения производительности.
 
-    async def update_pathways(
-            self,
-            drug: DrugSchema,
-            assistant_response: AssistantResponseDrugPathways
-    ) -> DrugSchema:
-        """
-        Обновляет таблицу:
-            — Пути активации препарата.
-        """
-        drug: Drug = self.model.from_pydantic(drug)
-        try:
-            if assistant_response.mechanism_summary:
+            :param briefly_info:
+            :param dosages:
+            :param analogs:
+            :param metabolism:
+            :param pathways:
+            :param combinations:
+            :param drug_id: Существующий препарат для обновления (если None - создается новый)
+            :return: Обновленная или созданная модель Drug
+            """
+            try:
+                need_to_clean = drug_id is not None
+
+                if drug_id:
+                    drug: Drug | None = await self.session.get(Drug, drug_id)
+                    if not drug:
+                        logger.exception(f"При обновлении препарата {drug_id} он не был найден в базе.")
+                        raise
+
+                    drug.updated_at = datetime.now()
+                else:
+                    drug = Drug(
+                        id=uuid.uuid4(),
+                        name=briefly_info.drug_name,
+                        created_at=datetime.now()
+                    )
+                    self.session.add(drug)
+
+                results = await asyncio.gather(
+                    self.update_briefly_info(drug, briefly_info, need_to_clean),
+                    self.update_dosages(drug, dosages, need_to_clean),
+                    self.update_analogs(drug, analogs, need_to_clean),
+                    self.update_metabolism(drug, metabolism),
+                    self.update_pathways(drug, pathways, need_to_clean),
+                    self.update_combinations(drug, combinations, need_to_clean),
+                    return_exceptions=True
+                )
+
+                # [ check exceptions ]
+                for i, result in enumerate(results):
+                    if isinstance(result, Exception):
+                        logger.error(f"Error in parallel update {i}: {result}")
+                        raise result
+
+                await self.session.commit()
+                await self.session.refresh(drug)
+
+                logger.info(f"Successfully {'updated' if drug_id else 'created'} drug: {drug.name}")
+                return drug.get_schema()
+
+            except Exception as ex:
+                await self.session.rollback()
+                logger.exception(f"Failed to update drug: {str(ex)}")
+                raise
+
+        async def update_briefly_info(
+                self, drug: Drug, assistant_response: DrugBrieflyAssistantResponse,
+                need_to_clean: bool = False
+        ) -> None:
+            try:
+                if need_to_clean:
+                    await self.session.execute(delete(DrugSynonym).where(DrugSynonym.drug_id == drug.id))
+
+                drug.name = assistant_response.drug_name
+                drug.name_ru = assistant_response.drug_name_ru
+                drug.latin_name = assistant_response.latin_name
+                drug.description = assistant_response.description
+                drug.classification = assistant_response.classification
+                drug.fact = assistant_response.fact
+                drug.danger_classification = assistant_response.danger_classification
+
+                drug.synonyms = [
+                    DrugSynonym(
+                        drug_id=drug.id,
+                        synonym=synonym
+                    )
+                    for synonym in assistant_response.synonyms
+                ]
+
+                drug.updated_at = datetime.now()
+
+            except Exception as ex:
+                logger.exception(f"Failed to update drug for {assistant_response.name}: {str(ex)}")
+                raise
+
+        async def update_dosages(
+                self, drug: Drug, assistant_response: DrugDosagesAssistantResponse,
+                need_to_clean: bool = False
+        ) -> None:
+            try:
+                if need_to_clean:
+                    await self.session.execute(delete(DrugDosage).where(DrugDosage.drug_id == drug.id))
+
+                drug.dosages = [
+                    DrugDosage(
+                        route=dosage_response.route,
+                        method=dosage_response.method,
+                        per_time=dosage_response.per_time,
+                        max_day=dosage_response.max_day,
+                        per_time_weight_based=dosage_response.per_time_weight_based,
+                        max_day_weight_based=dosage_response.max_day_weight_based,
+                        onset=dosage_response.onset,
+                        half_life=dosage_response.half_life,
+                        duration=dosage_response.duration,
+                        notes=dosage_response.notes,
+                    ) for dosage_response in assistant_response.dosages
+                ]
+                drug.dosages_fun_facts = assistant_response.dosages_fun_facts
+                drug.dosage_sources = assistant_response.dosage_sources
+
+            except Exception as ex:
+                logger.exception(f"Failed to update drug for {assistant_response.name}: {str(ex)}")
+                raise
+
+        async def update_analogs(
+                self, drug: Drug, assistant_response: DrugAnalogsAssistantResponse,
+                need_to_clean: bool = False
+        ) -> None:
+            try:
+                if need_to_clean:
+                    await self.session.execute(delete(DrugAnalog).where(DrugAnalog.drug_id == drug.id))
+
+                drug.analogs = [
+                    DrugAnalog(
+                        analog_name=analog_response.analog_name,
+                        percent=analog_response.percent,
+                        difference=analog_response.difference,
+                    )
+                    for analog_response in assistant_response.analogs
+                ]
+
+                drug.analogs_description = assistant_response.analogs_description
+
+            except Exception as ex:
+                logger.exception(f"Failed to update drug for {assistant_response.name}: {str(ex)}")
+                raise
+
+        @staticmethod
+        async def update_metabolism(
+                drug: Drug, assistant_response: DrugMetabolismAssistantResponse
+        ) -> None:
+            try:
+                drug.absorption = assistant_response.absorption
+                drug.metabolism = assistant_response.metabolism
+                drug.metabolism_description = assistant_response.metabolism_description
+                drug.elimination = assistant_response.elimination
+                drug.time_to_peak = assistant_response.time_to_peak
+
+            except Exception as ex:
+                logger.exception(f"Failed to update drug for {assistant_response.name}: {str(ex)}")
+                raise
+
+        async def update_pathways(
+                self, drug: Drug, assistant_response: DrugPathwaysAssistantResponse,
+                need_to_clean: bool = False
+        ) -> None:
+            try:
+                if need_to_clean:
+                    await self.session.execute(delete(DrugPathway).where(DrugPathway.drug_id == drug.id))
+
+                drug.pathways = [
+                    DrugPathway(
+                        receptor=pathway_response.receptor,
+                        binding_affinity=pathway_response.binding_affinity,
+                        affinity_description=pathway_response.affinity_description,
+                        activation_type=pathway_response.activation_type,
+                        pathway=pathway_response.pathway,
+                        effect=pathway_response.effect,
+                        note=pathway_response.note,
+                    )
+                    for pathway_response in assistant_response.pathways
+                ]
+
                 drug.primary_action = assistant_response.mechanism_summary.primary_action
                 drug.secondary_actions = assistant_response.mechanism_summary.secondary_actions
                 drug.clinical_effects = assistant_response.mechanism_summary.clinical_effects
-            else:
-                logger.error("ASSISTANT RESPONSE: Missing mechanism summary!")
-                raise AssistantResponseError
 
-            # Создаем новые DrugPathways объекты
-            new_pathways = []
-            for pathway_data in assistant_response.pathways:
-                new_pathways.append(DrugPathway(
-                    drug_id=drug.id,
-                    receptor=pathway_data.receptor,
-                    binding_affinity=pathway_data.binding_affinity,
-                    affinity_description=pathway_data.affinity_description,
-                    activation_type=pathway_data.activation_type,
-                    pathway=pathway_data.pathway,
-                    effect=pathway_data.effect,
-                    note=pathway_data.note,
-                ))
-            drug.pathways = new_pathways
-            drug.pathways_sources = assistant_response.pathway_sources
-        except Exception as ex:
-            logger.error(f"Failed to update pathways for {drug.name}: {str(ex)}")
-            raise ex
-        return drug.get_schema()
+                drug.pathway_sources = assistant_response.pathway_sources
 
-    async def update_combinations(
-            self,
-            drug: DrugSchema,
-            assistant_response: AssistantResponseCombinations
-    ) -> DrugSchema:
-        """
-        Обновляет таблицу:
-            — Комбинации препарата.
-        """
-        drug: Drug = self.model.from_pydantic(drug)
-        try:
-            new_combinations = []
-            for combination in assistant_response.combinations:
-                new_combinations.append(DrugCombination(
-                    drug_id=drug.id,
-                    combination_type=combination.combination_type,
-                    substance=combination.substance,
-                    effect=combination.effect,
-                    risks=combination.risks,
-                    products=combination.products,
-                ))
-            drug.combinations = new_combinations
-        except Exception as ex:
-            logger.error(f"Failed to update combinations for {drug.name}, {drug.id}: {str(ex)}")
-            raise ex
-        return drug.get_schema()
+            except Exception as ex:
+                logger.exception(f"Failed to update drug for {assistant_response.name}: {str(ex)}")
+                raise
 
-    async def update_researches(
-            self,
-            drug_id: uuid.UUID,
-            researches: list[AssistantResponseDrugResearch]
-    ) -> None:
-        """
-        Обновляет таблицу:
-            — Исследования препарата.
-        """
-        drug: Drug = await self.get_model(drug_id)
-        if not drug:
-            raise DrugNotFound
-        try:
-            old_researches_doi = [res.doi for res in drug.researches]
-            new_researches = drug.researches.copy()
-            for research in researches:
-                if research.doi in old_researches_doi:
-                    continue
-                new_researches.append(
-                    DrugResearch(
-                        name=research.name,
-                        description=research.description,
-                        publication_date=research.publication_date,
-                        url=research.url,
-                        summary=research.summary,
-                        journal=research.journal,
-                        doi=research.doi,
-                        authors=research.authors,
-                        study_type=research.study_type,
-                        interest=research.interest
+        async def update_combinations(
+                self, drug: Drug, assistant_response: DrugCombinationsAssistantResponse,
+                need_to_clean: bool = False
+        ) -> None:
+            try:
+                if need_to_clean:
+                    await self.session.execute(delete(DrugDosage).where(DrugDosage.drug_id == drug.id))
+
+                drug.combinations = [
+                    DrugCombination(
+                        combination_type=combination_response.combination_type,
+                        substance=combination_response.substance,
+                        effect=combination_response.effect,
+                        risks=combination_response.risks,
+                        products=combination_response.products,
                     )
+                    for combination_response in assistant_response.combinations
+                ]
+
+            except Exception as ex:
+                logger.exception(f"Failed to update drug for {assistant_response.name}: {str(ex)}")
+                raise
+
+    @staticmethod
+    async def update_researches(drug: Drug, researches: DrugResearchesAssistantResponse) -> Drug:
+        try:
+            drug.researches = [
+                DrugResearch(
+                    name=research_response.name,
+                    description=research_response.description,
+                    publication_date=research_response.publication_date,
+                    url=research_response.url,
+                    summary=research_response.summary,
+                    journal=research_response.journal,
+                    doi=research_response.doi,
+                    authors=research_response.authors,
+                    study_type=research_response.study_type,
+                    interest=research_response.interest,
                 )
-                drug.researches += new_researches
+                for research_response in researches.researches
+            ]
+
+            return drug
+
         except Exception as ex:
-            logger.error(f"Error while updating researches model: {ex}")
-            raise ex
-        await self.save(drug)
+            logger.exception(f"Failed to update drug for {researches.name}: {str(ex)}")
+            raise
 
 
 async def get_drug_repository(

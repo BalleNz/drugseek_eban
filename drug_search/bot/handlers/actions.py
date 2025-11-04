@@ -82,7 +82,7 @@ async def drug_buy_request(
 
     match api_response.status:
         case BuyDrugStatuses.DRUG_CREATED:
-            if api_response.job_status == JobStatuses.CREATED:
+            if api_response.job_status == JobStatuses.CREATED:  # TODO протестить статусы
                 logger.info(f"Юзер {callback_query.from_user.id} создал препарат {api_response.drug_name}")
                 await callback_query.message.edit_text(
                     text=MessageText.DRUG_BUY_CREATED

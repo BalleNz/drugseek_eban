@@ -1,19 +1,39 @@
 import uuid
 from datetime import date
-from typing import Optional, Type, TypeVar
+from typing import Optional, Type, TypeVar, Generic
 
 from pydantic import BaseModel
-from sqlalchemy import String, Float, ForeignKey, Text, UniqueConstraint, ARRAY, Index, func, Date
+from sqlalchemy import String, Float, ForeignKey, Text, UniqueConstraint, ARRAY, Index, func, Date, JSON, TypeDecorator
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID  # Важно импортировать UUID для PostgreSQL
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from drug_search.core.schemas import DrugAnalogSchema, DrugCombinationSchema, Pathway, \
-    DrugResearchSchema, DrugSynonymSchema, DrugDosageSchema, DrugSchema
+from drug_search.core.schemas import DrugAnalogSchema, DrugCombinationSchema, DrugPathwaySchema, \
+    DrugResearchSchema, DrugSynonymSchema, DrugDosageSchema, DrugSchema, AbsorptionInfo, MetabolismPhase, \
+    EliminationInfo
 from drug_search.infrastructure.database.models.base import TimestampsMixin, IDMixin
 from drug_search.infrastructure.database.models.types import DangerClassificationEnum
 
 M = TypeVar("M", bound=IDMixin)
 S = TypeVar("S", bound=BaseModel)
+
+
+class PydanticTypeList(TypeDecorator, Generic[S]):
+    impl = JSON
+    cache_ok = True
+
+    def __init__(self, pydantic_type: Type[S], *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.pydantic_type = pydantic_type
+
+    def process_bind_param(self, value: list[S] | None, dialect):
+        if value is None:
+            return None
+        return [item.model_dump() for item in value]
+
+    def process_result_value(self, value: list | None, dialect):
+        if value is None:
+            return None
+        return [self.pydantic_type(**item) for item in value]
 
 
 class Drug(IDMixin, TimestampsMixin):
@@ -44,10 +64,18 @@ class Drug(IDMixin, TimestampsMixin):
     )
 
     # [ pharmacokinetics ]
-    absorption: Mapped[list[str] | None] = mapped_column(ARRAY(Text))
-    metabolism: Mapped[list[str] | None] = mapped_column(ARRAY(Text))
-    elimination: Mapped[Optional[str]] = mapped_column(Text)
-    time_to_peak: Mapped[Optional[str]] = mapped_column(String(100))
+    absorption: Mapped[list[AbsorptionInfo] | None] = mapped_column(
+        PydanticTypeList(AbsorptionInfo),
+        comment="JSON список абсорбции {route, bioavailability, time_to_peak}"
+    )
+    metabolism: Mapped[list[MetabolismPhase] | None] = mapped_column(
+        PydanticTypeList(MetabolismPhase),
+        comment="JSON список фаз метаболизма {phase, process, result}"
+    )
+    elimination: Mapped[list[EliminationInfo] | None] = mapped_column(
+        PydanticTypeList(EliminationInfo),
+        comment="JSON список выведения {excrement_type, output_percent}"
+    )
     metabolism_description: Mapped[Optional[str]] = mapped_column(Text)
 
     # [ pathways ]
@@ -113,6 +141,7 @@ class Drug(IDMixin, TimestampsMixin):
     def get_schema(self) -> DrugSchema:
         def _map_schemas(items):
             return [item_schema for item in items if (item_schema := item.get_schema())] if items else []
+
         return DrugSchema(
             id=self.id,
             name=self.name,
@@ -126,10 +155,9 @@ class Drug(IDMixin, TimestampsMixin):
             analogs_description=self.analogs_description,
             metabolism_description=self.metabolism_description,
 
-            absorption=self.absorption,
-            metabolism=self.metabolism,
-            elimination=self.elimination,
-            time_to_peak=self.time_to_peak,
+            absorption=self.absorption or [],
+            metabolism=self.metabolism or [],
+            elimination=self.elimination or [],
 
             danger_classification=self.danger_classification,
 
@@ -251,7 +279,7 @@ class DrugPathway(IDMixin):
 
     @property
     def schema_class(cls) -> Type[S]:
-        return Pathway
+        return DrugPathwaySchema
 
 
 class DrugPrice(IDMixin, TimestampsMixin):
@@ -264,7 +292,7 @@ class DrugPrice(IDMixin, TimestampsMixin):
     )
     drug: Mapped["Drug"] = relationship(back_populates="prices", )
 
-    drug_brandname: Mapped[str] = mapped_column(String(100), unique=True)
+    drug_brand: Mapped[str] = mapped_column(String(100), unique=True)
     price: Mapped[float] = mapped_column(Float)
     shop_url: Mapped[str] = mapped_column(String(100))
 

@@ -14,6 +14,7 @@ class CombinationType(str, Enum):
 
 
 class DrugSynonymSchema(BaseModel):
+    """объект из таблицы drug_synonyms"""
     synonym: str
 
     class Config:
@@ -21,6 +22,7 @@ class DrugSynonymSchema(BaseModel):
 
 
 class DrugAnalogSchema(BaseModel):
+    """объект из таблицы drug_analogs"""
     analog_name: str = Field(...)
     percent: str = Field(...)
     difference: str = Field(...)
@@ -30,6 +32,7 @@ class DrugAnalogSchema(BaseModel):
 
 
 class DrugCombinationSchema(BaseModel):
+    """объект из таблицы drug_combinations"""
     combination_type: CombinationType = Field(...)
     substance: str = Field(..., description="ДВ или классификация")
     effect: str = Field(..., description="Эффект комбинации")
@@ -41,7 +44,7 @@ class DrugCombinationSchema(BaseModel):
 
 
 class DrugDosageSchema(BaseModel):
-    """Схема дозировки препарата из таблицы drug_dosages."""
+    """объект из таблицы drug_dosages"""
     route: str = Field(...)
     method: Optional[str] = Field(default=None, description="например, внутримышечно")
 
@@ -60,8 +63,8 @@ class DrugDosageSchema(BaseModel):
         from_attributes = True
 
 
-class Pathway(BaseModel):
-    """Схема одной записи из таблицы drug_pathways"""
+class DrugPathwaySchema(BaseModel):
+    """объект из таблицы drug_pathways"""
     receptor: str = Field(...)
     binding_affinity: Optional[str] = Field(default=None)
     affinity_description: str = Field(...)
@@ -88,7 +91,7 @@ class DrugPriceSchema(BaseModel):
     """Схема цены препарата"""
     # FUTURE
     id: int = Field(...)
-    drug_brandname: str = Field(...)
+    drug_brand: str = Field(...)
     price: float = Field(...)
     shop_url: str = Field(...)
     created_at: datetime = Field(...)
@@ -115,6 +118,35 @@ class DrugResearchSchema(BaseModel):
         from_attributes = True
 
 
+class AbsorptionInfo(BaseModel):
+    """Информация об абсорбции для конкретного пути введения"""
+    route: str = Field(..., description="Способ введения")
+    bioavailability: str = Field(..., description="Биодоступность (только число процент)")
+    time_to_peak: str = Field(..., description="Время до Cmax")
+
+    class Config:
+        from_attributes = True
+
+
+class EliminationInfo(BaseModel):
+    """Информация о выведении через конкретный тип экскрементов"""
+    excrement_type: str = Field(..., description="Тип экскремента")
+    output_percent: str = Field(..., description="Процент выведения")
+
+    class Config:
+        from_attributes = True
+
+
+class MetabolismPhase(BaseModel):
+    """Информация о фазе метаболизма"""
+    phase: str = Field(..., description="Номер фазы")
+    process: str = Field(..., description="Название процесса")
+    result: str = Field(..., description="Результат этого процесса")
+
+    class Config:
+        from_attributes = True
+
+
 class DrugSchema(BaseModel):
     """Полная схема препарата"""
     id: UUID = Field(...)
@@ -131,10 +163,10 @@ class DrugSchema(BaseModel):
     danger_classification: DANGER_CLASSIFICATION = Field(..., description="класс опасности 0/1/2")
 
     # [ metabolism ]
-    absorption: list[str] = Field(..., description="процент биодоступности")
-    metabolism: list[str] = Field(..., description="основные пути метаболизма")
-    elimination: str = Field(..., description="ТОП 3 (примерно) путей выведения...")
-    time_to_peak: str = Field(..., description="время до достижения Cmax")
+    absorption: list[AbsorptionInfo] = Field(..., description="информация о абсорбции по путям введения")
+    metabolism: list[MetabolismPhase] = Field(..., description="фазы метаболизма")
+    elimination: list[EliminationInfo] = Field(..., description="пути выведения")
+
     metabolism_description: str = Field(...)
 
     # [ dosages ]
@@ -143,7 +175,7 @@ class DrugSchema(BaseModel):
     dosage_sources: list[str] = Field(...)
 
     # [ pathways ]
-    pathways: list[Pathway] = Field(...)
+    pathways: list[DrugPathwaySchema] = Field(...)
     pathways_sources: list[str] = Field(...)
     primary_action: str = Field(...)
     secondary_actions: str = Field(...)

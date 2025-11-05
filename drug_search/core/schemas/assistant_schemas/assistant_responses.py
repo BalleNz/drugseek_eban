@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 from drug_search.core.lexicon import EXIST_STATUS, DANGER_CLASSIFICATION
 from drug_search.core.schemas.drug_schemas import DrugDosageSchema, DrugAnalogSchema, MechanismSummary, \
-    Pathway, DrugCombinationSchema, DrugResearchSchema
+    DrugPathwaySchema, DrugCombinationSchema, DrugResearchSchema, MetabolismPhase, AbsorptionInfo, EliminationInfo
 
 
 class DosageRoute(str, Enum):
@@ -51,11 +51,10 @@ class DrugMetabolismAssistantResponse(BaseModel):
     """
     prompt: GET_DRUG_METABOLISM
     """
-    absorption: list[str] = Field(..., description="абсорбция")
-    metabolism: list[str] = Field(..., description="метаболзм")
+    absorption: list[AbsorptionInfo] = Field(..., description="абсорбция")
+    metabolism: list[MetabolismPhase] = Field(..., description="метаболизм")
     metabolism_description: str = Field(..., description="описание метаболизма")
-    elimination: str = Field(..., description="выведение")
-    time_to_peak: str = Field(..., description="пик концентрации")
+    elimination: list[EliminationInfo] = Field(..., description="выведение")
 
 
 class DrugPathwaysAssistantResponse(BaseModel):
@@ -63,7 +62,7 @@ class DrugPathwaysAssistantResponse(BaseModel):
     Ответ на
      GET_DRUG_PATHWAYS
     """
-    pathways: list[Pathway] = Field(...)
+    pathways: list[DrugPathwaySchema] = Field(...)
     mechanism_summary: MechanismSummary = Field(...)
     pathway_sources: list[str] = Field(..., description="Источники по путям активации")
 

@@ -20,12 +20,14 @@ __all__ = [
     'DrugAnalogsAssistantResponse',
     'DrugMetabolismAssistantResponse',
     # [ Drug ]
-    'DrugBrieflySchema',
+    'AbsorptionInfo',
+    'MetabolismPhase',
+    'EliminationInfo',
     'DrugSchema',
+    'DrugBrieflySchema',
     'DrugDosageSchema',
-    'Pathway',
+    'DrugPathwaySchema',
     'DrugSynonymSchema',
-    'DrugAnalogSchema',
     'DrugAnalogSchema',
     'DrugResearchSchema',
     'DrugPriceSchema',
@@ -56,7 +58,7 @@ __all__ = [
     'BuyDrugStatuses',
     'UpdateDrugStatuses',
     # [ Types ]
-    'Pathway',
+    'DrugPathwaySchema',
     'MechanismSummary',
     'CombinationType',
 ]

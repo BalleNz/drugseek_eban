@@ -169,9 +169,13 @@ class DrugMessageFormatter:
     def format_metabolism(drug: DrugSchema) -> str:
         """Фармакокинетика форматирование"""
 
-        # TODO: пути метаболизма оформить как "Фаза I: ...\nФаза II: ..."
+        # [ биодоступность для разных методов ]
         absorption: str | None = "<b>Биодоступность:</b>\n" + drug.absorption + "\n\n" if drug.absorption else ""
+
+        # TODO: пути метаболизма оформить как "Фаза I: ...\nФаза II: ..."
+        # [ пути метаболизма ]
         metabolism: str | None = "<b>Метаболизм:</b>\n" + drug.metabolism + "\n\n" if drug.metabolism else ""
+
         elimination: str | None = "<b>Выведение:</b>\n" + drug.elimination + "\n\n" if drug.elimination else ""
 
         pharmacokinetics = absorption + metabolism + elimination

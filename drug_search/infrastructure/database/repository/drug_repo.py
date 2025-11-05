@@ -301,9 +301,8 @@ class DrugRepository(BaseRepository):
             try:
                 drug.absorption = assistant_response.absorption
                 drug.metabolism = assistant_response.metabolism
-                drug.metabolism_description = assistant_response.metabolism_description
                 drug.elimination = assistant_response.elimination
-                drug.time_to_peak = assistant_response.time_to_peak
+                drug.metabolism_description = assistant_response.metabolism_description
 
             except Exception as ex:
                 logger.exception(f"Failed to update drug for {assistant_response.name}: {str(ex)}")

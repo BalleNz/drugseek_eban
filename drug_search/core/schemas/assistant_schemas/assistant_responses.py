@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 from drug_search.core.lexicon import EXIST_STATUS, DANGER_CLASSIFICATION
 from drug_search.core.schemas.drug_schemas import DrugDosageSchema, DrugAnalogSchema, MechanismSummary, \
-    DrugPathwaySchema, DrugCombinationSchema, DrugResearchSchema, MetabolismPhase, AbsorptionInfo, EliminationInfo
+    DrugPathwaySchema, DrugCombinationSchema, DrugResearchSchema, MetabolismPhase, Pharmacokinetics, EliminationInfo
 
 
 class DosageRoute(str, Enum):
@@ -28,6 +28,7 @@ class DrugBrieflyAssistantResponse(BaseModel):
     classification: Optional[str] = Field(None, description="Фармакологические классификации")
     danger_classification: DANGER_CLASSIFICATION = Field(..., description="класс опасности препарата")
     fact: Optional[str] = Field(None, description="Интересный факт о препарате")
+    fun_facts: list[str] = Field(..., description="факты о дозировках")
 
 
 class DrugDosagesAssistantResponse(BaseModel):
@@ -35,7 +36,6 @@ class DrugDosagesAssistantResponse(BaseModel):
     prompt: GET_DRUG_DOSAGES
     """
     dosages: list[DrugDosageSchema] = Field(..., description="дозировки")
-    dosages_fun_facts: list[str] = Field(..., description="факты о дозировках")
     dosage_sources: list[str] = Field(..., description="источники дозировок")
 
 
@@ -51,7 +51,7 @@ class DrugMetabolismAssistantResponse(BaseModel):
     """
     prompt: GET_DRUG_METABOLISM
     """
-    absorption: list[AbsorptionInfo] = Field(..., description="абсорбция")
+    pharmacokinetics: list[Pharmacokinetics] = Field(..., description="фармакокинетика")
     metabolism: list[MetabolismPhase] = Field(..., description="метаболизм")
     metabolism_description: str = Field(..., description="описание метаболизма")
     elimination: list[EliminationInfo] = Field(..., description="выведение")

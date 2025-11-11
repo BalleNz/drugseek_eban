@@ -53,10 +53,6 @@ class DrugDosageSchema(BaseModel):
     per_time_weight_based: Optional[str] = Field(default=None)
     max_day_weight_based: Optional[str] = Field(default=None)
 
-    onset: Optional[str] = Field(None, description="время начала действия (например, 'немедленно')")
-    half_life: Optional[str] = Field(None, description="период полувыведения")
-    duration: Optional[str] = Field(None, description="продолжительность действия")
-
     notes: Optional[str] = Field(default=None)
 
     class Config:
@@ -118,11 +114,14 @@ class DrugResearchSchema(BaseModel):
         from_attributes = True
 
 
-class AbsorptionInfo(BaseModel):
+class Pharmacokinetics(BaseModel):
     """Информация об абсорбции для конкретного пути введения"""
     route: str = Field(..., description="Способ введения")
     bioavailability: str = Field(..., description="Биодоступность (только число процент)")
     time_to_peak: str = Field(..., description="Время до Cmax")
+    onset: Optional[str] = Field(None, description="время начала действия (например, 'немедленно')")
+    half_life: Optional[str] = Field(None, description="период полувыведения")
+    duration: Optional[str] = Field(None, description="продолжительность действия")
 
     class Config:
         from_attributes = True
@@ -158,20 +157,21 @@ class DrugSchema(BaseModel):
     description: str = Field(...)
     classification: str = Field(...)
     fact: str = Field(...)
+    fun_facts: list[str] = Field(...)
+
     synonyms: list[DrugSynonymSchema] = Field(...)
 
     danger_classification: DANGER_CLASSIFICATION = Field(..., description="класс опасности 0/1/2")
 
     # [ metabolism ]
-    absorption: list[AbsorptionInfo] = Field(..., description="информация о абсорбции по путям введения")
     metabolism: list[MetabolismPhase] = Field(..., description="фазы метаболизма")
+    pharmacokinetics: list[Pharmacokinetics] = Field(..., description="информация о абсорбции по путям введения")
     elimination: list[EliminationInfo] = Field(..., description="пути выведения")
 
     metabolism_description: str = Field(...)
 
     # [ dosages ]
     dosages: list[DrugDosageSchema] = Field(...)
-    dosages_fun_facts: list[str] = Field(...)
     dosage_sources: list[str] = Field(...)
 
     # [ pathways ]

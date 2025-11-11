@@ -10,7 +10,7 @@ class MessageTemplates:
     )
 
     DRUG_INFO_PATHWAYS: str = (
-        "<b>{drug_name_ru} механизм действия {sources_section}</b>\n\n"
+        "<b>🎯 {drug_name_ru} МЕХАНИЗМ ДЕЙСТВИЯ {sources_section}</b>\n\n"
         "<b>Основное действие: </b>\n{primary_action}\n\n"
         "{secondary_actions_section}"
         "<b>┫Пути активации:</b>"
@@ -18,32 +18,39 @@ class MessageTemplates:
     )
 
     DRUG_INFO_COMBINATIONS: str = (
-        "<b>{drug_name_ru} комбинации.</b>\n\n"
-        "<b>Полезные комбинации:</b>\n{good_combinations}\n"
-        "<b>Опасные комбинации:</b>\n{bad_combinations}"
+        "<b>🔄 {drug_name_ru} КОМБИНАЦИИ</b>\n\n"
+        "💚 <b>СИНЕРГИЯ</b>\n"
+        "{good_combinations}\n"
+        "🚫<b> ПРОТИВОПОКАЗАННЫЕ </b>\n"
+        "{bad_combinations}"
     )
 
     DRUG_INFO_DOSAGES: str = (
-        "<b>{drug_name_ru} дозировки {sources_section}</b>\n\n"
-        "{dosages_list}"
-        "{dosage_fun_fact_section}"
+        "<b>📋 {drug_name_ru} ДОЗИРОВКИ {sources_section}</b>\n\n"
+        "{dosages}"
+        "{dosages_fun_fact}"
     )
 
     DRUG_INFO_METABOLISM: str = (
-        "<b>{drug_name_ru} метаболизм.</b>\n\n"
+        "<b>💊 {drug_name_ru} ФАРМАКОКИНЕТИКА</b>\n\n"
+        "💉 <b>ВСАСЫВАНИЕ</b>\n"
+        "{absorption}\n"
+        "<b>🌟 МЕТАБОЛИЗМ <a href='https://ru.wikipedia.org/wiki/%D0%9C%D0%B5%D1%82%D0%B0%D0%B1%D0%BE%D0%BB%D0%B8%D0%B7%D0%BC_%D0%BB%D0%B5%D0%BA%D0%B0%D1%80%D1%81%D1%82%D0%B2'>¹</a></b>\n"
+        "{metabolism}\n"
+        "<b>📤 ВЫВЕДЕНИЕ</b>\n"
+        "{elimination}\n"
         "{metabolism_description}"
-        "{pharmacokinetics}"
     )
 
     DRUG_INFO_RESEARCHES: str = (
-        "<b>{drug_name_ru} исследования.</b>\n\n"
+        "<b>📊 {drug_name_ru} ИССЛЕДОВАНИЯ</b>\n\n"
         "{researches_list}"
     )
 
     DRUGS_ANALOGS: str = (
-        "<b>{drug_name_ru} аналоги.</b>\n\n"
-        "{analogs_description}"
+        "<b>⚙️ {drug_name_ru} АНАЛОГИ</b>\n\n"
         "{analogs_section}"
+        "{analogs_description}"
     )
 
     USER_PROFILE: str = (

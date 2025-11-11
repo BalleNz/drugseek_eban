@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import UUID as PG_UUID  # Важно имп�
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from drug_search.core.schemas import DrugAnalogSchema, DrugCombinationSchema, DrugPathwaySchema, \
-    DrugResearchSchema, DrugSynonymSchema, DrugDosageSchema, DrugSchema, AbsorptionInfo, MetabolismPhase, \
+    DrugResearchSchema, DrugSynonymSchema, DrugDosageSchema, DrugSchema, Pharmacokinetics, MetabolismPhase, \
     EliminationInfo
 from drug_search.infrastructure.database.models.base import TimestampsMixin, IDMixin
 from drug_search.infrastructure.database.models.types import DangerClassificationEnum
@@ -53,7 +53,7 @@ class Drug(IDMixin, TimestampsMixin):
     analogs_description: Mapped[Optional[str]] = mapped_column(Text)
 
     # [ dosages info ]
-    dosages_fun_facts: Mapped[list[str] | None] = mapped_column(ARRAY(Text))
+    fun_facts: Mapped[list[str] | None] = mapped_column(ARRAY(Text))
 
     danger_classification: Mapped[DangerClassificationEnum] = mapped_column(
         DangerClassificationEnum,
@@ -64,9 +64,9 @@ class Drug(IDMixin, TimestampsMixin):
     )
 
     # [ pharmacokinetics ]
-    absorption: Mapped[list[AbsorptionInfo] | None] = mapped_column(
-        PydanticTypeList(AbsorptionInfo),
-        comment="JSON список абсорбции {route, bioavailability, time_to_peak}"
+    pharmacokinetics: Mapped[list[Pharmacokinetics] | None] = mapped_column(
+        PydanticTypeList(Pharmacokinetics),
+        comment="JSON список фармакокинетики"
     )
     metabolism: Mapped[list[MetabolismPhase] | None] = mapped_column(
         PydanticTypeList(MetabolismPhase),
@@ -149,13 +149,13 @@ class Drug(IDMixin, TimestampsMixin):
             name_ru=self.name_ru,
             description=self.description,
             classification=self.classification,
-            dosages_fun_facts=self.dosages_fun_facts,
+            fun_facts=self.fun_facts,
 
             fact=self.fact,
             analogs_description=self.analogs_description,
             metabolism_description=self.metabolism_description,
 
-            absorption=self.absorption or [],
+            pharmacokinetics=self.pharmacokinetics or [],
             metabolism=self.metabolism or [],
             elimination=self.elimination or [],
 
@@ -331,13 +331,6 @@ class DrugDosage(IDMixin):
         String(100),
         comment="for peroral and intramuscular only"
     )
-
-    onset: Mapped[Optional[str]] = mapped_column(
-        String(100),
-        comment="<Время начала действия (например, 'немедленно'). Только для intramuscular/intravenous/peroral>"
-    )
-    half_life: Mapped[Optional[str]] = mapped_column(String(150), comment="период полувыведения")
-    duration: Mapped[Optional[str]] = mapped_column(String(150), comment="продолжительность действия")
 
     notes: Mapped[Optional[str]] = mapped_column(Text)
 

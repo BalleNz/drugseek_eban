@@ -20,7 +20,7 @@ __all__ = [
     'DrugAnalogsAssistantResponse',
     'DrugMetabolismAssistantResponse',
     # [ Drug ]
-    'AbsorptionInfo',
+    'Pharmacokinetics',
     'MetabolismPhase',
     'EliminationInfo',
     'DrugSchema',

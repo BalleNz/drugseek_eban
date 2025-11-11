@@ -1,3 +1,5 @@
+import random
+
 from drug_search.bot.keyboards import DescribeTypes
 from drug_search.bot.lexicon.consts import SYMBOLS
 from drug_search.bot.lexicon.message_templates import MessageTemplates
@@ -24,7 +26,7 @@ class DrugMessageFormatter:
         )
 
     @staticmethod
-    def format_mechanism(drug: DrugSchema) -> str:
+    def format_pathways(drug: DrugSchema) -> str:
         """Форматирование информации о путях воздействия"""
         pathways_list: str = ""
 
@@ -44,23 +46,22 @@ class DrugMessageFormatter:
                 pathway_info += f"\n<b>{SYMBOLS[i]} {signaling_pathway}</b>\n"
                 pathways.remove(signaling_pathway)
 
-            pathway_info += f"<b>     ▻ <u>{drug_pathway.receptor}</u></b>\n"
-            pathway_info += f"        <b>Тип:</b> {drug_pathway.activation_type}\n"
-            pathway_info += f"        <b>Эффект:</b> {drug_pathway.effect}\n"
-            pathway_info += f"        <b>Сила связи:</b> {drug_pathway.affinity_description} | {drug_pathway.binding_affinity}\n"
-            pathway_info += f"        <b>Что делает:</b> {drug_pathway.note}\n"
+            pathway_info += f"<b>└─ <u>{drug_pathway.receptor}</u></b>\n"
+            pathway_info += f"<b>└── Тип:</b> {drug_pathway.activation_type}\n"
+            pathway_info += f"<b>└── Эффект:</b> {drug_pathway.effect}\n"
+            pathway_info += f"<b>└── Сила связи:</b> {drug_pathway.affinity_description} | {drug_pathway.binding_affinity}\n"
+            pathway_info += f"<b>└── Что делает:</b> {drug_pathway.note}\n"
 
             pathways_list += pathway_info
 
-        secondary_actions_section = f"<b>Вторичные действия:\n</b>{drug.secondary_actions}\n\n" if drug.secondary_actions else ""
+        secondary_actions_section = f"<b>Вторичные действия:\n</b>{drug.secondary_actions.capitalize()}.\n\n" if drug.secondary_actions else ""
 
         return MessageTemplates.DRUG_INFO_PATHWAYS.format(
             sources_section=sources_section,
-            drug_name_ru=drug.name_ru,
+            drug_name_ru=drug.name_ru.upper(),
             pathways_list=pathways_list,
-            primary_action=drug.primary_action,
+            primary_action=drug.primary_action.capitalize() + ".",
             secondary_actions_section=secondary_actions_section,
-
         )
 
     @staticmethod
@@ -71,22 +72,23 @@ class DrugMessageFormatter:
 
         for combination in drug.combinations:
             comb_products: str = ""
-            if combination.combination_type == CombinationType.GOOD:
-                comb_products = f'({", ".join(combination.products)})'
 
-            combination_text: str = f"        <b>▻ {combination.substance} {comb_products}</b>\n"
-            combination_text += f"        <u>{combination.effect}</u>\n"
+            # if combination.combination_type == CombinationType.GOOD:
+            #     comb_products = f'({", ".join(combination.products)})'
+            combination_text: str = f"<b>{combination.substance}</b> <i>{comb_products}</i>\n"
+
+            combination_text += f"<b>└──</b> {combination.effect}\n"
 
             if combination.combination_type == CombinationType.GOOD:
-                good_combinations += f"{combination_text}\n"
+                good_combinations += f"<b>└─</b> {combination_text}"
 
             if combination.combination_type == CombinationType.BAD:
-                combination_text += f"        <b>Вред:</b> {combination.risks.lower()}\n"
+                combination_text += f"<b>└──</b> {combination.risks.capitalize()}\n"
 
-                bad_combinations += f"{combination_text}\n"
+                bad_combinations += f"<b>└─</b> {combination_text}"
 
         return MessageTemplates.DRUG_INFO_COMBINATIONS.format(
-            drug_name_ru=drug.name_ru,
+            drug_name_ru=drug.name_ru.upper(),
             good_combinations=good_combinations or "Нет данных",
             bad_combinations=bad_combinations or "Нет данных"
         )
@@ -94,30 +96,6 @@ class DrugMessageFormatter:
     @staticmethod
     def format_dosages(drug: DrugSchema) -> str:
         """Форматирование информации о дозировках"""
-
-        def format_dosage_info(
-                dosage: DrugDosageSchema,
-                symbol: str
-        ) -> str:
-            """Форматирует информацию об одной дозировке"""
-            sections = [
-                f"<b>{symbol} <u>{dosage.method.capitalize()}</u></b>",
-
-                f"<b>Разовая дозировка:</b> {dosage.per_time} <i>"
-                f"{f'({dosage.per_time_weight_based})' if dosage.per_time_weight_based else ''}</i>" if dosage.per_time else None,
-
-                f"<b>Макс. в сутки:</b> {dosage.max_day} <i>"
-                f"{f'({dosage.max_day_weight_based})' if dosage.max_day_weight_based else ''}</i>" if dosage.max_day else None,
-
-                f"<b>Время начала действия:</b> {dosage.onset}" if dosage.onset else None,
-                f"<b>Период полувыведения:</b> {dosage.half_life}" if dosage.half_life else None,
-                f"<b>Продолжительность действия:</b> {dosage.duration}" if dosage.duration else None,
-
-                dosage.notes if dosage.notes else None
-            ]
-
-            return "\n".join(filter(None, sections))
-
         def create_sources_section(sources: list[dict]) -> str:
             """Создает секцию с источниками в виде пронумерованных ссылок"""
             source_links = [
@@ -131,21 +109,26 @@ class DrugMessageFormatter:
         sources_section = create_sources_section(google_sources)
 
         # [ формирование списка всех дозировок ]
-        dosages_list = "\n\n".join(
-            format_dosage_info(dosage, SYMBOLS[i])
-            for i, dosage in enumerate(drug.dosages)
-        )
+        dosages = ""
+        for i, dosage in enumerate(drug.dosages):
+            dosages += f"{SYMBOLS[i]} <b>{dosage.method.capitalize()}</b>\n"
+            dosages += f"<b>└── Разовая дозировка:</b> {dosage.per_time} "
+            if dosage.max_day:
+                dosages += f"<i>(макс. {dosage.max_day} в день)</i>"
+            dosages += "\n"
 
-        if dosages_list:
-            dosages_list += "\n\n"
+            if dosage.per_time_weight_based and dosage.max_day_weight_based:
+                dosages += f"<b>└── Дозировка на вес тела:</b> {dosage.per_time_weight_based} <i>(макс. {dosage.max_day_weight_based} в день)</i>\n"
 
-        dosage_fun_fact_section = f"{drug.dosages_fun_facts}\n\n" if drug.dosages_fun_facts else ""
+            dosages += f"<b>└──</b> {dosage.notes.capitalize()}.\n\n"
+
+        dosages_fun_fact = f"{random.choice(drug.fun_facts)}\n\n"
 
         return MessageTemplates.DRUG_INFO_DOSAGES.format(
-            drug_name_ru=drug.name_ru,
-            dosages_list=dosages_list,
+            drug_name_ru=drug.name_ru.upper(),
+            dosages=dosages,
             sources_section=sources_section,
-            dosage_fun_fact_section=dosage_fun_fact_section
+            dosages_fun_fact=dosages_fun_fact
         )
 
     @staticmethod
@@ -153,14 +136,13 @@ class DrugMessageFormatter:
         """Форматирование аналогов"""
         analogs_section: str = ""
         for i, analog in enumerate(sorted(drug.analogs, key=lambda x: x.percent, reverse=True), start=1):
-            analogs_section += f"<b>{i}) " + analog.analog_name + "</b>\n"
-            analogs_section += "        " + analog.difference + "\n"
-            analogs_section += f"        <u>схожесть</u>: {str(analog.percent)}% \n\n"
+            analogs_section += f"<b>{SYMBOLS[i]} {analog.analog_name}</b> <i>({str(analog.percent)}% схожести)</i>\n"
+            analogs_section += f"<b>└─ </b>{analog.difference}\n\n"
 
         analogs_description: str = drug.analogs_description + "\n\n" if drug.analogs_description else ""
 
         return MessageTemplates.DRUGS_ANALOGS.format(
-            drug_name_ru=drug.name_ru,
+            drug_name_ru=drug.name_ru.upper(),
             analogs_description=analogs_description,
             analogs_section=analogs_section
         )
@@ -169,25 +151,50 @@ class DrugMessageFormatter:
     def format_metabolism(drug: DrugSchema) -> str:
         """Фармакокинетика форматирование"""
 
-        # [ биодоступность для разных методов ]
-        absorption: str | None = "<b>Биодоступность:</b>\n" + drug.absorption + "\n\n" if drug.absorption else ""
-
-        # TODO: пути метаболизма оформить как "Фаза I: ...\nФаза II: ..."
         # [ пути метаболизма ]
-        metabolism: str | None = "<b>Метаболизм:</b>\n" + drug.metabolism + "\n\n" if drug.metabolism else ""
+        metabolism_phases = {
+            "-1": "Экскреция",
+            "1": "Фаза Ⅰ",
+            "2": "Фаза Ⅱ",
+            "3": "Фаза Ⅲ",
+            "4": "Фаза Ⅳ",
+            "5": "Фаза Ⅴ",
+            "6": "Фаза Ⅵ",
+        }
+        metabolism: str = ""
+        met_phases = []
+        for met_pathway in drug.metabolism:
+            # [ проверка была ли эта фаза ]
+            if met_pathway.phase not in met_phases:
+                met_phases.append(met_pathway.phase)
+                metabolism += f"<b>└─ <u>{metabolism_phases[met_pathway.phase]}</u></b>\n"
 
-        elimination: str | None = "<b>Выведение:</b>\n" + drug.elimination + "\n\n" if drug.elimination else ""
+            metabolism += f"<b>└── {met_pathway.process.capitalize()}: </b>"
+            metabolism += f"<i>{met_pathway.result}</i>\n"
 
-        pharmacokinetics = absorption + metabolism + elimination
-        pharmacokinetics += f"Максимальная концентрация в крови достигает через <b><u>{drug.time_to_peak}</u></b>" \
-            if drug.time_to_peak else ""
+        # [ биодоступность для разных методов ] TODO перенести в новый раздел
+        pharmacokinetics: str = ""
+        for absorption_adm_method in drug.pharmacokinetics:
+            pharmacokinetics += f"<b>└─ <u>{absorption_adm_method.route.capitalize()}</u></b>\n"
+            pharmacokinetics += f"<b>└── Биодоступность:</b> {absorption_adm_method.bioavailability}%\n"
+            pharmacokinetics += f"<b>└── Начало действия:</b> {absorption_adm_method.onset}\n"
+            pharmacokinetics += f"<b>└── Cmax через:</b> {absorption_adm_method.time_to_peak}\n"
+            pharmacokinetics += f"<b>└── Период полувыведения:</b> {absorption_adm_method.half_life}\n"
+            pharmacokinetics += f"<b>└── Продолжительность действия:</b> {absorption_adm_method.duration}\n"
 
-        metabolism_description: str = drug.metabolism_description + "\n\n" if drug.metabolism_description else ""
+        # [ пути выведения ]
+        elimination: str = ""
+        for elimination_path in drug.elimination:
+            elimination += f"<b>└─ <u>{elimination_path.excrement_type.capitalize()}</u>:</b> ~{elimination_path.output_percent}%\n"
+
+        metabolism_description: str = drug.metabolism_description if drug.metabolism_description else ""
 
         return MessageTemplates.DRUG_INFO_METABOLISM.format(
-            drug_name_ru=drug.name_ru,
+            drug_name_ru=drug.name_ru.upper(),
+            metabolism=metabolism,
+            absorption=pharmacokinetics,
+            elimination=elimination,
             metabolism_description=metabolism_description,
-            pharmacokinetics=pharmacokinetics
         )
 
     @staticmethod
@@ -223,7 +230,7 @@ class DrugMessageFormatter:
         format_methods = {
             DescribeTypes.BRIEFLY: DrugMessageFormatter.format_drug_briefly,
             DescribeTypes.DOSAGES: DrugMessageFormatter.format_dosages,
-            DescribeTypes.MECHANISM: DrugMessageFormatter.format_mechanism,
+            DescribeTypes.MECHANISM: DrugMessageFormatter.format_pathways,
             DescribeTypes.COMBINATIONS: DrugMessageFormatter.format_combinations,
             DescribeTypes.RESEARCHES: DrugMessageFormatter.format_researches,
             DescribeTypes.METABOLISM: DrugMessageFormatter.format_metabolism,

@@ -15,7 +15,7 @@ from sqlalchemy import text
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from drug_search.infrastructure.database.models.drug import PydanticTypeList
-from drug_search.core.schemas.drug_schemas import MetabolismPhase, EliminationInfo, AbsorptionInfo
+from drug_search.core.schemas.drug_schemas import MetabolismPhase, EliminationInfo, Pharmacokinetics
 
 
 # revision identifiers, used by Alembic.
@@ -58,11 +58,11 @@ def upgrade():
 
     # Теперь меняем тип с использованием USING
     op.alter_column('drugs', 'absorption',
-               existing_type=sa.TEXT(),
-               type_=PydanticTypeList(AbsorptionInfo),
-               comment='JSON список абсорбции {route, bioavailability, time_to_peak}',
-               existing_nullable=True,
-               postgresql_using='absorption::json')
+                    existing_type=sa.TEXT(),
+                    type_=PydanticTypeList(Pharmacokinetics),
+                    comment='JSON список абсорбции {route, bioavailability, time_to_peak}',
+                    existing_nullable=True,
+                    postgresql_using='absorption::json')
 
     op.alter_column('drugs', 'metabolism',
                existing_type=sa.TEXT(),
@@ -124,12 +124,12 @@ def downgrade():
                postgresql_using='metabolism::text')
 
     op.alter_column('drugs', 'absorption',
-               existing_type=PydanticTypeList(AbsorptionInfo),
-               type_=sa.TEXT(),
-               comment=None,
-               existing_comment='JSON список абсорбции {route, bioavailability, time_to_peak}',
-               existing_nullable=True,
-               postgresql_using='absorption::text')
+                    existing_type=PydanticTypeList(Pharmacokinetics),
+                    type_=sa.TEXT(),
+                    comment=None,
+                    existing_comment='JSON список абсорбции {route, bioavailability, time_to_peak}',
+                    existing_nullable=True,
+                    postgresql_using='absorption::text')
 
     op.add_column('drug_prices', sa.Column('drug_brandname', sa.VARCHAR(length=100), autoincrement=False, nullable=False))
     op.drop_constraint('uq_drug_prices_brand', 'drug_prices', type_='unique')

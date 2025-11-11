@@ -227,6 +227,7 @@ class DrugRepository(BaseRepository):
                 drug.classification = assistant_response.classification
                 drug.fact = assistant_response.fact
                 drug.danger_classification = assistant_response.danger_classification
+                drug.fun_facts = assistant_response.fun_facts
 
                 drug.synonyms = [
                     DrugSynonym(
@@ -258,17 +259,13 @@ class DrugRepository(BaseRepository):
                         max_day=dosage_response.max_day,
                         per_time_weight_based=dosage_response.per_time_weight_based,
                         max_day_weight_based=dosage_response.max_day_weight_based,
-                        onset=dosage_response.onset,
-                        half_life=dosage_response.half_life,
-                        duration=dosage_response.duration,
                         notes=dosage_response.notes,
                     ) for dosage_response in assistant_response.dosages
                 ]
-                drug.dosages_fun_facts = assistant_response.dosages_fun_facts
                 drug.dosage_sources = assistant_response.dosage_sources
 
             except Exception as ex:
-                logger.exception(f"Failed to update drug for {assistant_response.name}: {str(ex)}")
+                logger.exception(f"Failed to update drug for {drug.name}: {str(ex)}")
                 raise
 
         async def update_analogs(
@@ -291,7 +288,7 @@ class DrugRepository(BaseRepository):
                 drug.analogs_description = assistant_response.analogs_description
 
             except Exception as ex:
-                logger.exception(f"Failed to update drug for {assistant_response.name}: {str(ex)}")
+                logger.exception(f"Failed to update drug for {drug.name}: {str(ex)}")
                 raise
 
         @staticmethod
@@ -299,13 +296,13 @@ class DrugRepository(BaseRepository):
                 drug: Drug, assistant_response: DrugMetabolismAssistantResponse
         ) -> None:
             try:
-                drug.absorption = assistant_response.absorption
+                drug.pharmacokinetics = assistant_response.pharmacokinetics
                 drug.metabolism = assistant_response.metabolism
                 drug.elimination = assistant_response.elimination
                 drug.metabolism_description = assistant_response.metabolism_description
 
             except Exception as ex:
-                logger.exception(f"Failed to update drug for {assistant_response.name}: {str(ex)}")
+                logger.exception(f"Failed to update drug for {drug.name}: {str(ex)}")
                 raise
 
         async def update_pathways(
@@ -336,7 +333,7 @@ class DrugRepository(BaseRepository):
                 drug.pathway_sources = assistant_response.pathway_sources
 
             except Exception as ex:
-                logger.exception(f"Failed to update drug for {assistant_response.name}: {str(ex)}")
+                logger.exception(f"Failed to update drug for {drug.name}: {str(ex)}")
                 raise
 
         async def update_combinations(
@@ -359,7 +356,7 @@ class DrugRepository(BaseRepository):
                 ]
 
             except Exception as ex:
-                logger.exception(f"Failed to update drug for {assistant_response.name}: {str(ex)}")
+                logger.exception(f"Failed to update drug for {drug.name}: {str(ex)}")
                 raise
 
     @staticmethod

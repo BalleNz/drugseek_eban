@@ -1,12 +1,11 @@
 import random
 
-from drug_search.bot.keyboards import DescribeTypes
 from drug_search.bot.lexicon.consts import SYMBOLS
+from drug_search.bot.lexicon.enums import DrugMenu
 from drug_search.bot.lexicon.message_templates import MessageTemplates
 from drug_search.bot.utils.funcs import make_google_sources, get_subscription_name, days_text, get_time_when_refresh
 from drug_search.core.lexicon.enums import SUBSCRIBE_TYPES
 from drug_search.core.schemas import UserSchema, DrugSchema, CombinationType, AllowedDrugsInfoSchema
-from schemas import DrugDosageSchema
 
 
 class DrugMessageFormatter:
@@ -225,20 +224,20 @@ class DrugMessageFormatter:
         )
 
     @staticmethod
-    def format_by_type(describe_type: DescribeTypes, drug: DrugSchema) -> str:
+    def format_by_type(drug_menu: DrugMenu, drug: DrugSchema) -> str:
         """Форматирование информации в зависимости от типа описания"""
         format_methods = {
-            DescribeTypes.BRIEFLY: DrugMessageFormatter.format_drug_briefly,
-            DescribeTypes.DOSAGES: DrugMessageFormatter.format_dosages,
-            DescribeTypes.MECHANISM: DrugMessageFormatter.format_pathways,
-            DescribeTypes.COMBINATIONS: DrugMessageFormatter.format_combinations,
-            DescribeTypes.RESEARCHES: DrugMessageFormatter.format_researches,
-            DescribeTypes.METABOLISM: DrugMessageFormatter.format_metabolism,
-            DescribeTypes.ANALOGS: DrugMessageFormatter.format_analogs,
-            DescribeTypes.UPDATE_INFO: DrugMessageFormatter.format_drug_update_info
+            DrugMenu.BRIEFLY: DrugMessageFormatter.format_drug_briefly,
+            DrugMenu.DOSAGES: DrugMessageFormatter.format_dosages,
+            DrugMenu.MECHANISM: DrugMessageFormatter.format_pathways,
+            DrugMenu.COMBINATIONS: DrugMessageFormatter.format_combinations,
+            DrugMenu.RESEARCHES: DrugMessageFormatter.format_researches,
+            DrugMenu.METABOLISM: DrugMessageFormatter.format_metabolism,
+            DrugMenu.ANALOGS: DrugMessageFormatter.format_analogs,
+            DrugMenu.UPDATE_INFO: DrugMessageFormatter.format_drug_update_info
         }
 
-        method = format_methods.get(describe_type)
+        method = format_methods.get(drug_menu)
         if method:
             return method(drug)
         else:

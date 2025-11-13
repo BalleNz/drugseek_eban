@@ -6,6 +6,7 @@ from drug_search.core.lexicon import DANGER_CLASSIFICATION, ARROW_TYPES
 from drug_search.core.schemas import (UserTelegramDataSchema, UserSchema, DrugExistingResponse,
                                       DrugSchema, QuestionAssistantResponse, SelectActionResponse, QuestionRequest, AddTokensRequest,
                                       BuyDrugRequest, BuyDrugResponse, UpdateDrugResponse, MailingRequest, AllowedDrugsInfoSchema)
+from lexicon.enums import DrugMenu
 
 
 class DrugSearchAPIClient(BaseHttpClient):
@@ -174,9 +175,9 @@ class DrugSearchAPIClient(BaseHttpClient):
     async def buy_drug(
             self,
             drug_name: str,
-            drug_id: str | None,  # is existing in database
+            drug_id: uuid.UUID | None,  # is existing in database
             danger_classification: DANGER_CLASSIFICATION,
-            access_token: str
+            access_token: str,
     ) -> BuyDrugResponse:
         """Разрешение препарата.
         Если не существует в БД —> создает.
@@ -188,7 +189,7 @@ class DrugSearchAPIClient(BaseHttpClient):
             request_body=BuyDrugRequest(
                 drug_name=drug_name,
                 drug_id=drug_id,
-                danger_classification=danger_classification
+                danger_classification=danger_classification,
             ),
             response_model=BuyDrugResponse
         )

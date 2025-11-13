@@ -5,7 +5,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, LinkPreviewOptions
 
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
-from drug_search.bot.keyboards import DescribeTypes, drug_keyboard, buy_request_keyboard
+from drug_search.bot.keyboards import drug_keyboard
+from lexicon.enums import DrugMenu
 from drug_search.bot.lexicon import MessageTemplates
 from drug_search.bot.lexicon.enums import ModeTypes
 from drug_search.bot.lexicon.message_text import MessageText
@@ -15,6 +16,7 @@ from drug_search.core.lexicon import (ACTIONS_FROM_ASSISTANT, ARROW_TYPES,
                                       MAX_MESSAGE_LENGTH_DEFAULT, SUBSCRIBE_TYPES,
                                       MAX_MESSAGE_LENGTH_LITE, MAX_MESSAGE_LENGTH_PREMIUM)
 from drug_search.core.schemas import SelectActionResponse, DrugExistingResponse, UserSchema
+from handlers.actions import drug_buy
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
@@ -69,7 +71,7 @@ async def main_action(
                 reply_markup=drug_keyboard(
                     drug=drug_response.drug,
                     mode=ModeTypes.SEARCH,
-                    describe_type=DescribeTypes.BRIEFLY,
+                    drug_menu=DrugMenu.BRIEFLY,
                     user_subscribe_type=user.subscription_type,
                     user_query=message.text
                 ),
@@ -77,17 +79,16 @@ async def main_action(
             )
         else:
             # [ предложить купить препарат ]
-            await state.update_data(
-                purchase_drug_name=drug_response.drug_name,
-                purchase_drug_id=drug_response.drug.id if drug_response.drug else None,
-                purchase_danger_classification=drug_response.danger_classification
-            )
-
-            await message.answer(
-                text=MessageTemplates.DRUG_BUY_REQUEST.format(
-                    drug_name_ru=drug_response.drug_name_ru
-                ),
-                reply_markup=buy_request_keyboard(maybe_wrong_drug=True, user_query=message.text),
+            logger.info(f"Препарат {drug_response.drug_name} есть в базе, юзер {user.telegram_id} пытается его купить")
+            await drug_buy(
+                message=message,
+                is_message_from_user=True,
+                api_client=api_client,
+                access_token=access_token,
+                drug_name=drug_response.drug_name,
+                drug_id=drug_response.drug.id if drug_response.drug else None,
+                danger_classification=drug_response.danger_classification,
+                user=user
             )
 
     # [ определяем действие юзера ]
@@ -97,6 +98,8 @@ async def main_action(
         action_response: SelectActionResponse = await api_client.assistant_get_action(
             access_token, message.text
         )
+
+        logger.info(f"Действие юзера {user.telegram_id}: {action_response.action} {action_response.drug_menu if action_response.drug_menu else ""}")
 
         match action_response.action:
             case ACTIONS_FROM_ASSISTANT.QUESTION:
@@ -124,16 +127,19 @@ async def main_action(
                     access_token=access_token
                 )
 
+                logger.info(f"Юзер {user.telegram_id} ищет раздел {action_response.drug_menu} препарата {drug_existing_response.drug_name}\n")
+                logger.info(f"Существует ли препарат: {drug_existing_response.is_exist}: {drug_existing_response.drug.id if drug_existing_response.drug else ""}")
+
                 if drug_existing_response.is_allowed:
                     await message_request.edit_text(
                         text=DrugMessageFormatter.format_by_type(
-                            describe_type=DescribeTypes(action_response.drug_menu),
+                            drug_menu=action_response.drug_menu,
                             drug=drug_existing_response.drug
                         ),
                         reply_markup=drug_keyboard(
                             drug=drug_existing_response.drug,
                             mode=ModeTypes.SEARCH,
-                            describe_type=DescribeTypes(action_response.drug_menu),
+                            drug_menu=action_response.drug_menu,
                             user_subscribe_type=user.subscription_type,
                             user_query=message.text
                         ),
@@ -142,17 +148,17 @@ async def main_action(
 
                 elif drug_existing_response.is_exist:
                     # [ предложить купить препарат ]
-                    await state.update_data(  # TODO: in redis
-                        purchase_drug_name=drug_existing_response.drug_name,
-                        purchase_drug_id=drug_existing_response.drug.id if drug_response.drug else None,
-                        purchase_danger_classification=drug_existing_response.danger_classification
-                    )
-
-                    await message_request.edit_text(
-                        text=MessageTemplates.DRUG_BUY_REQUEST.format(
-                            drug_name_ru=action_response.drug_name
-                        ),
-                        reply_markup=buy_request_keyboard(),
+                    logger.info(f"Юзер {user.telegram_id} пытается купить {drug_existing_response.drug_name}")
+                    logger.info(f"существует в базе: {drug_existing_response.is_drug_in_database}")
+                    await drug_buy(
+                        message=message_request,
+                        api_client=api_client,
+                        access_token=access_token,
+                        drug_name=drug_existing_response.drug_name,
+                        drug_id=drug_existing_response.drug.id if drug_existing_response.drug else None,
+                        danger_classification=drug_existing_response.danger_classification,
+                        user=user,
+                        drug_menu=action_response.drug_menu
                     )
                 else:
                     logger.error(f"Drug existing response error: {drug_existing_response}")
@@ -170,7 +176,7 @@ async def main_action(
                         message_text,
                         reply_markup=drug_keyboard(
                             drug=drug_existing_response.drug,
-                            describe_type=DescribeTypes.BRIEFLY,
+                            drug_menu=DrugMenu.BRIEFLY,
                             user_subscribe_type=user.subscription_type,
                             mode=ModeTypes.SEARCH,
                             user_query=message.text
@@ -179,17 +185,14 @@ async def main_action(
                     )
                 elif drug_existing_response.is_exist:
                     # [ купить препарат ]
-                    await state.update_data(
-                        purchase_drug_name=drug_existing_response.drug_name,
-                        purchase_drug_id=drug_existing_response.drug.id if drug_response.drug else None,
-                        purchase_danger_classification=drug_existing_response.danger_classification
-                    )
-
-                    await message_request.edit_text(
-                        text=MessageTemplates.DRUG_BUY_REQUEST.format(
-                            drug_name_ru=drug_existing_response.drug_name_ru
-                        ),
-                        reply_markup=buy_request_keyboard(),
+                    await drug_buy(
+                        message=message_request,
+                        api_client=api_client,
+                        access_token=access_token,
+                        drug_name=drug_existing_response.drug_name,
+                        drug_id=drug_existing_response.drug.id if drug_response.drug else None,
+                        danger_classification=drug_existing_response.danger_classification,
+                        user=user
                     )
                 else:
                     await message_request.edit_text(MessageText.DRUG_IS_NOT_EXIST)

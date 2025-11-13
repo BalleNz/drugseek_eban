@@ -3,7 +3,9 @@ import json
 import aiohttp
 from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup
 
-from drug_search.bot.keyboards.keyboard_markups import question_continue_keyboard
+from drug_search.bot.keyboards.keyboard_markups import question_continue_keyboard, drug_keyboard
+from drug_search.bot.lexicon.enums import DrugMenu, ModeTypes
+from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.config import config
 from drug_search.core.lexicon import ARROW_TYPES
 from drug_search.core.lexicon.message_templates import MessageTemplates
@@ -35,7 +37,7 @@ class TelegramService:
             self,
             user_telegram_id: str,
             message: str,
-            reply_markup: ReplyKeyboardMarkup = None  # keyboard
+            reply_markup: ReplyKeyboardMarkup | InlineKeyboardMarkup = None  # keyboard
     ):
         """Отправляет сообщение юзеру"""
         url = f"{self.api_url}/sendMessage"
@@ -95,6 +97,26 @@ class TelegramService:
                 if response.status != 200:
                     response_text = await response.text()
                     raise ValueError(f"Ошибка отправки сообщения в Telegram: {response.status} - {response_text}")
+
+    async def send_drug(
+            self,
+            user_telegram_id: str,
+            drug: DrugSchema,
+            drug_menu: DrugMenu | None = None
+    ):
+        """Открывает меню препарата"""
+        message: str = MessageText.formatters.DRUG_BY_TYPE(
+            drug_menu=drug_menu,
+            drug=drug
+        )
+        keyboard = drug_keyboard(
+            drug=drug,
+            drug_menu=drug_menu,
+            user_subscribe_type=None,
+            mode=ModeTypes.SEARCH
+        )
+
+        await self.send_message(user_telegram_id, message=message, reply_markup=keyboard)
 
     async def send_drug_created_notification(
             self,

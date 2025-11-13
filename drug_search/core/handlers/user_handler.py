@@ -96,7 +96,7 @@ async def buy_drug(
         )
 
     if request.danger_classification == DANGER_CLASSIFICATION.DANGER:
-        logger.info(f"Юзер ищет запрещенный препарат.. {request.drug_name}")
+        logger.info(f"Юзер искал запрещенный препарат: {request.drug_name}")
         return BuyDrugResponse(
             status=BuyDrugStatuses.DANGER
         )
@@ -108,22 +108,26 @@ async def buy_drug(
         """Обновляем описание юзера"""
         await task_service.enqueue_user_description_update(user_id=user.id, user_telegram_id=user.telegram_id)
 
+    logger.info(f"Is drug exist in database: {request.drug_id}")
+
     if request.drug_id:
         """Препарат уже есть в базе"""
-        logger.info(f"Юзер {user.telegram_id} купил препарат {request.drug_name}")
         await user_service.allow_drug_to_user(user.id, request.drug_id)
         await cache_service.redis_service.invalidate_user_data(telegram_id=user.telegram_id)
+
+        logger.info(f"Юзер {user.telegram_id} купил препарат {request.drug_name}")
+
         return BuyDrugResponse(
             status=BuyDrugStatuses.DRUG_ALLOWED,
             drug_name=request.drug_name
         )
     else:
         """Нужно его создать и разрешить"""
-        logger.info(f"Юзер {user.telegram_id} купил препарат {request.drug_name}")
+        logger.info(f"Юзер {user.telegram_id} создаёт и покупает препарат {request.drug_name}")
         job_response: dict = await task_service.enqueue_drug_creation(  # + invalidation user data in task
             user_telegram_id=user.telegram_id,
             user_id=user.id,
-            drug_name=request.drug_name
+            drug_name=request.drug_name,
         )
         return BuyDrugResponse(
             status=BuyDrugStatuses.DRUG_CREATED,

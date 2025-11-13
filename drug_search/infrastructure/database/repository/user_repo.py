@@ -27,7 +27,7 @@ class UserRepository(BaseRepository):
         """
         user.requests_last_refresh = datetime.datetime.now()
 
-        match user.subscription_type:
+        match user.subscription_type:  # TODO сделать поле additional tokens (дополнительные токены которые не обнуляются)
             case SUBSCRIBE_TYPES.DEFAULT:
                 user.allowed_search_requests = DEFAULT_SEARCH_DAY_LIMIT
                 user.allowed_question_requests = DEFAULT_ASSISTANT_DAY_LIMIT

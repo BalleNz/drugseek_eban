@@ -1,23 +1,10 @@
 import uuid
-from enum import Enum
 from typing import Optional
 
 from aiogram.filters.callback_data import CallbackData
 
-from drug_search.bot.lexicon.enums import UserDescriptionMode, HelpSectionMode
+from drug_search.bot.lexicon.enums import UserDescriptionMode, HelpSectionMode, DrugMenu
 from drug_search.core.lexicon.enums import ARROW_TYPES
-
-
-# [ TYPES ]
-class DescribeTypes(str, Enum):
-    BRIEFLY = "Briefly"
-    DOSAGES = "Dosages"
-    MECHANISM = "Mechanism"
-    COMBINATIONS = "Combinations"
-    RESEARCHES = "Researches"
-    ANALOGS = "Analogs"
-    METABOLISM = "Metabolism"
-    UPDATE_INFO = "UpdateInfo"
 
 
 # [ CALLBACKS ]
@@ -45,7 +32,7 @@ class DrugResearchesUpdateCallback(CallbackData, prefix="drug_researches_update"
 class DrugDescribeCallback(CallbackData, prefix="drug_describe"):
     # Подробное описание препарата
     drug_id: uuid.UUID
-    describe_type: Optional[DescribeTypes]
+    describe_type: Optional[DrugMenu]
     page: int | None  # страница с прошлого меню | None (если вне меню)
 
 

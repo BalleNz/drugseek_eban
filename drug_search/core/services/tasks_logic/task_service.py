@@ -7,6 +7,7 @@ from arq import ArqRedis
 from arq.jobs import Job, JobStatus
 
 from drug_search.core.lexicon import ARROW_TYPES, JobStatuses
+from drug_search.bot.lexicon.enums import DrugMenu
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,6 @@ class TaskService:
             status = JobStatuses.QUEUED
 
         logger.info(f"Задача на создание препарата поставлена в очередь!")
-
 
         return {
             "status": status,

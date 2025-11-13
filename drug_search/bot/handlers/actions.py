@@ -1,22 +1,25 @@
 import logging
+import uuid
 
 from aiogram import Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, LinkPreviewOptions
+from aiogram.types import CallbackQuery, LinkPreviewOptions, Message
 
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
-from drug_search.bot.keyboards import WrongDrugFoundedCallback, drug_keyboard, DescribeTypes, buy_request_keyboard
-from drug_search.bot.keyboards.callbacks import (DrugUpdateRequestCallback, BuyDrugRequestCallback,
-                                                 AssistantQuestionContinue)
+from drug_search.bot.keyboards import WrongDrugFoundedCallback, drug_keyboard
+from drug_search.bot.keyboards.callbacks import (DrugUpdateRequestCallback, AssistantQuestionContinue,
+                                                 BuyDrugRequestCallback)
+from drug_search.bot.keyboards.keyboard_markups import buy_request_keyboard
 from drug_search.bot.lexicon import MessageTemplates
-from drug_search.bot.lexicon.enums import ModeTypes
+from drug_search.bot.lexicon.enums import ModeTypes, DrugMenu
 from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.bot.utils.format_message_text import DrugMessageFormatter
+from drug_search.bot.utils.message_actions import open_drug_menu
 from drug_search.core.dependencies.bot.cache_service_dep import cache_service
-from drug_search.core.lexicon import ARROW_TYPES, JobStatuses
+from drug_search.core.lexicon import ARROW_TYPES, JobStatuses, DANGER_CLASSIFICATION
 from drug_search.core.schemas import (BuyDrugResponse, BuyDrugStatuses,
                                       UpdateDrugResponse, UpdateDrugStatuses,
-                                      UserSchema, DrugExistingResponse)
+                                      UserSchema, DrugExistingResponse, DrugSchema)
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
@@ -54,12 +57,10 @@ async def drug_update(
 @router.callback_query(BuyDrugRequestCallback.filter())
 async def drug_buy_request(
         callback_query: CallbackQuery,
+        state: FSMContext,
         access_token: str,
-        state: FSMContext,  # noqa
         api_client: DrugSearchAPIClient
 ):
-    """Обработка покупки препарата"""
-
     # [ получаем данные из state ]
     state_data = await state.get_data()
 
@@ -67,46 +68,96 @@ async def drug_buy_request(
     drug_id = state_data.get("purchase_drug_id")
     danger_classification = state_data.get("purchase_danger_classification")
 
-    if not all([drug_name, danger_classification]):
-        await callback_query.message.answer("Данные о препарате устарели")
-        return
+    user = await cache_service.get_user_profile(
+        access_token,
+        telegram_id=callback_query.from_user.id
+    )
 
-    await state.clear()
+    await drug_buy(
+        drug_name=drug_name,
+        drug_id=drug_id,
+        danger_classification=danger_classification,
+        message=callback_query.message,
+        access_token=access_token,
+        api_client=api_client,
+        user=user
+    )
+
+
+async def drug_buy(
+        message: Message,
+        access_token: str,
+        api_client: DrugSearchAPIClient,
+        drug_name: str,
+        user: UserSchema,
+        drug_id: uuid.UUID | None,
+        danger_classification: DANGER_CLASSIFICATION,
+        drug_menu: DrugMenu | None = None,
+        is_message_from_user: bool = False,
+):
+    """Обработка покупки препарата"""
+    if not all([drug_name, danger_classification]):
+        if not is_message_from_user:
+            await message.answer("Данные о препарате устарели")
+            return
+        else:
+            await message.edit_text("Данные о препарате устарели")
+            return
 
     api_response: BuyDrugResponse = await api_client.buy_drug(
         drug_name,
         drug_id,
         danger_classification,
-        access_token=access_token
+        access_token=access_token,
     )
+
+    if is_message_from_user:
+        send_message = message.answer
+    else:
+        send_message = message.edit_text
 
     match api_response.status:
         case BuyDrugStatuses.DRUG_CREATED:
-            if api_response.job_status == JobStatuses.CREATED:  # TODO протестить статусы
-                logger.info(f"Юзер {callback_query.from_user.id} создал препарат {api_response.drug_name}")
-                await callback_query.message.edit_text(
+            if api_response.job_status == JobStatuses.CREATED:
+                logger.info(f"Юзер {message.from_user.id} создал препарат {api_response.drug_name}")
+                await send_message(
                     text=MessageText.DRUG_BUY_CREATED
                 )
             elif api_response.job_status == JobStatuses.QUEUED:
-                await callback_query.message.edit_text(
+                await send_message(
                     text=MessageText.DRUG_BUY_QUEUED
                 )
         case BuyDrugStatuses.DRUG_ALLOWED:
-            await callback_query.message.edit_text(
+            await send_message(
                 text=MessageText.DRUG_BUY_ALLOWED.format(drug_name=api_response.drug_name)
             )
         case BuyDrugStatuses.NOT_ENOUGH_TOKENS:
-            await callback_query.message.edit_text(
+            await send_message(
                 text=MessageText.NOT_ENOUGH_CREATE_TOKENS
             )
         case BuyDrugStatuses.NEED_PREMIUM:
-            await callback_query.message.edit_text(
+            await send_message(
                 text=MessageText.NEED_SUBSCRIPTION
             )
         case BuyDrugStatuses.DANGER:
-            await callback_query.message.edit_text(
+            await send_message(
                 text=MessageText.DRUG_IS_BANNED
             )
+
+    # [ если препарат уже был в базе ]
+    if drug_id:
+        drug: DrugSchema = await api_client.get_drug(
+            drug_id=drug_id,
+            access_token=access_token
+        )
+
+        logger.info(f"Открывается меню препарата {drug.name}: {drug_menu}")
+        await open_drug_menu(
+            drug=drug,
+            drug_menu=drug_menu,
+            message=message,
+            user=user
+        )
 
 
 @router.callback_query(WrongDrugFoundedCallback.filter())
@@ -134,7 +185,7 @@ async def wrong_drug_founded(
                 message_text,
                 reply_markup=drug_keyboard(
                     drug=drug_response.drug,
-                    describe_type=DescribeTypes.BRIEFLY,
+                    drug_menu=DrugMenu.BRIEFLY,
                     user_subscribe_type=user.subscription_type,
                     mode=ModeTypes.WRONG_DRUG,
                 ),

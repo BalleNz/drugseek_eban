@@ -123,7 +123,7 @@ class MessageText:
     # [ positive / neutral ]
     DRUG_MANUAL_SEARCHING: str = "Поиск препарата.."
 
-    DRUG_BUY_CREATED: str = "Препарат генерируется, вы получите уведомление когда он будет создан."
+    DRUG_BUY_CREATED: str = "⏳ <i>Препарат создаётся...</i>"
 
     DRUG_UPDATING: str = "Препарат поставлен в очередь на обновление. Вы получите уведомление о завершении!"
 

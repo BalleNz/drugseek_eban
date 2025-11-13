@@ -1,10 +1,8 @@
 import logging
-import threading
 from typing import Union, Type
 
 import aiohttp
-import requests
-from openai import OpenAI, AsyncOpenAI
+from openai import AsyncOpenAI, NOT_GIVEN, NotGiven
 from pydantic import ValidationError
 
 from drug_search.config import config
@@ -39,45 +37,31 @@ class AssistantService:
         self.drug_creation = self.DrugCreation(self)
         self._session: aiohttp.ClientSession | None = None
 
-    async def __aenter__(self):
-        return self
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        if self._session:
-            await self._session.close()
-
-    async def _get_session(self) -> aiohttp.ClientSession:
-        """Ленивая инициализация aiohttp сессии"""
-        if self._session is None:
-            self._session = aiohttp.ClientSession()
-        return self._session
-
     async def check_balance(self):
         """Асинхронная проверка баланса"""
-        session = await self._get_session()
-
         try:
-            async with session.get(
-                    "https://api.deepseek.com/user/balance",
-                    headers={
-                        'Accept': 'application/json',
-                        'Authorization': f'Bearer {config.DEEPSEEK_API_KEY}'
-                    }
-            ) as response:
-                balance_data = await response.json()
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                        "https://api.deepseek.com/user/balance",
+                        headers={
+                            'Accept': 'application/json',
+                            'Authorization': f'Bearer {config.DEEPSEEK_API_KEY}'
+                        }
+                ) as response:
+                    balance_data = await response.json()
 
-                usd_balance_info = next(
-                    (item for item in balance_data["balance_infos"] if item["currency"] == "USD"),
-                    None
-                )
-                balance_now: float = float(usd_balance_info["total_balance"]) if usd_balance_info else 0.0
+                    usd_balance_info = next(
+                        (item for item in balance_data["balance_infos"] if item["currency"] == "USD"),
+                        None
+                    )
+                    balance_now: float = float(usd_balance_info["total_balance"]) if usd_balance_info else 0.0
 
-                if balance_now > config.MINIMUM_USD_ON_BALANCE:
-                    logger.info(f"Выполняется запрос, на балансе: {balance_now}")
-                    return
+                    if balance_now > config.MINIMUM_USD_ON_BALANCE:
+                        logger.info(f"Выполняется запрос, на балансе: {balance_now}")
+                        return
 
-                logger.error(f"На балансе недостаточно денег: {balance_now} < {config.MINIMUM_USD_ON_BALANCE}")
-                raise APIError("На балансе DeepseekAPI недостаточно денег!")
+                    logger.error(f"На балансе недостаточно денег: {balance_now} < {config.MINIMUM_USD_ON_BALANCE}")
+                    raise APIError("На балансе DeepseekAPI недостаточно денег!")
 
         except aiohttp.ClientError as e:
             logger.error(f"Ошибка при проверке баланса: {e}")
@@ -88,7 +72,8 @@ class AssistantService:
             input_query: str,
             prompt: str,
             pydantic_model: Type[AssistantResponseModel],
-            temperature: float = 0.3
+            temperature: float = 0.3,
+            max_completion_tokens: int | NotGiven = NOT_GIVEN
     ):
         try:
             await self.check_balance()
@@ -100,7 +85,8 @@ class AssistantService:
                     {"role": "user", "content": f"{input_query}"}
                 ],
                 response_format={"type": "json_object"},
-                temperature=temperature
+                temperature=temperature,
+                max_completion_tokens=max_completion_tokens
             )
 
             if not response.choices:
@@ -211,7 +197,7 @@ class AssistantService:
                                        pydantic_model=AssistantResponsePubmedQuery)
 
     class Actions:
-        """Класс для взаимодействием с действиями пользователя:
+        """Действия пользователя
 
         Actions:
 
@@ -226,7 +212,8 @@ class AssistantService:
             return await self.assistant_service.get_response(
                 input_query=query,
                 prompt=Prompts.PREDICT_USER_ACTION,
-                pydantic_model=SelectActionResponse
+                pydantic_model=SelectActionResponse,
+                max_completion_tokens=200
             )
 
         async def answer_to_question(self, question: str) -> QuestionAssistantResponse:

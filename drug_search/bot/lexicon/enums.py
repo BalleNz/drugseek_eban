@@ -28,3 +28,14 @@ class HelpSectionMode(str, Enum):
 
     # [ SUBSCRIPTION ]
     SUBSCRIPTION = "subscription"
+
+
+class DrugMenu(str, Enum):
+    BRIEFLY = "Briefly"
+    DOSAGES = "Dosages"
+    MECHANISM = "Mechanism"
+    COMBINATIONS = "Combinations"
+    RESEARCHES = "Researches"
+    ANALOGS = "Analogs"
+    METABOLISM = "Metabolism"
+    UPDATE_INFO = "UpdateInfo"

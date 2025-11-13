@@ -13,6 +13,7 @@ from drug_search.core.services.models_service.drug_service import DrugService
 from drug_search.core.services.models_service.user_service import UserService
 from drug_search.core.services.telegram_service import TelegramService
 from drug_search.infrastructure.database.repository.user_repo import UserRepository
+from drug_search.bot.lexicon.enums import DrugMenu
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ async def drug_create(
         ctx,  # noqa
         drug_name: str,
         user_telegram_id: str,
-        user_id: uuid.UUID
+        user_id: uuid.UUID,
 ):
     """Логика создания препарата"""
     async with get_service_container() as container:
@@ -38,6 +39,7 @@ async def drug_create(
             user_telegram_id=user_telegram_id,
             drug=drug,
         )
+
         await user_service.allow_drug_to_user(user_id=user_id, drug_id=drug.id)
 
         await redis_service.invalidate_user_data(user_telegram_id)

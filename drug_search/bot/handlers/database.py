@@ -6,7 +6,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, LinkPreviewOptions
 
 from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback, drug_list_keyboard,
-                                       DescribeTypes, drug_keyboard)
+                                       drug_keyboard)
+from lexicon.enums import DrugMenu
 from drug_search.bot.lexicon.enums import ModeTypes
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.bot.lexicon.message_text import MessageText
@@ -83,7 +84,7 @@ async def drug_describe_handler(
 
     # [ callback data ]
     drug_id: UUID = callback_data.drug_id
-    describe_type: DescribeTypes = callback_data.describe_type
+    describe_type: DrugMenu = callback_data.describe_type
     page: int = callback_data.page
 
     drug: DrugSchema = await cache_service.get_drug(
@@ -96,11 +97,11 @@ async def drug_describe_handler(
     )
 
     await callback.message.edit_text(
-        text=MessageText.formatters.DRUG_BY_TYPE(describe_type=describe_type, drug=drug),
+        text=MessageText.formatters.DRUG_BY_TYPE(drug_menu=describe_type, drug=drug),
         reply_markup=drug_keyboard(
             drug=drug,
             page=page,
-            describe_type=describe_type,
+            drug_menu=describe_type,
             user_subscribe_type=user.subscription_type,
             mode=ModeTypes.DATABASE
         ),

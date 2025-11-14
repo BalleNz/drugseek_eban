@@ -108,6 +108,10 @@ class QuestionDrugResponse(BaseModel):
 
 
 class QuestionAssistantResponse(BaseModel):
+    answer: str = Field(..., description="Ответ на вопрос c HTML тегами")
+
+
+class QuestionDrugsAssistantResponse(BaseModel):
     answer: str = Field(..., description="Ответ на вопрос")
     drugs: List[QuestionDrugResponse] = Field(..., description="Список препаратов")
 

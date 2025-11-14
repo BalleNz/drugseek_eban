@@ -102,6 +102,24 @@ async def main_action(
         logger.info(f"Действие юзера {user.telegram_id}: {action_response.action} {action_response.drug_menu if action_response.drug_menu else ""}")
 
         match action_response.action:
+            case ACTIONS_FROM_ASSISTANT.QUESTION_DRUGS:
+                # [ ответ на вопрос юзера с препаратами ]
+                if user.allowed_question_requests:
+                    await message_request.edit_text(MessageText.ASSISTANT_WAITING)
+                    await api_client.reduce_tokens(access_token, amount_question_tokens=1)
+
+                    await api_client.question_drugs_answer(  # via TaskService
+                        access_token=access_token,
+                        user_telegram_id=user.telegram_id,
+                        question=message.text,
+                        message_id=str(message_request.message_id),
+                        arrow=ARROW_TYPES.FORWARD
+                    )
+                else:
+                    await message_request.edit_text(
+                        text=MessageText.NOT_ENOUGH_QUESTION_TOKENS
+                    )
+
             case ACTIONS_FROM_ASSISTANT.QUESTION:
                 # [ ответ на вопрос юзера ]
                 if user.allowed_question_requests:
@@ -113,7 +131,6 @@ async def main_action(
                         user_telegram_id=user.telegram_id,
                         question=message.text,
                         message_id=str(message_request.message_id),
-                        arrow=ARROW_TYPES.FORWARD
                     )
                 else:
                     await message_request.edit_text(

@@ -6,14 +6,13 @@ from typing import Sequence, Generator
 
 from drug_search.core.dependencies.containers.service_container import get_service_container
 from drug_search.core.lexicon import ADMINS_TG_ID, ARROW_TYPES
-from drug_search.core.schemas import DrugSchema, QuestionAssistantResponse, UserSchema
+from drug_search.core.schemas import DrugSchema, QuestionDrugsAssistantResponse, UserSchema, QuestionAssistantResponse
 from drug_search.core.services.assistant_service import AssistantService
 from drug_search.core.services.cache_logic.redis_service import RedisService
 from drug_search.core.services.models_service.drug_service import DrugService
 from drug_search.core.services.models_service.user_service import UserService
 from drug_search.core.services.telegram_service import TelegramService
 from drug_search.infrastructure.database.repository.user_repo import UserRepository
-from drug_search.bot.lexicon.enums import DrugMenu
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +73,31 @@ async def drug_update(
         )
 
 
-async def assistant_answer(
+async def assistant_question(
+        ctx,  # noqa
+        user_telegram_id: str,
+        question: str,
+        old_message_id: str,
+):
+    """
+    Отправляется ответ от нейронки в телеграм.
+    """
+    logger.info(f"Question: {question} for user {user_telegram_id}")
+
+    async with get_service_container() as container:
+        assistant_service: AssistantService = await container.assistant_service
+        telegram_service: TelegramService = await container.telegram_service
+
+        question_response: QuestionAssistantResponse = await assistant_service.actions.answer_to_question(question)
+
+        await telegram_service.edit_message_with_assistant_answer(
+            question_response=question_response,
+            user_telegram_id=user_telegram_id,
+            old_message_id=old_message_id,
+        )
+
+
+async def assistant_drugs_question(
         ctx,  # noqa
         user_telegram_id: str,
         question: str,
@@ -84,7 +107,7 @@ async def assistant_answer(
     """
     Отправляется ответ от нейронки в телеграм.
     """
-    logger.info(f"Question: {question} for user {user_telegram_id}")
+    logger.info(f"Question (drugs): {question} for user {user_telegram_id}")
 
     question_key: str = question[:15]  # to safe callback data length
 
@@ -93,18 +116,18 @@ async def assistant_answer(
         telegram_service: TelegramService = await container.telegram_service
         redis_service: RedisService = await container.redis_service
 
-        question_response: QuestionAssistantResponse | None = await redis_service.get_assistant_answer(
+        question_response: QuestionDrugsAssistantResponse | None = await redis_service.get_assistant_drugs_answer(
             question=question
         )
         if not question_response:
-            question_response: QuestionAssistantResponse = await assistant_service.actions.answer_to_question(question)
+            question_response: QuestionDrugsAssistantResponse = await assistant_service.actions.answer_to_drugs_question(question)
 
-            await redis_service.set_assistant_answer(
+            await redis_service.set_assistant_drugs_answer(
                 assistant_response=question_response,
                 question=question_key,
             )
 
-        await telegram_service.edit_message_with_assistant_answer(
+        await telegram_service.edit_message_with_assistant_drugs_answer(
             question_response=question_response,
             user_telegram_id=user_telegram_id,
             old_message_id=old_message_id,

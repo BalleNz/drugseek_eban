@@ -7,7 +7,6 @@ from arq import ArqRedis
 from arq.jobs import Job, JobStatus
 
 from drug_search.core.lexicon import ARROW_TYPES, JobStatuses
-from drug_search.bot.lexicon.enums import DrugMenu
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +17,8 @@ class ARQ_JOBS(str, Enum):
     """
     DRUG_CREATE = "drug_create"
     DRUG_UPDATE = "drug_update"
-    ASSISTANT_ANSWER = "assistant_answer"
+    ASSISTANT_DRUGS_QUESTION = "assistant_drugs_question"
+    ASSISTANT_QUESTION = "assistant_question"
     MAILING = "mailing"
     USER_DESCRIPTION_UPDATE = "user_description_update"
 
@@ -84,14 +84,34 @@ class TaskService:
 
         logger.info(f"Задача на обновление препарата поставлена в очередь!")
 
-
         return {
             "status": status,
             "job_id": job_id,
             "drug_id": drug_id,
         }
 
-    async def enqueue_assistant_answer(
+    async def enqueue_assistant_question(
+            self,
+            user_telegram_id: str,
+            question: str,
+            old_message_id: str,
+    ):
+        """Задача не уникальная"""
+        job: Job = await self.arq_pool.enqueue_job(
+            ARQ_JOBS.ASSISTANT_QUESTION.value,
+            user_telegram_id,
+            question,
+            old_message_id,
+        )
+        logger.info(f"Задача на вопрос ассистенту поставлена в очередь!")
+
+        return {
+            "status": f"{await job.status()}",
+            "user_id": user_telegram_id,
+            "question": question
+        }
+
+    async def enqueue_assistant_drugs_question(
             self,
             user_telegram_id: str,
             question: str,
@@ -100,7 +120,7 @@ class TaskService:
     ):
         """Задача не уникальная"""
         job: Job = await self.arq_pool.enqueue_job(
-            ARQ_JOBS.ASSISTANT_ANSWER.value,
+            ARQ_JOBS.ASSISTANT_DRUGS_QUESTION.value,
             user_telegram_id,
             question,
             old_message_id,

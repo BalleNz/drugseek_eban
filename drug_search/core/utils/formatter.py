@@ -1,12 +1,12 @@
 from drug_search.core.lexicon import ASSISTANT_ANSWER_DRUG_COUNT_PER_PAGE, ARROW_TYPES
 from drug_search.core.lexicon.message_templates import MessageTemplates
-from drug_search.core.schemas import QuestionAssistantResponse
+from drug_search.core.schemas import QuestionDrugsAssistantResponse
 
 
 class ARQMessageTemplates:
     @staticmethod
     def format_assistant_answer(
-            assistant_response: QuestionAssistantResponse,
+            assistant_response: QuestionDrugsAssistantResponse,
             arrow: ARROW_TYPES
     ):
         """Ответ со списком препаратов"""

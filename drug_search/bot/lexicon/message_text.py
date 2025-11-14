@@ -149,12 +149,12 @@ class MessageText:
     NOT_ENOUGH_UPDATE_TOKENS: str = "У вас недостаточно токенов базы для обновления препарата"
 
     NOT_ENOUGH_CREATE_TOKENS: str = (
-        "У вас недостаточно токенов базы для покупки.\n\n"
+        "⚠️ У вас недостаточно токенов базы!\n\n"
         "Пополнить: /tokens"  # TODO INLINE
     )
 
     NOT_ENOUGH_QUESTION_TOKENS: str = (
-        "У вас недостаточно фарм токенов для этого запроса.\n\n"
+        "⚠️ У вас недостаточно ассистент-токенов!\n\n"
         "Пополнить: /tokens"  # TODO INLINE
     )
 
@@ -177,7 +177,7 @@ class MessageText:
 
     # [ QUERY ]
     QUERY_IN_PROCESS: str = "Обработка запроса..."
-    ASSISTANT_WAITING: str = "Ожидание ответа на вопрос у ассистента.."
+    ASSISTANT_WAITING: str = "Ожидание ответа на вопрос у ассистента..."
 
     ANTISPAM_MESSAGE = MessageTemplates.ANTISPAM_MESSAGE
 

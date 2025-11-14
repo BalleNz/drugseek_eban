@@ -5,9 +5,9 @@ from fastapi.params import Depends
 
 from drug_search.core.dependencies.assistant_service_dep import get_assistant_service
 from drug_search.core.dependencies.task_service_dep import get_task_service
-from drug_search.core.schemas import QueryRequest, SelectActionResponse, QuestionRequest
+from drug_search.core.schemas import QueryRequest, SelectActionResponse, QuestionDrugsRequest, QuestionRequest
 from drug_search.core.services.assistant_service import AssistantService
-from services.tasks_logic.task_service import TaskService
+from drug_search.core.services.tasks_logic.task_service import TaskService
 
 assistant_router = APIRouter(prefix="/assistant")
 
@@ -23,13 +23,13 @@ async def get_action(
     return await assistant_service.actions.predict_user_action(request.query)
 
 
-@assistant_router.post(path="/actions/question")
-async def question_answer(
-        request: QuestionRequest,
+@assistant_router.post(path="/actions/drugs_question")
+async def drugs_question_answer(
+        request: QuestionDrugsRequest,
         task_service: Annotated[TaskService, Depends(get_task_service)],
 ):
     """Отвечает на вопрос юзера, дает список препаратов для достижения целей"""
-    await task_service.enqueue_assistant_answer(
+    await task_service.enqueue_assistant_drugs_question(
         user_telegram_id=request.user_telegram_id,
         question=request.question,
         old_message_id=request.old_message_id,
@@ -37,6 +37,14 @@ async def question_answer(
     )
 
 
-# если препарат в боте не найден по drug_get (поиск по drug_name из ассистента) в АПИ
-# —> дергаем ручку assistant/actions/drug_validation
-# после этого спрашиваем добавить препарат или нет
+@assistant_router.post(path="/actions/question")
+async def question_answer(
+        request: QuestionRequest,
+        task_service: Annotated[TaskService, Depends(get_task_service)],
+):
+    """Отвечает на вопрос юзера в красивом формате HTML"""
+    await task_service.enqueue_assistant_question(
+        user_telegram_id=request.user_telegram_id,
+        question=request.question,
+        old_message_id=request.old_message_id,
+    )

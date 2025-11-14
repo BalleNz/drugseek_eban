@@ -9,7 +9,7 @@ from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.config import config
 from drug_search.core.lexicon import ARROW_TYPES
 from drug_search.core.lexicon.message_templates import MessageTemplates
-from drug_search.core.schemas import DrugSchema, QuestionAssistantResponse
+from drug_search.core.schemas import DrugSchema, QuestionDrugsAssistantResponse, QuestionAssistantResponse
 from drug_search.core.utils.formatter import ARQMessageTemplates
 
 
@@ -149,10 +149,26 @@ class TelegramService:
             question_response: QuestionAssistantResponse,
             user_telegram_id: str,
             old_message_id: str,
+    ):
+        """Редактирует сообщение ответ на вопрос"""
+        message_text: str = question_response.answer
+
+        await self.edit_message(
+            user_telegram_id=user_telegram_id,
+            old_message_id=old_message_id,
+            message_text=message_text,
+            reply_markup=None
+        )
+
+    async def edit_message_with_assistant_drugs_answer(
+            self,
+            question_response: QuestionDrugsAssistantResponse,
+            user_telegram_id: str,
+            old_message_id: str,
             question: str,
             arrow: ARROW_TYPES
     ):
-        """Редактирует сообщение для ответа на вопрос юзера"""
+        """Редактирует сообщение ответ на вопрос с препаратами"""
         message_text: str = ARQMessageTemplates.format_assistant_answer(question_response, arrow)
 
         await self.edit_message(

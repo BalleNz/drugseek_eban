@@ -219,7 +219,7 @@ async def assistant_question_listing(
 ):
     """Продолжить список ответа ассистента"""
     arrow: ARROW_TYPES = ARROW_TYPES.FORWARD if callback_data.arrow == ARROW_TYPES.BACK else ARROW_TYPES.BACK
-    await api_client.question_answer(
+    await api_client.question_drugs_answer(
         access_token=access_token,
         user_telegram_id=str(callback_query.from_user.id),
         question=callback_data.question,

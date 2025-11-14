@@ -6,13 +6,14 @@ from uuid import UUID
 from redis.asyncio import Redis
 
 from drug_search.config import config
-from drug_search.core.schemas import DrugSchema, UserSchema, QuestionAssistantResponse, AllowedDrugsInfoSchema
+from drug_search.core.schemas import DrugSchema, UserSchema, QuestionDrugsAssistantResponse, AllowedDrugsInfoSchema
 
 
 class CacheKeys(str, Enum):
     ALLOWED_DRUGS = "allowed_drugs_info"
     DRUG = "drug"
     USER_PROFILE = "user_profile"
+    ASSISTANT_DRUGS_ANSWER = "assistant_drugs_answer"
     ASSISTANT_ANSWER = "assistant_answer"
     ASSISTANT_ANSWER_CONTINUE = "assistant_answer_continue"
 
@@ -40,8 +41,8 @@ class RedisService:
 
     # [ ASSISTANT ]
     @staticmethod
-    def _get_assistant_answer(query: str):
-        return f"assistant_answer:{query}:{CacheKeys.ASSISTANT_ANSWER}"
+    def _get_assistant_drugs_question(query: str):
+        return f"asstn_drugs_quest:{query}:{CacheKeys.ASSISTANT_DRUGS_ANSWER}"
 
     async def get_access_token(self, telegram_id: str) -> Optional[str]:
         """Получение access token из кэша"""
@@ -130,25 +131,25 @@ class RedisService:
         )
 
     # [ ASSISTANT ]
-    async def get_assistant_answer(
+    async def get_assistant_drugs_answer(
             self,
             question: str,
-    ) -> QuestionAssistantResponse | None:
+    ) -> QuestionDrugsAssistantResponse | None:
         """Ответ ассистента: ПОЛУЧЕНИЕ"""
-        cache_key: str = self._get_assistant_answer(question)
+        cache_key: str = self._get_assistant_drugs_question(question)
         cache_data: str | None = await self.redis.get(cache_key)
         if not cache_data:
             return None
-        return QuestionAssistantResponse.model_validate_json(cache_data)
+        return QuestionDrugsAssistantResponse.model_validate_json(cache_data)
 
-    async def set_assistant_answer(
+    async def set_assistant_drugs_answer(
             self,
-            assistant_response: QuestionAssistantResponse,
+            assistant_response: QuestionDrugsAssistantResponse,
             question: str,
             expire_seconds: int = 86400
     ) -> None:
         """Ответ ассистента: СОХРАНЕНИЕ"""
-        cache_key: str = self._get_assistant_answer(question)
+        cache_key: str = self._get_assistant_drugs_question(question)
         await self.redis.set(
             name=cache_key,
             value=assistant_response.model_dump_json(),

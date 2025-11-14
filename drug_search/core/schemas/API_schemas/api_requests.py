@@ -35,14 +35,20 @@ class QueryRequest(BaseModel):
 
 
 # [ Question ]
-class QuestionRequest(BaseModel):
+class QuestionDrugsRequest(BaseModel):
     user_telegram_id: str
     question: str
     old_message_id: str
     arrow: ARROW_TYPES
 
 
-class QuestionContinueRequest(BaseModel):
+class QuestionDrugsContinueRequest(BaseModel):
+    user_telegram_id: str
+    question: str
+    old_message_id: str
+
+
+class QuestionRequest(BaseModel):
     user_telegram_id: str
     question: str
     old_message_id: str

@@ -11,9 +11,9 @@ from drug_search.core.schemas import (
     DrugResearchesAssistantResponse, AssistantResponsePubmedQuery,
     DrugBrieflyAssistantResponse, DrugCombinationsAssistantResponse,
     DrugPathwaysAssistantResponse, AssistantResponseDrugValidation,
-    SelectActionResponse, QuestionAssistantResponse,
+    SelectActionResponse, QuestionDrugsAssistantResponse,
     AssistantResponseUserDescription, DrugDosagesAssistantResponse, DrugAnalogsAssistantResponse,
-    DrugMetabolismAssistantResponse, ClearResearchesRequest
+    DrugMetabolismAssistantResponse, ClearResearchesRequest, QuestionAssistantResponse
 )
 from drug_search.core.utils import assistant_utils
 from drug_search.core.utils.exceptions import AssistantResponseError, APIError
@@ -213,13 +213,22 @@ class AssistantService:
                 input_query=query,
                 prompt=Prompts.PREDICT_USER_ACTION,
                 pydantic_model=SelectActionResponse,
-                max_completion_tokens=200
+                max_completion_tokens=50
             )
 
         async def answer_to_question(self, question: str) -> QuestionAssistantResponse:
             """Отвечает на вопрос пользователя и дает ему список препаратов для его решения"""
             return await self.assistant_service.get_response(
                 input_query=question,
+                prompt=Prompts.ANSWER_TO_QUESTION,
+                pydantic_model=QuestionAssistantResponse,
+                # max_completion_tokens=600
+            )
+
+        async def answer_to_drugs_question(self, question: str) -> QuestionDrugsAssistantResponse:
+            """Отвечает на вопрос пользователя и дает ему список препаратов для его решения"""
+            return await self.assistant_service.get_response(
+                input_query=question,
                 prompt=Prompts.ANSWER_TO_DRUGS_QUESTION,
-                pydantic_model=QuestionAssistantResponse
+                pydantic_model=QuestionDrugsAssistantResponse
             )

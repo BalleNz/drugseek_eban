@@ -19,6 +19,7 @@ __all__ = [
     'DrugDosagesAssistantResponse',
     'DrugAnalogsAssistantResponse',
     'DrugMetabolismAssistantResponse',
+    'QuestionAssistantResponse',
     # [ Drug ]
     'Pharmacokinetics',
     'MetabolismPhase',
@@ -43,16 +44,17 @@ __all__ = [
     # [ API Requests ]
     'AddTokensRequest',
     'QueryRequest',
-    'QuestionRequest',
+    'QuestionDrugsRequest',
     'BuyDrugRequest',
-    'QuestionContinueRequest',
+    'QuestionDrugsContinueRequest',
     'MailingRequest',
     'ClearResearchesRequest',
+    'QuestionRequest',
     # [ API Responses ]
     'SelectActionResponse',
     'UpdateDrugResponse',
     'BuyDrugResponse',
-    'QuestionAssistantResponse',
+    'QuestionDrugsAssistantResponse',
     'DrugAnswer',
     # [ Enums ]
     'BuyDrugStatuses',

@@ -3,10 +3,11 @@ from uuid import UUID
 
 from drug_search.bot.api_client.base_http_client import BaseHttpClient, HTTPMethod
 from drug_search.core.lexicon import DANGER_CLASSIFICATION, ARROW_TYPES
-from drug_search.core.schemas import (UserTelegramDataSchema, UserSchema, DrugExistingResponse,
-                                      DrugSchema, QuestionAssistantResponse, SelectActionResponse, QuestionRequest, AddTokensRequest,
-                                      BuyDrugRequest, BuyDrugResponse, UpdateDrugResponse, MailingRequest, AllowedDrugsInfoSchema)
-from lexicon.enums import DrugMenu
+from drug_search.core.schemas import (UserTelegramDataSchema, UserSchema, DrugExistingResponse, QuestionRequest,
+                                      DrugSchema, QuestionDrugsAssistantResponse, SelectActionResponse,
+                                      QuestionDrugsRequest, AddTokensRequest,
+                                      BuyDrugRequest, BuyDrugResponse, UpdateDrugResponse, MailingRequest,
+                                      AllowedDrugsInfoSchema)
 
 
 class DrugSearchAPIClient(BaseHttpClient):
@@ -22,22 +23,40 @@ class DrugSearchAPIClient(BaseHttpClient):
             response_model=SelectActionResponse
         )
 
-    async def question_answer(
+    async def question_drugs_answer(
             self,
             access_token: str,
             user_telegram_id: str,
             question: str,
             message_id: str,
             arrow: ARROW_TYPES
-    ) -> QuestionAssistantResponse:
+    ) -> QuestionDrugsAssistantResponse:
+        return await self._request(
+            HTTPMethod.POST,
+            endpoint="/v1/assistant/actions/drugs_question",
+            request_body=QuestionDrugsRequest(
+                user_telegram_id=user_telegram_id,
+                question=question,
+                old_message_id=message_id,
+                arrow=arrow
+            ),
+            access_token=access_token,
+        )
+
+    async def question_answer(
+            self,
+            access_token: str,
+            user_telegram_id: str,
+            question: str,
+            message_id: str
+    ) -> QuestionDrugsAssistantResponse:
         return await self._request(
             HTTPMethod.POST,
             endpoint="/v1/assistant/actions/question",
             request_body=QuestionRequest(
                 user_telegram_id=user_telegram_id,
                 question=question,
-                old_message_id=message_id,
-                arrow=arrow
+                old_message_id=message_id
             ),
             access_token=access_token,
         )

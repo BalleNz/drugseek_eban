@@ -7,7 +7,7 @@ from fastapi.params import Depends
 from drug_search.core.dependencies.bot.cache_service_dep import get_cache_service
 from drug_search.core.dependencies.task_service_dep import get_task_service
 from drug_search.core.dependencies.user_service_dep import get_user_service, get_user_service_with_assistant
-from drug_search.core.lexicon import SUBSCRIBE_TYPES, DANGER_CLASSIFICATION
+from drug_search.core.lexicon import SUBSCRIPTION_TYPES, DANGER_CLASSIFICATION
 from drug_search.core.schemas import (UserSchema, AddTokensRequest, BuyDrugRequest, BuyDrugResponse,
                                       BuyDrugStatuses, AllowedDrugsInfoSchema)
 from drug_search.core.services.cache_logic.cache_service import CacheService
@@ -89,7 +89,7 @@ async def buy_drug(
             status=BuyDrugStatuses.NOT_ENOUGH_TOKENS
         )
 
-    if user.subscription_type in SUBSCRIBE_TYPES.DEFAULT and request.danger_classification in DANGER_CLASSIFICATION.PREMIUM_NEED:
+    if user.subscription_type in SUBSCRIPTION_TYPES.DEFAULT and request.danger_classification in DANGER_CLASSIFICATION.PREMIUM_NEED:
         logger.info(f"У юзера недостаточный уровень подписки, ID: {user.id}, drug_name: {request.drug_name}")
         return BuyDrugResponse(
             status=BuyDrugStatuses.NEED_PREMIUM

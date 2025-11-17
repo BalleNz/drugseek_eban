@@ -5,9 +5,8 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup
 
-from drug_search.bot.keyboards.callbacks import UserDescriptionCallback
-from drug_search.bot.keyboards.keyboard_markups import user_description_keyboard
-from drug_search.bot.lexicon.enums import UserDescriptionMode
+from drug_search.bot.keyboards.callbacks import UserDescriptionCallback, BackToUserProfileCallback
+from drug_search.bot.keyboards.keyboard_markups import back_to_user_profile, user_profile_keyboard
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.core.schemas import UserSchema
@@ -17,7 +16,7 @@ logger = logging.getLogger(__name__)
 router = Router(name=__name__)
 
 
-@router.callback_query(UserDescriptionCallback.filter(F.mode == UserDescriptionMode.SHOW_DESCRIPTION))
+@router.callback_query(UserDescriptionCallback.filter())
 async def show_description(
         callback_query: CallbackQuery,
         cache_service: CacheService,
@@ -35,9 +34,7 @@ async def show_description(
     )
     await callback_query.message.edit_text(
         text=MessageText.formatters.USER_PROFILE_DESCRIPTION(user=profile_info),
-        reply_markup=user_description_keyboard(
-            mode=UserDescriptionMode.BACK_TO_PROFILE
-        )
+        reply_markup=back_to_user_profile()
     )
 
 
@@ -57,11 +54,7 @@ async def _show_user_profile(
 
     text = MessageText.formatters.USER_PROFILE(user=profile_info)
 
-    keyboard: InlineKeyboardMarkup | None = None
-    if profile_info.description:
-        keyboard = user_description_keyboard(
-            mode=UserDescriptionMode.SHOW_DESCRIPTION
-        )
+    keyboard: InlineKeyboardMarkup = user_profile_keyboard(profile_info)
 
     if isinstance(obj, Message):
         await obj.answer(text=text, reply_markup=keyboard)
@@ -69,7 +62,7 @@ async def _show_user_profile(
         await obj.message.edit_text(text=text, reply_markup=keyboard)
 
 
-@router.callback_query(UserDescriptionCallback.filter(F.mode == UserDescriptionMode.BACK_TO_PROFILE))
+@router.callback_query(BackToUserProfileCallback.filter())
 async def get_profile_from_callback(
         callback: CallbackQuery,
         cache_service: CacheService,

@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from sqlalchemy import String, ForeignKey, Text, Index, func, DateTime, Integer, UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from drug_search.core.lexicon import SUBSCRIBE_TYPES, DEFAULT_SEARCH_DAY_LIMIT, ASSISTANT_TOKENS_START
+from drug_search.core.lexicon import SUBSCRIPTION_TYPES, DEFAULT_SEARCH_DAY_LIMIT, ASSISTANT_TOKENS_START
 from drug_search.core.schemas import UserSchema, UserRequestLogSchema, AllowedDrugSchema
 from drug_search.infrastructure.database.models.base import IDMixin, TimestampsMixin
 from drug_search.infrastructure.database.models.types import UserSubscriptionTypes
@@ -26,8 +26,8 @@ class User(IDMixin, TimestampsMixin):
     # subscription
     subscription_type: Mapped[UserSubscriptionTypes] = mapped_column(
         UserSubscriptionTypes,
-        server_default=SUBSCRIBE_TYPES.DEFAULT.value,
-        default=SUBSCRIBE_TYPES.DEFAULT,
+        server_default=SUBSCRIPTION_TYPES.DEFAULT.value,
+        default=SUBSCRIPTION_TYPES.DEFAULT,
         comment="Тип подписки юзера"
     )
     subscription_end: Mapped[Optional[datetime]] = mapped_column(DateTime, comment="Конец подписки")

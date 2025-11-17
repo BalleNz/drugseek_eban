@@ -6,14 +6,13 @@ from aiogram.types import Message, LinkPreviewOptions
 
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
 from drug_search.bot.keyboards import drug_keyboard
-from lexicon.enums import DrugMenu
+from drug_search.bot.lexicon.enums import DrugMenu, ModeTypes
 from drug_search.bot.lexicon import MessageTemplates
-from drug_search.bot.lexicon.enums import ModeTypes
 from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.bot.utils.format_message_text import DrugMessageFormatter
 from drug_search.core.dependencies.bot.cache_service_dep import cache_service
 from drug_search.core.lexicon import (ACTIONS_FROM_ASSISTANT, ARROW_TYPES,
-                                      MAX_MESSAGE_LENGTH_DEFAULT, SUBSCRIBE_TYPES,
+                                      MAX_MESSAGE_LENGTH_DEFAULT, SUBSCRIPTION_TYPES,
                                       MAX_MESSAGE_LENGTH_LITE, MAX_MESSAGE_LENGTH_PREMIUM)
 from drug_search.core.schemas import SelectActionResponse, DrugExistingResponse, UserSchema
 from handlers.actions import drug_buy
@@ -38,21 +37,21 @@ async def main_action(
         return
 
     match user.subscription_type:
-        case SUBSCRIBE_TYPES.DEFAULT:
+        case SUBSCRIPTION_TYPES.DEFAULT:
             if message.text.__len__() > MAX_MESSAGE_LENGTH_DEFAULT:
                 await message.answer(MessageTemplates.MESSAGE_LENGTH_EXCEED.format(
                     subscription_info="без подписки",
                     max_message_len=MAX_MESSAGE_LENGTH_DEFAULT
                 ))
                 return
-        case SUBSCRIBE_TYPES.LITE:
+        case SUBSCRIPTION_TYPES.LITE:
             if message.text.__len__() > MAX_MESSAGE_LENGTH_LITE:
                 await message.answer(MessageText.MESSAGE_LENGTH_EXCEED.format(
                     subscription_info="с лайт подпиской",
                     max_message_len=MAX_MESSAGE_LENGTH_LITE
                 ))
                 return
-        case SUBSCRIBE_TYPES.PREMIUM:
+        case SUBSCRIPTION_TYPES.PREMIUM:
             if message.text.__len__() > MAX_MESSAGE_LENGTH_PREMIUM:
                 await message.answer(MessageText.MESSAGE_LENGTH_EXCEED_PREMIUM)
                 return

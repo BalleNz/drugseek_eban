@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from drug_search.core.lexicon.enums import SUBSCRIBE_TYPES
+from drug_search.core.lexicon.enums import SUBSCRIPTION_TYPES
 
 
 class AllowedDrugSchema(BaseModel):
@@ -33,7 +33,7 @@ class UserSchema(BaseModel):
         description="Список разрешенных препаратов"
     )
 
-    subscription_type: SUBSCRIBE_TYPES = Field(..., description="Тип подписки юзера")
+    subscription_type: SUBSCRIPTION_TYPES = Field(..., description="Тип подписки юзера")
     subscription_end: Optional[datetime] = Field(None, description="когда конец подписки")
 
     created_at: datetime = Field(..., description="когда создан юзер")

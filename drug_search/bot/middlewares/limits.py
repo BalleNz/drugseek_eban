@@ -10,7 +10,7 @@ from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.bot.utils.funcs import get_telegram_schema_from_data, format_time, format_rate_limit, what_subscription
 from drug_search.core.dependencies.bot.cache_service_dep import get_cache_service
 from drug_search.core.dependencies.redis_service_dep import get_redis_service
-from drug_search.core.lexicon import SUBSCRIBE_TYPES, ANTISPAM_DEFAULT, ANTISPAM_LITE
+from drug_search.core.lexicon import SUBSCRIPTION_TYPES, ANTISPAM_DEFAULT, ANTISPAM_LITE
 from drug_search.core.schemas import UserSchema, UserTelegramDataSchema
 from drug_search.core.services.cache_logic.cache_service import CacheService
 from drug_search.core.services.cache_logic.redis_service import RedisService
@@ -22,8 +22,8 @@ class MessageLimitsMiddleware(BaseMiddleware):
     def __init__(self):
         self.redis_service: RedisService = get_redis_service()
         self.limits = {
-            SUBSCRIBE_TYPES.DEFAULT: ANTISPAM_DEFAULT,
-            SUBSCRIBE_TYPES.LITE: ANTISPAM_LITE,
+            SUBSCRIPTION_TYPES.DEFAULT: ANTISPAM_DEFAULT,
+            SUBSCRIPTION_TYPES.LITE: ANTISPAM_LITE,
         }
 
     async def __call__(
@@ -50,7 +50,7 @@ class MessageLimitsMiddleware(BaseMiddleware):
         user: UserSchema = await cache_service.get_user_profile(access_token, telegram_data.telegram_id)
 
         # [ skip if Premium ]
-        if user.subscription_type == SUBSCRIBE_TYPES.PREMIUM:
+        if user.subscription_type == SUBSCRIPTION_TYPES.PREMIUM:
             return await handler(event, data)
 
         user_limits = self.limits[user.subscription_type]
@@ -114,7 +114,7 @@ class MessageLimitsMiddleware(BaseMiddleware):
             self,
             bot: Bot,
             chat_id: str,
-            user_subscription: SUBSCRIBE_TYPES,
+            user_subscription: SUBSCRIPTION_TYPES,
             remaining_time: int,
     ):
         """Отправляем информационное сообщение о лимите"""

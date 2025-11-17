@@ -1,20 +1,23 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
 from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback, WrongDrugFoundedCallback)
-from drug_search.bot.keyboards.callbacks import AssistantQuestionContinue, \
-    DrugUpdateRequestCallback, UserDescriptionCallback, HelpSectionCallback
-from drug_search.bot.lexicon.enums import ModeTypes, UserDescriptionMode, HelpSectionMode, DrugMenu
+from drug_search.bot.keyboards.callbacks import (AssistantQuestionContinueCallback, DrugUpdateRequestCallback,
+                                                 UserDescriptionCallback, HelpSectionCallback,
+                                                 BuyDrugRequestCallback, FinishPaymentCallback,
+                                                 BackToUserProfileCallback, BuySubscriptionCallback, BuyTokensCallback,
+                                                 BuyTokensConfirmationCallback, BuySubscriptionChosenTypeCallback)
+from drug_search.bot.lexicon.enums import ModeTypes, HelpSectionMode, DrugMenu
 from drug_search.bot.lexicon.keyboard_words import ButtonText
-from drug_search.core.lexicon import SUBSCRIBE_TYPES, ARROW_TYPES
-from drug_search.core.schemas import DrugBrieflySchema, DrugSchema
+from drug_search.core.lexicon import ARROW_TYPES, TokenPackage, SubscriptionPackage, SUBSCRIPTION_TYPES
+from drug_search.core.schemas import DrugBrieflySchema, DrugSchema, UserSchema
 from drug_search.core.utils.funcs import may_update_drug
 
 # [Reply]
 menu_keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(
     keyboard=[
+        [KeyboardButton(text=ButtonText.DRUG_DATABASE)],
         [KeyboardButton(text=ButtonText.PROFILE)],
         [KeyboardButton(text=ButtonText.HELP)],
-        [KeyboardButton(text=ButtonText.DRUG_DATABASE)],
     ],
     resize_keyboard=True,
 )
@@ -76,7 +79,7 @@ def drug_list_keyboard(drugs: list[DrugBrieflySchema], page: int) -> InlineKeybo
 def drug_keyboard(
         drug: DrugSchema,
         drug_menu: DrugMenu,
-        user_subscribe_type: SUBSCRIBE_TYPES | None,
+        user_subscribe_type: SUBSCRIPTION_TYPES | None,
         mode: ModeTypes,
         page: int | None = None,  # страница с прошлого меню
         user_query: str | None = None
@@ -103,7 +106,7 @@ def drug_keyboard(
         )
         if drug_menu == DrugMenu.UPDATE_INFO:
             # [ обновить препарат ]
-            if user_subscribe_type != SUBSCRIBE_TYPES.PREMIUM:
+            if user_subscribe_type != SUBSCRIPTION_TYPES.PREMIUM:
                 update_text = ButtonText.UPDATE_DRUG
             else:
                 update_text = ButtonText.UPDATE_DRUG_FOR_PREMIUM
@@ -275,7 +278,7 @@ def question_continue_keyboard(
             [
                 InlineKeyboardButton(
                     text=ButtonText.RIGHT_ARROW if arrow == arrow.FORWARD else ButtonText.LEFT_ARROW,
-                    callback_data=AssistantQuestionContinue(
+                    callback_data=AssistantQuestionContinueCallback(
                         question=question,
                         arrow=arrow
                     ).pack()
@@ -286,22 +289,145 @@ def question_continue_keyboard(
 
 
 # [ USER PROFILE ]
-def user_description_keyboard(
-        mode: UserDescriptionMode
+def user_profile_keyboard(
+        user: UserSchema
 ) -> InlineKeyboardMarkup:
+    """
+    Кнопки:
+    — Описание
+    — Подписка (Купить / Улучшить)
+    """
+    subscription_text = None
+    if user.subscription_type == SUBSCRIPTION_TYPES.LITE:
+        subscription_text = ButtonText.UPGRADE_SUBSCRIPTION
+    elif user.subscription_type == SUBSCRIPTION_TYPES.DEFAULT:
+        subscription_text = ButtonText.BUY_SUBSCRIPTION
+
+    buttons: list[list[InlineKeyboardButton]] = [[]]
+
+    if user.subscription_type != SUBSCRIPTION_TYPES.PREMIUM:
+        buttons.append([
+            InlineKeyboardButton(
+                text=subscription_text,
+                callback_data=BuySubscriptionCallback().pack(),
+            )]
+        )
+
+    if user.description:
+        buttons.append([
+            InlineKeyboardButton(
+                text=ButtonText.SHOW_DESCRIPTION,
+                callback_data=UserDescriptionCallback().pack()
+            )
+        ])
+
+    buttons.append([
+        InlineKeyboardButton(
+            text=ButtonText.BUY_TOKENS,
+            callback_data=BuyTokensCallback().pack()
+        )
+    ])
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=buttons
+    )
+
+
+def back_to_user_profile() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text=ButtonText.LEFT_ARROW if mode == UserDescriptionMode.BACK_TO_PROFILE else ButtonText.SHOW_DESCRIPTION,
-                    callback_data=UserDescriptionCallback(
-                        mode=mode
+                    text=ButtonText.LEFT_ARROW,
+                    callback_data=BackToUserProfileCallback().pack()
+                )
+            ]
+        ]
+    )
+
+
+# [ PAYMENT ]
+def get_tokens_packages_to_buy_keyboard() -> InlineKeyboardMarkup:
+    """Клавиатура с пакетами токенов"""
+
+    buttons: list[list[InlineKeyboardButton]] = []
+
+    for token_package in TokenPackage.get_token_packages():
+        buttons.append([
+            InlineKeyboardButton(
+                text=token_package.name + f" ({token_package.price} рублей)",
+                callback_data=BuyTokensConfirmationCallback(
+                    token_package_key=token_package.key
+                ).pack()
+            )
+        ])
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=buttons
+    )
+
+
+def get_subscription_packages_types_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="⚡ Лайт",
+                    callback_data=BuySubscriptionChosenTypeCallback(
+                        subscription_type=SUBSCRIPTION_TYPES.LITE
+                    ).pack()
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="💎️ Премиум",
+                    callback_data=BuySubscriptionChosenTypeCallback(
+                        subscription_type=SUBSCRIPTION_TYPES.PREMIUM
                     ).pack()
                 )
             ]
         ]
     )
 
+
+def get_subscription_packages_keyboard(
+        subscription_type: SUBSCRIPTION_TYPES,
+) -> InlineKeyboardMarkup:
+    """клавиатура с выбором пакетов подписок"""
+    subscription_packages: tuple[SubscriptionPackage, ...] = SubscriptionPackage.get_packages_by_type(subscription_type)
+
+    buttons: list[list[InlineKeyboardButton]] = [[]]
+
+    for package in subscription_packages:
+        buttons.append([
+            InlineKeyboardButton(
+                text=package.name + f" ({package.price} рублей)",
+                callback_data=BuySubscriptionChosenTypeCallback(
+                    subscription_type=package.subscription_type
+                ).pack()
+            )]
+        )
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=buttons
+    )
+
+
+def get_url_to_buy_keyboard(url: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="Перейти в покупке",
+                    url=url,
+                    callback_data=FinishPaymentCallback().pack()
+                )
+            ]
+        ]
+    )
+
+
+# [ HELP ]
 
 def get_help_keyboard(
         help_mode: HelpSectionMode
@@ -348,8 +474,8 @@ def get_help_keyboard(
                 buttons.append(row_buttons)
             elif help_mode == HelpSectionMode.MAIN:
                 buttons.append([InlineKeyboardButton(
-                            text=text,
-                            callback_data=HelpSectionCallback(mode=mode).pack()
+                    text=text,
+                    callback_data=HelpSectionCallback(mode=mode).pack()
                 )])
                 if len(row_buttons) > 1:
                     buttons.append(row_buttons.copy())
@@ -357,9 +483,9 @@ def get_help_keyboard(
             else:
                 # каждая кнопка в отдельном ряду
                 buttons.append([InlineKeyboardButton(
-                        text=text,
-                        callback_data=HelpSectionCallback(mode=mode).pack()
-                    )])
+                    text=text,
+                    callback_data=HelpSectionCallback(mode=mode).pack()
+                )])
 
     if help_mode in back_navigation:
         buttons.append(

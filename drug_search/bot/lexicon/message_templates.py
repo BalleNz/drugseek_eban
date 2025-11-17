@@ -102,3 +102,49 @@ class MessageTemplates:
         "⚠️ <b>Превышена длина сообщения!</b>\n\n"
         "Для людей <b>{subscription_info}</b> разрешено использовать {max_message_len} символов."
     )
+
+    # [ PAYMENTS ]
+    TOKENS_BUY = (
+        "💳 <b>Покупка токенов</b>\n\n"
+        "Выбери пак: \n"
+    )
+
+    SUBSCRIPTION_BUY_CHOOSE_TYPE = (
+        "💳 <b>Покупка подписки</b>\n\n"
+        "Выбери тип подписки:\n"
+    )
+
+    SUBSCRIPTION_BUY_CHOOSE_DURATION = (
+        "💳 <b>Покупка подписки</b>\n\n"
+        "Выбери длительность подписки:\n"
+    )
+
+    SUBSCRIPTION_UPGRADE = (
+        "💳 <b>Улучшение подписки</b>\n\n"
+        "Текущая подписка: \n"
+        "— {subscription_name} ({subscription_end})\n\n"
+        "<b>Скидка на улучшение подписки:</b>\n"
+        "— {subscription_discount}%"
+    )
+
+    TOKENS_BUY_CONFIRMATION = (
+        "💳 <b>Покупка токенов</b>\n\n"
+        "Выбранный пак: \n"
+        "— {package_name} ({package_tokens} токенов)"
+    )
+
+    SUBSCRIPTION_BUY_CONFIRMATION = (
+        "💳 <b>Покупка подписки</b>\n\n"
+        "Выбранная подписка: \n"
+        "— {subscription_name} ({subscription_period})\n\n"
+        "<b>Цена:</b>\n"
+        "— {subscription_price} рублей"
+    )
+
+    SUBSCRIPTION_UPGRADE_CONFIRMATION = (
+        "💳 <b>Улучшение подписки</b>\n\n"
+        "Выбранная подписка: \n"
+        "— {subscription_name} ({subscription_period})\n\n"
+        "<b>Цена:</b>\n"
+        "— {subscription_price} рублей"
+    )

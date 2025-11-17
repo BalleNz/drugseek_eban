@@ -7,7 +7,7 @@ from aiogram.types import CallbackQuery, LinkPreviewOptions, Message
 
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
 from drug_search.bot.keyboards import WrongDrugFoundedCallback, drug_keyboard
-from drug_search.bot.keyboards.callbacks import (DrugUpdateRequestCallback, AssistantQuestionContinue,
+from drug_search.bot.keyboards.callbacks import (DrugUpdateRequestCallback, AssistantQuestionContinueCallback,
                                                  BuyDrugRequestCallback)
 from drug_search.bot.keyboards.keyboard_markups import buy_request_keyboard
 from drug_search.bot.lexicon import MessageTemplates
@@ -34,6 +34,8 @@ async def drug_update(
         api_client: DrugSearchAPIClient
 ):
     """Обработка обновления препарата"""
+    await callback_query.answer()
+
     api_response: UpdateDrugResponse = await api_client.update_drug(
         drug_id=callback_data.drug_id,
         access_token=access_token
@@ -62,6 +64,8 @@ async def drug_buy_request(
         api_client: DrugSearchAPIClient
 ):
     # [ получаем данные из state ]
+    await callback_query.answer()
+
     state_data = await state.get_data()
 
     drug_name = state_data.get("purchase_drug_name")
@@ -168,6 +172,9 @@ async def wrong_drug_founded(
         callback_data: WrongDrugFoundedCallback,
         api_client: DrugSearchAPIClient
 ):
+    """Клик по 'Найден не тот препарат'"""
+    await callback_query.answer()
+
     user: UserSchema = await cache_service.get_user_profile(access_token, callback_query.from_user.id)
     await callback_query.message.edit_text(MessageText.DRUG_MANUAL_SEARCHING)
 
@@ -209,15 +216,17 @@ async def wrong_drug_founded(
         await callback_query.message.edit_text(MessageText.DRUG_IS_NOT_EXIST)
 
 
-@router.callback_query(AssistantQuestionContinue.filter())
+@router.callback_query(AssistantQuestionContinueCallback.filter())
 async def assistant_question_listing(
         callback_query: CallbackQuery,
-        callback_data: AssistantQuestionContinue,
+        callback_data: AssistantQuestionContinueCallback,
         state: FSMContext,  # noqa
         access_token: str,
         api_client: DrugSearchAPIClient
 ):
     """Продолжить список ответа ассистента"""
+    await callback_query.answer()
+
     arrow: ARROW_TYPES = ARROW_TYPES.FORWARD if callback_data.arrow == ARROW_TYPES.BACK else ARROW_TYPES.BACK
     await api_client.question_drugs_answer(
         access_token=access_token,

@@ -3,7 +3,7 @@ from datetime import datetime
 
 import pytest
 
-from drug_search.core.lexicon import DEFAULT_SEARCH_DAY_LIMIT, SUBSCRIBE_TYPES, ASSISTANT_TOKENS_START
+from drug_search.core.lexicon import DEFAULT_SEARCH_DAY_LIMIT, SUBSCRIPTION_TYPES, ASSISTANT_TOKENS_START
 from drug_search.core.schemas import UserTelegramDataSchema, UserSchema
 from drug_search.infrastructure.database.models.user import User
 
@@ -15,7 +15,7 @@ def get_user() -> User:
         username="huesos",
         first_name="Оззи",
         last_name="озборн",
-        subscription_type=SUBSCRIBE_TYPES.DEFAULT,
+        subscription_type=SUBSCRIPTION_TYPES.DEFAULT,
         allowed_search_requests=DEFAULT_SEARCH_DAY_LIMIT,
         allowed_question_requests=ASSISTANT_TOKENS_START,
         used_requests=0,

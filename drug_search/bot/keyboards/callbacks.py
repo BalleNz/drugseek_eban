@@ -3,8 +3,8 @@ from typing import Optional
 
 from aiogram.filters.callback_data import CallbackData
 
-from drug_search.bot.lexicon.enums import UserDescriptionMode, HelpSectionMode, DrugMenu
-from drug_search.core.lexicon.enums import ARROW_TYPES
+from drug_search.bot.lexicon.enums import HelpSectionMode, DrugMenu
+from drug_search.core.lexicon.enums import ARROW_TYPES, SUBSCRIPTION_TYPES
 
 
 # [ CALLBACKS ]
@@ -42,7 +42,7 @@ class WrongDrugFoundedCallback(CallbackData, prefix="wrong_drug"):
     drug_name_query: str
 
 
-class AssistantQuestionContinue(CallbackData, prefix="quest_cont"):
+class AssistantQuestionContinueCallback(CallbackData, prefix="quest_cont"):
     question: str
     arrow: ARROW_TYPES
 
@@ -58,9 +58,46 @@ class CancelDrugBuyingCallback(CallbackData, prefix="cancel_buying_drug"):
 
 # [ USER PROFILE ]
 class UserDescriptionCallback(CallbackData, prefix="user_description"):
-    mode: UserDescriptionMode
+    pass
+
+
+class BackToUserProfileCallback(CallbackData, prefix="back_to_profile"):
+    pass
+
+
+# [ PAYMENT ]
+
+class BuySubscriptionCallback(CallbackData, prefix="buy_subscription"):
+    """Клик на 'Купить подписку' | 'Улучшить подписку' из Профиля"""
+    pass
+
+
+class BuySubscriptionChosenTypeCallback(CallbackData, prefix="buy_subscription"):
+    """Клик на выбор типа подписки"""
+    subscription_type: SUBSCRIPTION_TYPES
+
+
+class BuySubscriptionConfirmationCallback(CallbackData, prefix="buy_subscription_conf"):
+    """Клик на выбор пакета подписки"""
+    subscription_package_key: str
+
+
+class BuyTokensCallback(CallbackData, prefix="buy_tokens"):
+    """Клик на 'Купить токены' из Профиля"""
+    pass
+
+
+class BuyTokensConfirmationCallback(CallbackData, prefix="buy_tokens_conf"):
+    """Клик на выбор пакета токенов"""
+    token_package_key: str
+
+
+class FinishPaymentCallback(CallbackData, prefix="finish_buying"):
+    """После перехода по ссылке для оплаты"""
+    pass
 
 
 # [ HELP ]
+
 class HelpSectionCallback(CallbackData, prefix="help"):
     mode: HelpSectionMode

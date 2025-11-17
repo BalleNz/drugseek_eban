@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from drug_search.core.lexicon import (PREMIUM_SEARCH_DAY_LIMIT, DEFAULT_SEARCH_DAY_LIMIT,
-                                      SUBSCRIBE_TYPES, DEFAULT_ASSISTANT_DAY_LIMIT, LITE_ASSISTANT_DAY_LIMIT,
+                                      SUBSCRIPTION_TYPES, DEFAULT_ASSISTANT_DAY_LIMIT, LITE_ASSISTANT_DAY_LIMIT,
                                       LITE_SEARCH_DAY_LIMIT, PREMIUM_ASSISTANT_DAY_LIMIT)
 from drug_search.core.schemas import UserTelegramDataSchema, UserSchema, DrugBrieflySchema, AllowedDrugsInfoSchema
 from drug_search.infrastructure.database.models.user import AllowedDrugs, User
@@ -28,15 +28,15 @@ class UserRepository(BaseRepository):
         user.requests_last_refresh = datetime.datetime.now()
 
         match user.subscription_type:  # TODO сделать поле additional tokens (дополнительные токены которые не обнуляются)
-            case SUBSCRIBE_TYPES.DEFAULT:
+            case SUBSCRIPTION_TYPES.DEFAULT:
                 user.allowed_search_requests = DEFAULT_SEARCH_DAY_LIMIT
                 user.allowed_question_requests = DEFAULT_ASSISTANT_DAY_LIMIT
 
-            case SUBSCRIBE_TYPES.LITE:
+            case SUBSCRIPTION_TYPES.LITE:
                 user.allowed_search_requests = LITE_SEARCH_DAY_LIMIT
                 user.allowed_question_requests = LITE_ASSISTANT_DAY_LIMIT
 
-            case SUBSCRIBE_TYPES.PREMIUM:
+            case SUBSCRIPTION_TYPES.PREMIUM:
                 user.allowed_search_requests = PREMIUM_SEARCH_DAY_LIMIT
                 user.allowed_question_requests = PREMIUM_ASSISTANT_DAY_LIMIT
 

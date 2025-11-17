@@ -7,11 +7,6 @@ class ModeTypes(str, Enum):
     WRONG_DRUG = "wrong_drug"
 
 
-class UserDescriptionMode(str, Enum):
-    SHOW_DESCRIPTION = "show_description"
-    BACK_TO_PROFILE = "back_to_profile"
-
-
 class HelpSectionMode(str, Enum):
     # [ MAIN ]
     MAIN = "main"

@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from aiogram.types import User
 
-from drug_search.core.lexicon import SUBSCRIBE_TYPES
+from drug_search.core.lexicon import SUBSCRIPTION_TYPES
 from drug_search.core.schemas import UserTelegramDataSchema
 
 
@@ -17,13 +17,13 @@ def make_google_sources(sources: list[str]) -> list[dict]:
     ]
 
 
-def get_subscription_name(subscription_type: SUBSCRIBE_TYPES):
+def get_subscription_name(subscription_type: SUBSCRIPTION_TYPES):
     match subscription_type:
-        case SUBSCRIBE_TYPES.DEFAULT:
+        case SUBSCRIPTION_TYPES.DEFAULT:
             return "нет"
-        case SUBSCRIBE_TYPES.LITE:
+        case SUBSCRIPTION_TYPES.LITE:
             return "стандарт"
-        case SUBSCRIBE_TYPES.PREMIUM:
+        case SUBSCRIPTION_TYPES.PREMIUM:
             return "премиум"
 
 
@@ -214,11 +214,11 @@ def format_rate_limit(message_count: int, interval_seconds: int) -> str:
     return f"{message_text}/{interval_text}"
 
 
-def what_subscription(subscription: SUBSCRIBE_TYPES):
+def what_subscription(subscription: SUBSCRIPTION_TYPES):
     match subscription:
-        case SUBSCRIBE_TYPES.DEFAULT:
+        case SUBSCRIPTION_TYPES.DEFAULT:
             return "Без подписки"
-        case SUBSCRIBE_TYPES.LITE:
+        case SUBSCRIPTION_TYPES.LITE:
             return "Лайт"
-        case SUBSCRIBE_TYPES.DEFAULT:
+        case SUBSCRIPTION_TYPES.DEFAULT:
             return "Премиум"

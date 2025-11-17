@@ -4,7 +4,7 @@ from drug_search.bot.lexicon.consts import SYMBOLS
 from drug_search.bot.lexicon.enums import DrugMenu
 from drug_search.bot.lexicon.message_templates import MessageTemplates
 from drug_search.bot.utils.funcs import make_google_sources, get_subscription_name, days_text, get_time_when_refresh
-from drug_search.core.lexicon.enums import SUBSCRIBE_TYPES
+from drug_search.core.lexicon.enums import SUBSCRIPTION_TYPES
 from drug_search.core.schemas import UserSchema, DrugSchema, CombinationType, AllowedDrugsInfoSchema
 
 
@@ -252,11 +252,11 @@ class UserProfileMessageFormatter:
         """Форматирование профиля пользователя"""
         profile_icon: str = ""
         match user.subscription_type:
-            case SUBSCRIBE_TYPES.DEFAULT:
+            case SUBSCRIPTION_TYPES.DEFAULT:
                 profile_icon = "🪰"
-            case SUBSCRIBE_TYPES.LITE:
+            case SUBSCRIPTION_TYPES.LITE:
                 profile_icon = "🧢"
-            case SUBSCRIBE_TYPES.PREMIUM:
+            case SUBSCRIPTION_TYPES.PREMIUM:
                 profile_icon = "👑"
 
         subscription: str = f"<u>Подписка:</u> {get_subscription_name(user.subscription_type)}"
@@ -278,11 +278,11 @@ class UserProfileMessageFormatter:
         """Описание юзера в его профиле"""
         profile_icon: str = ""
         match user.subscription_type:
-            case SUBSCRIBE_TYPES.DEFAULT:
+            case SUBSCRIPTION_TYPES.DEFAULT:
                 profile_icon = "🪰"
-            case SUBSCRIBE_TYPES.LITE:
+            case SUBSCRIPTION_TYPES.LITE:
                 profile_icon = "🧢"
-            case SUBSCRIBE_TYPES.PREMIUM:
+            case SUBSCRIPTION_TYPES.PREMIUM:
                 profile_icon = "👑"
 
         user_description: str = '.\n\n'.join(user.description.split(". ")) if user.description else ""

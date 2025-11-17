@@ -10,6 +10,7 @@ from drug_search.bot.keyboards.keyboard_markups import get_help_keyboard
 from drug_search.bot.lexicon.enums import HelpSectionMode
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.bot.lexicon.message_text import MessageText
+from utils.materials.get_file import get_file_by_name
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
@@ -31,9 +32,9 @@ async def help_listing(
         ),
         link_preview_options=LinkPreviewOptions(is_disabled=True),
     )
-    BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
-    VIDEO_PATH = BASE_DIR / "bot_preview" / "demonstration_drug_search.mp4"
-    video_file = InputFile(VIDEO_PATH)
+
+    video_file = get_file_by_name("demonstration_drug_search.mp4")
+
     await callback_query.message.edit_media(
         media=InputMediaVideo(
             media=video_file,  # Прямо через open()

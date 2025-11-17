@@ -583,6 +583,7 @@ class Prompts:
     "какое влияние на концентрацию внимания" = question
     "взаимодействие рецептора с лигандом" = question
     "механизм действия инсулина" = question
+    "что лучше ... или ..." = question
     ...
     
     примеры для question_drugs:
@@ -616,7 +617,6 @@ class Prompts:
     
     Пример для drug_name:
     "лизин" = "lysine"
-
     
     Инструкция:
     1. Если action не в [drug_search, drug_menu] - возвращай ТОЛЬКО поле "action"

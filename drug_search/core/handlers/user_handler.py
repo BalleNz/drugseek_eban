@@ -7,7 +7,7 @@ from fastapi.params import Depends
 from drug_search.core.dependencies.bot.cache_service_dep import get_cache_service
 from drug_search.core.dependencies.task_service_dep import get_task_service
 from drug_search.core.dependencies.user_service_dep import get_user_service, get_user_service_with_assistant
-from drug_search.core.lexicon import SUBSCRIPTION_TYPES, DANGER_CLASSIFICATION
+from drug_search.core.lexicon import SUBSCRIPTION_TYPES, DANGER_CLASSIFICATION, NEW_DRUG_COST
 from drug_search.core.schemas import (UserSchema, AddTokensRequest, BuyDrugRequest, BuyDrugResponse,
                                       BuyDrugStatuses, AllowedDrugsInfoSchema)
 from drug_search.core.services.cache_logic.cache_service import CacheService
@@ -99,7 +99,7 @@ async def buy_drug(
             status=BuyDrugStatuses.DANGER
         )
 
-    await user_service.reduce_tokens(user.id, 1)
+    await user_service.reduce_tokens(user.id, tokens_amount=NEW_DRUG_COST)
 
     # [ если количество препаратов кратно 5 ]
     if not (len(user.allowed_drugs) + 1) % 5:

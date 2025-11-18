@@ -12,9 +12,10 @@ from drug_search.bot.lexicon.enums import DrugMenu, ModeTypes
 from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.bot.utils.format_message_text import DrugMessageFormatter
 from drug_search.core.dependencies.bot.cache_service_dep import cache_service
-from drug_search.core.lexicon import (ACTIONS_FROM_ASSISTANT, ARROW_TYPES,
-                                      MAX_MESSAGE_LENGTH_DEFAULT, SUBSCRIPTION_TYPES,
-                                      MAX_MESSAGE_LENGTH_LITE, MAX_MESSAGE_LENGTH_PREMIUM)
+from drug_search.core.lexicon import (
+    ACTIONS_FROM_ASSISTANT, ARROW_TYPES, QUESTION_COST, MAX_MESSAGE_LENGTH_DEFAULT, SUBSCRIPTION_TYPES,
+    MAX_MESSAGE_LENGTH_LITE, MAX_MESSAGE_LENGTH_PREMIUM
+)
 from drug_search.core.schemas import SelectActionResponse, DrugExistingResponse, UserSchema
 
 router = Router(name=__name__)
@@ -98,14 +99,15 @@ async def main_action(
             access_token, message.text
         )
 
-        logger.info(f"Действие юзера {user.telegram_id}: {action_response.action} {action_response.drug_menu if action_response.drug_menu else ""}")
+        logger.info(
+            f"Действие юзера {user.telegram_id}: {action_response.action} {action_response.drug_menu if action_response.drug_menu else ""}")
 
         match action_response.action:
             case ACTIONS_FROM_ASSISTANT.QUESTION_DRUGS:
                 # [ ответ на вопрос юзера с препаратами ]
                 if user.allowed_tokens:
                     await message_request.edit_text(MessageText.ASSISTANT_WAITING)
-                    await api_client.reduce_tokens(access_token, 1)
+                    await api_client.reduce_tokens(access_token, amount_tokens=QUESTION_COST)
 
                     await api_client.question_drugs_answer(  # via TaskService
                         access_token=access_token,
@@ -123,7 +125,7 @@ async def main_action(
                 # [ ответ на вопрос юзера ]
                 if user.allowed_tokens:
                     await message_request.edit_text(MessageText.ASSISTANT_WAITING)
-                    await api_client.reduce_tokens(access_token, 1)
+                    await api_client.reduce_tokens(access_token, amount_tokens=QUESTION_COST)
 
                     await api_client.question_answer(  # via TaskService
                         access_token=access_token,
@@ -143,8 +145,10 @@ async def main_action(
                     access_token=access_token
                 )
 
-                logger.info(f"Юзер {user.telegram_id} ищет раздел {action_response.drug_menu} препарата {drug_existing_response.drug_name}\n")
-                logger.info(f"Существует ли препарат: {drug_existing_response.is_exist}: {drug_existing_response.drug.id if drug_existing_response.drug else ""}")
+                logger.info(
+                    f"Юзер {user.telegram_id} ищет раздел {action_response.drug_menu} препарата {drug_existing_response.drug_name}\n")
+                logger.info(
+                    f"Существует ли препарат: {drug_existing_response.is_exist}: {drug_existing_response.drug.id if drug_existing_response.drug else ""}")
 
                 if drug_existing_response.is_allowed:
                     await message_request.edit_text(

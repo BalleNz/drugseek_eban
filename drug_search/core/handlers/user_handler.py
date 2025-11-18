@@ -51,8 +51,7 @@ async def add_tokens(
 ):
     await user_service.add_tokens(
         user.id,
-        amount_search_tokens=request.amount_search_tokens,
-        amount_question_tokens=request.amount_question_tokens
+        amount_search_tokens=request.tokens_amount,
     )
     await cache_service.redis_service.invalidate_user_data(telegram_id=user.telegram_id)
 
@@ -66,8 +65,7 @@ async def reduce_tokens(
 ):
     await user_service.reduce_tokens(
         user.id,
-        amount_search_tokens=request.amount_search_tokens,
-        amount_question_tokens=request.amount_question_tokens
+        tokens_amount=request.tokens_amount,
     )
     await cache_service.redis_service.invalidate_user_data(telegram_id=user.telegram_id)
 
@@ -83,7 +81,7 @@ async def buy_drug(
     """Покупка препарата.
     Если не было в базе, то создается и добавляется.
     """
-    if not user.allowed_search_requests:
+    if not user.allowed_tokens:
         logger.info(f"У юзера нет токенов для покупки препарата, ID: {user.id}")
         return BuyDrugResponse(
             status=BuyDrugStatuses.NOT_ENOUGH_TOKENS

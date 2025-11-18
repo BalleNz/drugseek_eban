@@ -9,8 +9,7 @@ from drug_search.bot.lexicon.enums import DrugMenu
 
 
 class AddTokensRequest(BaseModel):
-    amount_search_tokens: int = Field(..., description="Токены для поиска")
-    amount_question_tokens: int = Field(..., description="Токены для вопросов")
+    tokens_amount: int = Field(..., description="Сколько добавить токенов")
 
 
 class UserTelegramDataSchema(BaseModel):

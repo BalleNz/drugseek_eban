@@ -1,10 +1,12 @@
+import datetime
 import random
 
 from drug_search.bot.lexicon.consts import SYMBOLS
 from drug_search.bot.lexicon.enums import DrugMenu
 from drug_search.bot.lexicon.message_templates import MessageTemplates
-from drug_search.bot.utils.funcs import make_google_sources, get_subscription_name, days_text, get_time_when_refresh
-from drug_search.core.lexicon.enums import SUBSCRIPTION_TYPES
+from drug_search.bot.utils.funcs import make_google_sources, get_time_when_refresh_tokens_text, \
+    decline_tokens
+from drug_search.core.lexicon.enums import SUBSCRIPTION_TYPES, TOKENS_LIMIT
 from drug_search.core.schemas import UserSchema, DrugSchema, CombinationType, AllowedDrugsInfoSchema
 
 
@@ -95,6 +97,7 @@ class DrugMessageFormatter:
     @staticmethod
     def format_dosages(drug: DrugSchema) -> str:
         """Форматирование информации о дозировках"""
+
         def create_sources_section(sources: list[dict]) -> str:
             """Создает секцию с источниками в виде пронумерованных ссылок"""
             source_links = [
@@ -241,7 +244,7 @@ class DrugMessageFormatter:
         if method:
             return method(drug)
         else:
-            raise "Неизвестный тип описания"
+            raise f"Неизвестный тип описания: {drug_menu}"
 
 
 class UserProfileMessageFormatter:
@@ -250,27 +253,80 @@ class UserProfileMessageFormatter:
     @staticmethod
     def format_user_profile(user: UserSchema) -> str:
         """Форматирование профиля пользователя"""
-        profile_icon: str = ""
+        profile_name: str = ""
         match user.subscription_type:
             case SUBSCRIPTION_TYPES.DEFAULT:
-                profile_icon = "🪰"
+                profile_name = "🪰 Ограниченный профиль"
             case SUBSCRIPTION_TYPES.LITE:
-                profile_icon = "🧢"
+                profile_name = "🧢 Профиль"
             case SUBSCRIPTION_TYPES.PREMIUM:
-                profile_icon = "👑"
+                profile_name = "👑 Премиум профиль"
 
-        subscription: str = f"<u>Подписка:</u> {get_subscription_name(user.subscription_type)}"
-        subscription_end: str = f" <i>(ещё {days_text(user.subscription_end)})</i>\n\n" if user.subscription_end else "\n\n"
-        subscription_section = subscription + subscription_end
+        def get_subscription_end_at_text(subscription_end_at: datetime.datetime) -> str:
+            """Получить текст конца подписки
 
-        refresh_section: str = get_time_when_refresh(user.requests_last_refresh)
+            пример:
+            — Подписка заканчивается через 3 дня.
+            """
+            now = datetime.datetime.now()
+            time_difference = subscription_end_at - now
+
+            # Если подписка уже истекла
+            if time_difference.total_seconds() <= 0:
+                return "— Подписка истекла."
+
+            # Разбиваем разницу на составляющие
+            days = time_difference.days
+            hours = time_difference.seconds // 3600
+            minutes = (time_difference.seconds % 3600) // 60
+            seconds = time_difference.seconds % 60
+
+            # Определяем подходящую единицу времени для отображения
+            if days > 0:
+                if days == 1:
+                    return f"Подписка заканчивается через 1 день."
+                elif str(days)[-1] in ("2", "3", "4"):
+                    return f"Подписка заканчивается через {days} дня."
+                else:
+                    return f"Подписка заканчивается через {days} дней."
+            elif hours > 0:
+                if hours == 1:
+                    return f"Подписка заканчивается через 1 час."
+                elif str(hours)[-1] in ("2", "3", "4"):
+                    return f"Подписка заканчивается через {hours} часа."
+                else:
+                    return f"Подписка заканчивается через {hours} часов."
+            elif minutes > 0:
+                if minutes == 1:
+                    return f"Подписка заканчивается через 1 минуту."
+                elif str(minutes)[-1] in ("2", "3", "4"):
+                    return f"Подписка заканчивается через {minutes} минуты."
+                else:
+                    return f"Подписка заканчивается через {minutes} минут."
+            else:
+                if seconds == 1:
+                    return f"Подписка заканчивается через 1 секунду."
+                elif str(seconds)[-1] in ("2", "3", "4"):
+                    return f"Подписка заканчивается через {seconds} секунды."
+                else:
+                    return f"Подписка заканчивается через {seconds} секунд."
+
+        # ⏳ Обновление токенов: через 13 часов
+        refresh_section: str = get_time_when_refresh_tokens_text(
+            user.tokens_last_refresh,
+            subscription_type=user.subscription_type
+        )
+
+        allowed_tokens = f"{user.allowed_tokens} / <u>{TOKENS_LIMIT.get_limits_from_subscription_type(
+            user.subscription_type
+        )}</u>"
 
         return MessageTemplates.USER_PROFILE.format(
-            profile_icon=profile_icon,
-            allowed_search_requests=user.allowed_search_requests,
-            allowed_question_requests=user.allowed_question_requests,
+            profile_name=profile_name,
             refresh_section=refresh_section,
-            subscription_section=subscription_section
+            allowed_tokens=allowed_tokens,
+            token_word=decline_tokens(user.allowed_tokens),
+            subscription_end_at=get_subscription_end_at_text(user.subscription_end) if user.subscription_end else ""
         )
 
     @staticmethod

@@ -5,9 +5,10 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, LinkPreviewOptions
 
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
+from drug_search.bot.handlers.actions import drug_buy
 from drug_search.bot.keyboards import drug_keyboard
-from drug_search.bot.lexicon.enums import DrugMenu, ModeTypes
 from drug_search.bot.lexicon import MessageTemplates
+from drug_search.bot.lexicon.enums import DrugMenu, ModeTypes
 from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.bot.utils.format_message_text import DrugMessageFormatter
 from drug_search.core.dependencies.bot.cache_service_dep import cache_service
@@ -15,7 +16,6 @@ from drug_search.core.lexicon import (ACTIONS_FROM_ASSISTANT, ARROW_TYPES,
                                       MAX_MESSAGE_LENGTH_DEFAULT, SUBSCRIPTION_TYPES,
                                       MAX_MESSAGE_LENGTH_LITE, MAX_MESSAGE_LENGTH_PREMIUM)
 from drug_search.core.schemas import SelectActionResponse, DrugExistingResponse, UserSchema
-from handlers.actions import drug_buy
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
@@ -32,7 +32,7 @@ async def main_action(
     """Основная ручка для запросов юзера"""
     user: UserSchema = await cache_service.get_user_profile(access_token=access_token, telegram_id=message.from_user.id)
 
-    if not user.allowed_search_requests and not user.allowed_question_requests:
+    if not user.allowed_tokens:
         await message.answer(MessageText.NO_TOKENS)
         return
 
@@ -103,9 +103,9 @@ async def main_action(
         match action_response.action:
             case ACTIONS_FROM_ASSISTANT.QUESTION_DRUGS:
                 # [ ответ на вопрос юзера с препаратами ]
-                if user.allowed_question_requests:
+                if user.allowed_tokens:
                     await message_request.edit_text(MessageText.ASSISTANT_WAITING)
-                    await api_client.reduce_tokens(access_token, amount_question_tokens=1)
+                    await api_client.reduce_tokens(access_token, 1)
 
                     await api_client.question_drugs_answer(  # via TaskService
                         access_token=access_token,
@@ -121,9 +121,9 @@ async def main_action(
 
             case ACTIONS_FROM_ASSISTANT.QUESTION:
                 # [ ответ на вопрос юзера ]
-                if user.allowed_question_requests:
+                if user.allowed_tokens:
                     await message_request.edit_text(MessageText.ASSISTANT_WAITING)
-                    await api_client.reduce_tokens(access_token, amount_question_tokens=1)
+                    await api_client.reduce_tokens(access_token, 1)
 
                     await api_client.question_answer(  # via TaskService
                         access_token=access_token,

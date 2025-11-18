@@ -40,23 +40,20 @@ class UserService:
             self,
             user_id: uuid.UUID,
             amount_search_tokens: int = 0,
-            amount_question_tokens: int = 0
     ) -> None:
         """Добавляет запросы юзеру"""
         await self.repo.increment_user_requests(
             user_id=user_id,
-            amount_search_tokens=amount_search_tokens,
-            amount_question_tokens=amount_question_tokens
+            tokens_amount=amount_search_tokens,
         )
 
     async def reduce_tokens(
             self,
             user_id: uuid.UUID,
-            amount_search_tokens: int = 0,
-            amount_question_tokens: int = 0
+            tokens_amount: int = 0,
     ) -> None:
         """Отнимает запросы у юзера"""
-        await self.add_tokens(user_id, -amount_search_tokens, -amount_question_tokens)
+        await self.add_tokens(user_id, -tokens_amount)
 
     async def add_request_log(self, user_id: uuid.UUID, query: str):
         ...

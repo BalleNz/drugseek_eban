@@ -2,9 +2,7 @@ from drug_search.bot.lexicon import MessageTemplates
 from drug_search.bot.lexicon.enums import HelpSectionMode
 from drug_search.bot.utils.format_message_text import DrugMessageFormatter, UserProfileMessageFormatter
 from drug_search.bot.utils.funcs import format_time
-from drug_search.core.lexicon.consts import (LITE_SEARCH_DAY_LIMIT, LITE_ASSISTANT_DAY_LIMIT,
-                                             PREMIUM_SEARCH_DAY_LIMIT, PREMIUM_ASSISTANT_DAY_LIMIT, SEARCH_TOKENS_START,
-                                             ASSISTANT_TOKENS_START, ANTISPAM_DEFAULT)
+from drug_search.core.lexicon import ANTISPAM_DEFAULT, TOKENS_LIMIT
 
 
 class MessageText:
@@ -38,19 +36,15 @@ class MessageText:
         TOKENS = (
             "🔎 <b>Токены</b>\n\n"
             "<blockquote>"
-            "Есть два типа токенов:\n"
-            "1) <u>База токены</u> — расходуются на занесение препарата в базу.\n"
-            "2) <u>Фарм токены</u> — нужны для ответов на вопросы и фарм рекомендаций от ассистента.\n\n"
+            "Для занесения препарата в базу или запросов боту нужны токены.\n"
             "</blockquote>\n\n"
-            "👉 Каждый день вам начисляются токены в зависимости от вашей подписки:\n\n"
+            "👉 Вам даются токены в зависимости от вашей подписки:\n\n"
             f"<b>1) 💎️ Премиум:</b>\n"
-            f"       — {PREMIUM_SEARCH_DAY_LIMIT} база токенов\n"
-            f"       — {PREMIUM_ASSISTANT_DAY_LIMIT} фарм токенов\n\n"
+            f"       — {TOKENS_LIMIT.PREMIUM_TOKENS_LIMIT} токенов в день\n"
             f"<b>2) ⚡ Лайт:</b>\n"
-            f"       — {LITE_SEARCH_DAY_LIMIT} база токенов\n"
-            f"       — {LITE_ASSISTANT_DAY_LIMIT} фарм токенов\n\n"
+            f"       — {TOKENS_LIMIT.LITE_TOKENS_LIMIT} токенов в неделю\n"
             f"<b>3) Без подписки:</b>\n"
-            f"       — токены не начисляются"
+            f"       — {TOKENS_LIMIT.DEFAULT_TOKENS_LIMIT} токенов в неделю"
         )
         SUBSCRIPTION = (
             f"🔎 <b>Система подписок</b>\n\n"
@@ -94,9 +88,8 @@ class MessageText:
         TOKENS_FREE = (
             "🔎 <b>Как получать токены?</b>\n\n"
             f"<blockquote>"
-            f"При регистрации вам начисляется:\n"
-            f"  — {SEARCH_TOKENS_START} токена базы.\n"
-            f"  — {ASSISTANT_TOKENS_START} фарм токен.\n\n"
+            f"При регистрации вам даётся:\n"
+            f"  — <u>{TOKENS_LIMIT.DEFAULT_TOKENS_LIMIT}</u> токенов в неделю.\n\n"
             f"</blockquote>\n\n"
             f"👉 <b><u>Как получать токены?</u></b>\n\n"
             f"<b>1)</b> Реферальная система: /referrals\n\n"

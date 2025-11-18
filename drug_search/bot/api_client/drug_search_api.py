@@ -92,28 +92,10 @@ class DrugSearchAPIClient(BaseHttpClient):
             access_token=access_token
         )
 
-    async def add_tokens(
-            self,
-            access_token: str,
-            amount_search_tokens: int = 0,
-            amount_question_tokens: int = 0
-    ) -> None:
-        """Добавление токенов"""
-        await self._request(
-            HTTPMethod.POST,
-            "/v1/user/tokens/increment",
-            access_token=access_token,
-            request_body=AddTokensRequest(
-                amount_search_tokens=amount_search_tokens,
-                amount_question_tokens=amount_question_tokens,
-            )
-        )
-
     async def reduce_tokens(
             self,
             access_token: str,
-            amount_search_tokens: int = 0,
-            amount_question_tokens: int = 0
+            amount_tokens: int = 0,
     ):
         """Отнимает токены"""
         await self._request(
@@ -121,8 +103,7 @@ class DrugSearchAPIClient(BaseHttpClient):
             endpoint="/v1/user/tokens/reduce",
             access_token=access_token,
             request_body=AddTokensRequest(
-                amount_search_tokens=amount_search_tokens,
-                amount_question_tokens=amount_question_tokens,
+                tokens_amount=amount_tokens,
             )
         )
 

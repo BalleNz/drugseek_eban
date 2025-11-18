@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from aiogram.types import User
 
-from drug_search.core.lexicon import SUBSCRIPTION_TYPES
+from drug_search.core.lexicon import SUBSCRIPTION_TYPES, TOKENS_LIMIT
 from drug_search.core.schemas import UserTelegramDataSchema
 
 
@@ -35,42 +35,44 @@ def days_text(day: datetime):
         else f"{days} дней"
 
 
-def get_time_when_refresh(_datetime: datetime) -> str:
-    """
-    Returns:
-        "<i>({time_to_update} {time_format} до сброса)</i>"
-    """
-    def __get_time_name_format(count: int, time_type: str):
-        """Преобразование datetime.hours | .minutes в русскоязычный формат"""
-        if time_type == "minutes":
-            if count % 10 == 1 and count % 100 != 11:
-                return "минута"
-            elif 2 <= count % 10 <= 4 and (count % 100 < 10 or count % 100 >= 20):
-                return "минуты"
-            else:
-                return "минут"
-        elif time_type == "hours":
-            if count % 10 == 1 and count % 100 != 11:
-                return "час"
-            elif 2 <= count % 10 <= 4 and (count % 100 < 10 or count % 100 >= 20):
-                return "часа"
-            else:
-                return "часов"
+def get_time_when_refresh_tokens_text(_datetime: datetime, subscription_type: SUBSCRIPTION_TYPES) -> str:
+    """Время до сброса токенов"""
+    def __get_time_name_format(count: int, time_type: str) -> str:
+        """Преобразование числа в русскоязычный формат времени"""
+        forms = {
+            "minutes": ("минуту", "минуты", "минут"),
+            "hours": ("час", "часа", "часов"),
+            "days": ("день", "дня", "дней")
+        }[time_type]
 
-    text: str = "<i>({time_to_update} {time_format} до сброса)</i>"
+        if count % 10 == 1 and count % 100 != 11:
+            return forms[0]
+        elif 2 <= count % 10 <= 4 and (count % 100 < 10 or count % 100 >= 20):
+            return forms[1]
+        else:
+            return forms[2]
 
-    time_diff: timedelta = (_datetime + timedelta(hours=24)) - datetime.now()
+    text: str = "<b>⏳ Сброс токенов через:</b> {time_to_update} {time_format}"
+
+    refresh_tokens_days_interval: int = TOKENS_LIMIT.get_days_interval_to_refresh_tokens(subscription_type=subscription_type)
+    time_diff: timedelta = (_datetime + timedelta(days=refresh_tokens_days_interval)) - datetime.now()
     if time_diff <= timedelta(hours=1):
         time_to_update: int = time_diff.seconds // 60
         return text.format(
             time_to_update=time_to_update,
             time_format=__get_time_name_format(time_to_update, "minutes")
         )
-    else:
+    elif time_diff <= timedelta(hours=24):
         time_to_update: int = time_diff.seconds // 60 // 60
         return text.format(
             time_to_update=time_to_update,
             time_format=__get_time_name_format(time_to_update, "hours")
+        )
+    else:
+        time_to_update: int = time_diff.days
+        return text.format(
+            time_to_update=time_to_update,
+            time_format=__get_time_name_format(time_to_update, "days")
         )
 
 
@@ -102,34 +104,34 @@ def format_time(seconds: int) -> str:
         elif 2 <= seconds % 10 <= 4 and (seconds % 100 < 10 or seconds % 100 >= 20):
             return f"{seconds} секунды"  # винительный падеж для "через"
         else:
-            return f"{seconds} секунд"   # родительный падеж для "через"
+            return f"{seconds} секунд"  # родительный падеж для "через"
 
     def _format_minutes(minutes: int) -> str:
         """Форматирует минуты"""
         if minutes % 10 == 1 and minutes % 100 != 11:
-            return f"{minutes} минуту"   # винительный падеж для "через"
+            return f"{minutes} минуту"  # винительный падеж для "через"
         elif 2 <= minutes % 10 <= 4 and (minutes % 100 < 10 or minutes % 100 >= 20):
-            return f"{minutes} минуты"   # винительный падеж для "через"
+            return f"{minutes} минуты"  # винительный падеж для "через"
         else:
-            return f"{minutes} минут"    # родительный падеж для "через"
+            return f"{minutes} минут"  # родительный падеж для "через"
 
     def _format_hours(hours: int) -> str:
         """Форматирует часы"""
         if hours % 10 == 1 and hours % 100 != 11:
-            return f"{hours} час"        # винительный падеж для "через"
+            return f"{hours} час"  # винительный падеж для "через"
         elif 2 <= hours % 10 <= 4 and (hours % 100 < 10 or hours % 100 >= 20):
-            return f"{hours} часа"       # винительный падеж для "через"
+            return f"{hours} часа"  # винительный падеж для "через"
         else:
-            return f"{hours} часов"      # родительный падеж для "через"
+            return f"{hours} часов"  # родительный падеж для "через"
 
     def _format_days(days: int) -> str:
         """Форматирует дни"""
         if days % 10 == 1 and days % 100 != 11:
-            return f"{days} день"        # винительный падеж для "через"
+            return f"{days} день"  # винительный падеж для "через"
         elif 2 <= days % 10 <= 4 and (days % 100 < 10 or days % 100 >= 20):
-            return f"{days} дня"         # винительный падеж для "через"
+            return f"{days} дня"  # винительный падеж для "через"
         else:
-            return f"{days} дней"        # родительный падеж для "через"
+            return f"{days} дней"  # родительный падеж для "через"
 
     if seconds < 60:
         return _format_seconds(seconds)
@@ -212,6 +214,24 @@ def format_rate_limit(message_count: int, interval_seconds: int) -> str:
             interval_text = f"{days} суток"
 
     return f"{message_text}/{interval_text}"
+
+
+def decline_tokens(count: int) -> str:
+    """
+    Склоняет слово 'токен' в зависимости от числа.
+
+    Args:
+        count (int): Количество токенов
+
+    Returns:
+        str: Склоненное слово 'токен'
+    """
+    if count % 10 == 1 and count % 100 != 11:
+        return "токен"
+    elif count % 10 in [2, 3, 4] and count % 100 not in [12, 13, 14]:
+        return "токена"
+    else:
+        return "токенов"
 
 
 def what_subscription(subscription: SUBSCRIPTION_TYPES):

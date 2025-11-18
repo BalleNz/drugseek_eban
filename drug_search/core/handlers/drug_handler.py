@@ -34,7 +34,7 @@ async def new_drug(
         drug_name: str = Path(description="ДВ")
 ):
     """Создает препарат в ARQ через TaskService"""
-    if not user.allowed_search_requests:
+    if not user.allowed_tokens:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User hasn't allowed requests")
 
     try:
@@ -203,10 +203,10 @@ async def update_old_drug(
     """
 
     # [ проверка на наличие токенов + покупка ]
-    if user.allowed_search_requests > UPDATE_DRUG_COST:
+    if user.allowed_tokens > UPDATE_DRUG_COST:
         await user_service.reduce_tokens(
             user.id,
-            amount_search_tokens=UPDATE_DRUG_COST
+            tokens_amount=UPDATE_DRUG_COST
         )
     else:
         return UpdateDrugResponse(status=UpdateDrugStatuses.NOT_ENOUGH_TOKENS)
@@ -225,7 +225,7 @@ async def get_drug(
         drug_id: UUID = Path(..., description="ID препарата в формате UUID")
 ):
     """Возвращает препарат по его ID"""
-    if not user.allowed_search_requests:
+    if not user.allowed_tokens:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов")
 
     drug: DrugSchema | None = await drug_service.repo.get_with_all_relationships(drug_id)
@@ -241,7 +241,7 @@ async def update_drug_researches(
 ):
     """Обновляет таблицу с исследованиями препарата. Возвращает схему препарата."""
     # TODO задачу в arq
-    if not user.allowed_search_requests:
+    if not user.allowed_tokens:
         # TODO сделать обработку недостаточно токенов в клиенте
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов.")
 

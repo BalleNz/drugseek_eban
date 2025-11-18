@@ -1,4 +1,7 @@
 from enum import Enum
+from typing import Optional
+
+from drug_search.core.lexicon import SMALL_PACKET, ENTERPRISE_PACKET, ULTIMATE_PACKET, PRO_PACKET, BASIC_PACKET
 
 
 class SUBSCRIPTION_TYPES(str, Enum):
@@ -49,11 +52,11 @@ class TokenPackage(Enum):
     """Пакеты токенов с указанием количества для покупки"""
 
     # [ key, название_пакета, количество_токенов, цена ]
-    STARTER = ("small", "Малый пакет", 10, 199.0)
-    BASIC = ("basic", "Базовый пакет", 25, 399.0)
-    PRO = ("pro", "Профессиональный пакет", 50, 899.0)
-    ENTERPRISE = ("business", "Бизнес пакет", 70, 1099.0)
-    ULTIMATE = ("maximum", "Максимальный пакет", 200, 1900.0)
+    SMALL = ("small", f"{SMALL_PACKET} токенов", SMALL_PACKET, 199.0)
+    BASIC = ("basic", f"{BASIC_PACKET} токенов", BASIC_PACKET, 399.0)
+    PRO = ("pro", f"{PRO_PACKET} токенов", PRO_PACKET, 899.0)
+    ENTERPRISE = ("business", f"{ENTERPRISE_PACKET} токенов", ENTERPRISE_PACKET, 1099.0)
+    ULTIMATE = ("maximum", f"{ULTIMATE_PACKET} токенов", ULTIMATE_PACKET, 1900.0)
 
     @property
     def key(self):
@@ -85,7 +88,7 @@ class TokenPackage(Enum):
 
     @classmethod
     def get_token_packages(cls) -> tuple["TokenPackage", ...]:
-        return cls.STARTER, cls.BASIC, cls.PRO, cls.ENTERPRISE, cls.ULTIMATE
+        return cls.SMALL, cls.BASIC, cls.PRO, cls.ENTERPRISE, cls.ULTIMATE
 
 
 class SubscriptionPackage(Enum):
@@ -147,3 +150,34 @@ class SubscriptionPackage(Enum):
                 return cls.LITE_14_PACKAGE, cls.LITE_90_PACKAGE
             case SUBSCRIPTION_TYPES.PREMIUM:
                 return cls.PREMIUM_14_PACKAGE, cls.PREMIUM_90_PACKAGE, cls.PREMIUM_180_PACKAGE, cls.PREMIUM_365_PACKAGE
+
+
+class TOKENS_LIMIT(int, Enum):
+    """
+    Дневные | Недельные лимиты (в зависимости от типа подписки) токенов
+    """
+    DEFAULT_TOKENS_LIMIT = 5
+
+    LITE_TOKENS_LIMIT = 50
+
+    PREMIUM_TOKENS_LIMIT = 100
+
+    @classmethod
+    def get_days_interval_to_refresh_tokens(cls, subscription_type: SUBSCRIPTION_TYPES) -> int | None:
+        match subscription_type:
+            case SUBSCRIPTION_TYPES.DEFAULT:
+                return 10
+            case SUBSCRIPTION_TYPES.LITE:
+                return 7
+            case SUBSCRIPTION_TYPES.PREMIUM:
+                return 1
+
+    @classmethod
+    def get_limits_from_subscription_type(cls, subscription_type: SUBSCRIPTION_TYPES) -> Optional[int]:
+        match subscription_type:
+            case SUBSCRIPTION_TYPES.DEFAULT:
+                return cls.DEFAULT_TOKENS_LIMIT.value
+            case SUBSCRIPTION_TYPES.LITE:
+                return cls.LITE_TOKENS_LIMIT.value
+            case SUBSCRIPTION_TYPES.PREMIUM:
+                return cls.PREMIUM_TOKENS_LIMIT.value

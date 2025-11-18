@@ -7,9 +7,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from drug_search.core.lexicon import (PREMIUM_SEARCH_DAY_LIMIT, DEFAULT_SEARCH_DAY_LIMIT,
-                                      SUBSCRIPTION_TYPES, DEFAULT_ASSISTANT_DAY_LIMIT, LITE_ASSISTANT_DAY_LIMIT,
-                                      LITE_SEARCH_DAY_LIMIT, PREMIUM_ASSISTANT_DAY_LIMIT)
+from drug_search.core.lexicon import SUBSCRIPTION_TYPES, TOKENS_LIMIT
 from drug_search.core.schemas import UserTelegramDataSchema, UserSchema, DrugBrieflySchema, AllowedDrugsInfoSchema
 from drug_search.infrastructure.database.models.user import AllowedDrugs, User
 from drug_search.infrastructure.database.repository.base_repo import BaseRepository
@@ -25,20 +23,15 @@ class UserRepository(BaseRepository):
         """Обновляет дневные лимиты
         При создании юзера столбцы последнего обновления уже есть
         """
-        user.requests_last_refresh = datetime.datetime.now()
+        user.tokens_last_refresh = datetime.datetime.now()
 
         match user.subscription_type:  # TODO сделать поле additional tokens (дополнительные токены которые не обнуляются)
             case SUBSCRIPTION_TYPES.DEFAULT:
-                user.allowed_search_requests = DEFAULT_SEARCH_DAY_LIMIT
-                user.allowed_question_requests = DEFAULT_ASSISTANT_DAY_LIMIT
-
+                user.allowed_tokens = TOKENS_LIMIT.DEFAULT_TOKENS_LIMIT
             case SUBSCRIPTION_TYPES.LITE:
-                user.allowed_search_requests = LITE_SEARCH_DAY_LIMIT
-                user.allowed_question_requests = LITE_ASSISTANT_DAY_LIMIT
-
+                user.allowed_tokens = TOKENS_LIMIT.LITE_TOKENS_LIMIT
             case SUBSCRIPTION_TYPES.PREMIUM:
-                user.allowed_search_requests = PREMIUM_SEARCH_DAY_LIMIT
-                user.allowed_question_requests = PREMIUM_ASSISTANT_DAY_LIMIT
+                user.allowed_tokens = TOKENS_LIMIT.PREMIUM_TOKENS_LIMIT
 
         await self.session.commit()
 
@@ -57,9 +50,11 @@ class UserRepository(BaseRepository):
         if not user:
             return None
 
-        # refresh daily tokens
-        if (datetime.datetime.now() - user.requests_last_refresh).days >= 1:
+        # [ refresh tokens ]
+        refresh_interval_days = TOKENS_LIMIT.get_days_interval_to_refresh_tokens(user.subscription_type)
+        if (datetime.datetime.now() - user.tokens_last_refresh).days >= refresh_interval_days:
             await self.__refresh_requests(user)
+
         return user.get_schema()
 
     async def get_or_create_from_telegram(self, telegram_user: UserTelegramDataSchema) -> UserSchema | None:
@@ -149,25 +144,21 @@ class UserRepository(BaseRepository):
     async def increment_user_requests(
             self,
             user_id: uuid.UUID,
-            amount_search_tokens: int = 0,
-            amount_question_tokens: int = 0
+            tokens_amount: int = 0,
     ) -> None:
         """Атомарно увеличивает количество токенов.
 
-        :var amount_search_tokens: количество токенов на поиск препаратов
-        :var amount_question_tokens: количество токенов на вопросы
+        :var tokens_amount: количество токенов на поиск препаратов
         """
         await self.session.execute(
             update(User)
             .where(User.id == user_id)
             .values(
-                allowed_search_requests=User.allowed_search_requests + amount_search_tokens,
-                allowed_question_requests=User.allowed_question_requests + amount_question_tokens,
+                allowed_tokens=User.allowed_tokens + tokens_amount,
 
                 # в случае, если мы тратим запросы, а не добавляем
                 # всегда один прибавляется вне зависимости от потраченных
-                # (засчитывает только при поиске препарата)
-                used_requests=User.used_requests + (1 if amount_search_tokens > 0 else 0)
+                used_tokens=User.used_tokens + (1 if tokens_amount > 0 else 0)
             )
         )
         await self.session.commit()

@@ -355,7 +355,7 @@ def get_tokens_packages_to_buy_keyboard() -> InlineKeyboardMarkup:
     for token_package in TokenPackage.get_token_packages():
         buttons.append([
             InlineKeyboardButton(
-                text=token_package.name + f" ({token_package.price} рублей)",
+                text=token_package.name + f" ({int(token_package.price)} рублей)",
                 callback_data=BuyTokensConfirmationCallback(
                     token_package_key=token_package.key
                 ).pack()
@@ -401,7 +401,7 @@ def get_subscription_packages_keyboard(
     for package in subscription_packages:
         buttons.append([
             InlineKeyboardButton(
-                text=package.name + f" ({package.price} рублей)",
+                text=package.name + f" ({int(package.price)} рублей)",
                 callback_data=BuySubscriptionChosenTypeCallback(
                     subscription_type=package.subscription_type
                 ).pack()

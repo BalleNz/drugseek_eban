@@ -54,12 +54,10 @@ class MessageTemplates:
     )
 
     USER_PROFILE: str = (
-        "<b>{profile_icon} Твой профиль</b>\n\n"
-        "<b>Осталось запросов сегодня:</b>\n"
-        "   — Поиск препаратов: <u>{allowed_search_requests}</u>\n"
-        "   — Вопросы: <u>{allowed_question_requests}</u>\n\n"
+        "<b>{profile_name}</b>\n\n"
+        "<b>Ваши токены:</b> {allowed_tokens}\n\n"
         "{refresh_section}\n\n"
-        "{subscription_section}"
+        "<i>{subscription_end_at}</i>"
     )
 
     USER_PROFILE_DESCRIPTION: str = (

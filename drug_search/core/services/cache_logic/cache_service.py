@@ -1,3 +1,4 @@
+import datetime
 import logging
 from typing import Optional
 from uuid import UUID
@@ -11,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 class CacheService:
     """Сервис для работы с кэшем"""
+
     def __init__(
             self,
             redis_service: RedisService,
@@ -94,7 +96,9 @@ class CacheService:
         """Получение информации о юзере"""
         cache_data: Optional[UserSchema] = await self.redis_service.get_user_profile(telegram_id)
         if cache_data:
-            return cache_data
+            if cache_data.subscription_end and (
+                    not cache_data.subscription_end < datetime.datetime.now() and not cache_data.tokens_last_refresh < datetime.datetime.now()):
+                return cache_data
 
         fresh_data: UserSchema = await self.api_client.get_current_user(access_token)
 

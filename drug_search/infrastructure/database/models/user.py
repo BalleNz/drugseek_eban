@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from sqlalchemy import String, ForeignKey, Text, Index, func, DateTime, Integer, UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from drug_search.core.lexicon import SUBSCRIPTION_TYPES, DEFAULT_SEARCH_DAY_LIMIT, ASSISTANT_TOKENS_START
+from drug_search.core.lexicon import SUBSCRIPTION_TYPES, TOKENS_LIMIT
 from drug_search.core.schemas import UserSchema, UserRequestLogSchema, AllowedDrugSchema
 from drug_search.infrastructure.database.models.base import IDMixin, TimestampsMixin
 from drug_search.infrastructure.database.models.types import UserSubscriptionTypes
@@ -32,33 +32,38 @@ class User(IDMixin, TimestampsMixin):
     )
     subscription_end: Mapped[Optional[datetime]] = mapped_column(DateTime, comment="Конец подписки")
 
-    allowed_search_requests: Mapped[int] = mapped_column(
+    # [ TOKENS ]
+    allowed_tokens: Mapped[int] = mapped_column(
         Integer,
-        default=DEFAULT_SEARCH_DAY_LIMIT,
-        server_default=f"{DEFAULT_SEARCH_DAY_LIMIT}",
-        comment="Оставшиеся запросы на поиск препов"
-    )
-    allowed_question_requests: Mapped[int] = mapped_column(
-        Integer,
-        default=ASSISTANT_TOKENS_START,
-        server_default=f"{ASSISTANT_TOKENS_START}",
-        comment="Оставшиеся запросы на вопросы"
+        default=TOKENS_LIMIT.DEFAULT_TOKENS_LIMIT,
+        server_default=f"{TOKENS_LIMIT.DEFAULT_TOKENS_LIMIT}",
+        comment="Количество токенов"
     )
 
-    used_requests: Mapped[int] = mapped_column(Integer, default=0, comment="Количество использованных запросов в общем")
-    requests_last_refresh: Mapped[datetime] = mapped_column(
+    additional_tokens: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        server_default="0",
+        comment="дополнительные токены (не сбрасываются)"
+    )
+
+    used_tokens: Mapped[int] = mapped_column(Integer, server_default="0", default=0, comment="Количество использованных запросов в общем")
+
+    tokens_last_refresh: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.now,
         server_default=func.now(),
         comment="последний сброс счётчика"
     )
 
+    # [ DESCRIPTION ]
     description: Mapped[Optional[str]] = mapped_column(
         Text,
         default=None,
         comment="Каждые 10 запросов о пользователе обновляется его описание. Аля 'какой ты биофакер/химик/фармацевт?'"
     )
 
+    # [ RELATIONSHIPS ]
     allowed_drugs: Mapped[list["AllowedDrugs"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
@@ -74,10 +79,10 @@ class User(IDMixin, TimestampsMixin):
             last_name=self.last_name,
             subscription_type=self.subscription_type,
             subscription_end=self.subscription_end,
-            allowed_search_requests=self.allowed_search_requests,
-            allowed_question_requests=self.allowed_question_requests,
-            used_requests=self.used_requests,
-            requests_last_refresh=self.requests_last_refresh,
+            allowed_tokens=self.allowed_tokens,
+            used_tokens=self.used_tokens,
+            additional_tokens=self.additional_tokens,
+            tokens_last_refresh=self.tokens_last_refresh,
             description=self.description,
             allowed_drugs=[al for al in self.allowed_drugs],
             created_at=self.created_at,

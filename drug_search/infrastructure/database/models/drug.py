@@ -179,7 +179,7 @@ class Drug(IDMixin, TimestampsMixin):
 
             created_at=self.created_at,
             updated_at=self.updated_at
-        )  # TODO сделать в базовой модели
+        )
 
 
 class DrugAnalog(IDMixin):

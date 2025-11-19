@@ -428,7 +428,6 @@ def get_url_to_buy_keyboard(url: str) -> InlineKeyboardMarkup:
 
 
 # [ HELP ]
-
 def get_help_keyboard(
         help_mode: HelpSectionMode
 ):

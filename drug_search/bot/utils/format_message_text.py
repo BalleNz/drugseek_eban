@@ -174,7 +174,7 @@ class DrugMessageFormatter:
             metabolism += f"<b>└── {met_pathway.process.capitalize()}: </b>"
             metabolism += f"<i>{met_pathway.result}</i>\n"
 
-        # [ биодоступность для разных методов ] TODO перенести в новый раздел
+        # [ биодоступность для разных методов ]
         pharmacokinetics: str = ""
         for absorption_adm_method in drug.pharmacokinetics:
             pharmacokinetics += f"<b>└─ <u>{absorption_adm_method.route.capitalize()}</u></b>\n"

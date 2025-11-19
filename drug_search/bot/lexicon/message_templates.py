@@ -78,8 +78,6 @@ class MessageTemplates:
     # [ ACTIONS ]
     DRUG_BUY_REQUEST: str = (
         "<b>Препарата {drug_name_ru} нет в вашей базе.</b>\n\n"
-        "<b>Стоимость:</b>\n"
-        "   1 поисковый токен\n"
     )
 
     DRUG_BUY_ALLOWED: str = (

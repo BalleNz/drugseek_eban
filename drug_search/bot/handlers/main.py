@@ -17,6 +17,7 @@ from drug_search.core.lexicon import (
     MAX_MESSAGE_LENGTH_LITE, MAX_MESSAGE_LENGTH_PREMIUM
 )
 from drug_search.core.schemas import SelectActionResponse, DrugExistingResponse, UserSchema
+from keyboards.keyboard_markups import get_tokens_packages_to_buy_keyboard
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
@@ -117,8 +118,10 @@ async def main_action(
                         arrow=ARROW_TYPES.FORWARD
                     )
                 else:
+                    keyboard = get_tokens_packages_to_buy_keyboard()
                     await message_request.edit_text(
-                        text=MessageText.NOT_ENOUGH_QUESTION_TOKENS
+                        text=MessageText.NOT_ENOUGH_CREATE_TOKENS,
+                        reply_markup=keyboard
                     )
 
             case ACTIONS_FROM_ASSISTANT.QUESTION:
@@ -134,8 +137,10 @@ async def main_action(
                         message_id=str(message_request.message_id),
                     )
                 else:
+                    keyboard = get_tokens_packages_to_buy_keyboard()
                     await message_request.edit_text(
-                        text=MessageText.NOT_ENOUGH_QUESTION_TOKENS
+                        text=MessageText.NOT_ENOUGH_CREATE_TOKENS,
+                        reply_markup=keyboard
                     )
 
             case ACTIONS_FROM_ASSISTANT.DRUG_MENU:
@@ -218,7 +223,6 @@ async def main_action(
                     await message_request.edit_text(MessageText.DRUG_IS_NOT_EXIST)
 
             case ACTIONS_FROM_ASSISTANT.SPAM:
-                # TODO возможно добавить
                 await message_request.edit_text("Это сообщение распознано как спам")
 
             case ACTIONS_FROM_ASSISTANT.OTHER:

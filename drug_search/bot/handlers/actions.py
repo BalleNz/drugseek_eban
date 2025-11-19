@@ -7,9 +7,12 @@ from aiogram.types import CallbackQuery, LinkPreviewOptions, Message
 
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
 from drug_search.bot.keyboards import WrongDrugFoundedCallback, drug_keyboard
-from drug_search.bot.keyboards.callbacks import (DrugUpdateRequestCallback, AssistantQuestionContinueCallback,
-                                                 BuyDrugRequestCallback)
-from drug_search.bot.keyboards.keyboard_markups import buy_request_keyboard
+from drug_search.bot.keyboards.callbacks import (
+    DrugUpdateRequestCallback, AssistantQuestionContinueCallback, BuyDrugRequestCallback
+)
+from drug_search.bot.keyboards.keyboard_markups import (
+    buy_request_keyboard, get_tokens_packages_to_buy_keyboard, get_subscription_packages_keyboard
+)
 from drug_search.bot.lexicon import MessageTemplates
 from drug_search.bot.lexicon.enums import ModeTypes, DrugMenu
 from drug_search.bot.lexicon.message_text import MessageText
@@ -17,9 +20,10 @@ from drug_search.bot.utils.format_message_text import DrugMessageFormatter
 from drug_search.bot.utils.message_actions import open_drug_menu
 from drug_search.core.dependencies.bot.cache_service_dep import cache_service
 from drug_search.core.lexicon import ARROW_TYPES, JobStatuses, DANGER_CLASSIFICATION
-from drug_search.core.schemas import (BuyDrugResponse, BuyDrugStatuses,
-                                      UpdateDrugResponse, UpdateDrugStatuses,
-                                      UserSchema, DrugExistingResponse, DrugSchema)
+from drug_search.core.schemas import (
+    BuyDrugResponse, BuyDrugStatuses, UpdateDrugResponse, UpdateDrugStatuses, UserSchema, DrugExistingResponse,
+    DrugSchema
+)
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
@@ -47,8 +51,10 @@ async def drug_update(
                 text=MessageText.DRUG_UPDATING
             )
         case UpdateDrugStatuses.NOT_ENOUGH_TOKENS:
+            keyboard = get_tokens_packages_to_buy_keyboard()
             await callback_query.message.edit_text(
-                text=MessageText.NOT_ENOUGH_UPDATE_TOKENS
+                text=MessageText.NOT_ENOUGH_UPDATE_TOKENS,
+                reply_markup=keyboard
             )
         case UpdateDrugStatuses.NEED_PREMIUM:
             await callback_query.message.edit_text(
@@ -136,12 +142,18 @@ async def drug_buy(
                 text=MessageText.DRUG_BUY_ALLOWED.format(drug_name=api_response.drug_name)
             )
         case BuyDrugStatuses.NOT_ENOUGH_TOKENS:
+            keyboard = get_tokens_packages_to_buy_keyboard()
             await send_message(
-                text=MessageText.NOT_ENOUGH_CREATE_TOKENS
+                text=MessageText.NOT_ENOUGH_CREATE_TOKENS,
+                reply_markup=keyboard
             )
         case BuyDrugStatuses.NEED_PREMIUM:
+            keyboard = get_subscription_packages_keyboard(
+                subscription_type=user.subscription_type
+            )
             await send_message(
-                text=MessageText.NEED_SUBSCRIPTION
+                text=MessageText.NEED_SUBSCRIPTION,
+                reply_markup=keyboard
             )
         case BuyDrugStatuses.DANGER:
             await send_message(

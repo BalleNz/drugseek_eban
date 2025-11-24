@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional, Union, AsyncGenerator
 
 from fastapi import Depends
-from sqlalchemy import select, func, delete
+from sqlalchemy import select, func, delete, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -157,27 +157,25 @@ class DrugRepository(BaseRepository):
             """
             Создает или обновляет препарат в базе данных на основе данных от ассистента.
             Выполняет обновления параллельно для повышения производительности.
-
-            :param briefly_info:
-            :param dosages:
-            :param analogs:
-            :param metabolism:
-            :param pathways:
-            :param combinations:
-            :param drug_id: Существующий препарат для обновления (если None - создается новый)
-            :return: Обновленная или созданная модель Drug
             """
             try:
-                need_to_clean = drug_id is not None
-
-                if drug_id:
-                    drug: Drug | None = await self.session.get(Drug, drug_id)
+                if drug_id is not None:
+                    # Обновляем существующий препарат по ID
+                    logger.info(f"UPDATING Drug {briefly_info.drug_name} by ID {drug_id}")
+                    drug = await self.session.get(Drug, drug_id)
                     if not drug:
-                        logger.exception(f"При обновлении препарата {drug_id} он не был найден в базе.")
-                        raise
-
-                    drug.updated_at = datetime.now()
+                        logger.warning(f"Препарат {drug_id} не найден для обновления, создаем новый")
+                        drug = None
+                    else:
+                        # Очищаем связанные данные для обновления
+                        await self._clean_drug_relationships(drug)
                 else:
+                    # Создаем новый препарат
+                    logger.info(f"CREATING Drug {briefly_info.drug_name}")
+                    drug = None
+
+                if drug is None:
+                    # Создаем новый препарат
                     drug = Drug(
                         id=uuid.uuid4(),
                         name=briefly_info.drug_name,
@@ -185,13 +183,16 @@ class DrugRepository(BaseRepository):
                     )
                     self.session.add(drug)
 
+                drug.updated_at = datetime.now()
+
+                # Выполняем обновления параллельно
                 results = await asyncio.gather(
-                    self.update_briefly_info(drug, briefly_info, need_to_clean),
-                    self.update_dosages(drug, dosages, need_to_clean),
-                    self.update_analogs(drug, analogs, need_to_clean),
+                    self.update_briefly_info(drug, briefly_info),
+                    self.update_dosages(drug, dosages),
+                    self.update_analogs(drug, analogs),
                     self.update_metabolism(drug, metabolism),
-                    self.update_pathways(drug, pathways, need_to_clean),
-                    self.update_combinations(drug, combinations, need_to_clean),
+                    self.update_pathways(drug, pathways),
+                    self.update_combinations(drug, combinations),
                     return_exceptions=True
                 )
 
@@ -207,19 +208,24 @@ class DrugRepository(BaseRepository):
                 logger.info(f"Successfully {'updated' if drug_id else 'created'} drug: {drug.name}")
                 return drug.get_schema()
 
-            except Exception as ex:
+            except Exception:
                 await self.session.rollback()
-                logger.exception(f"Failed to update drug: {str(ex)}")
                 raise
 
+        async def _clean_drug_relationships(self, drug: Drug) -> None:
+            """Очищает все связанные данные препарата"""
+            await self.session.execute(delete(DrugSynonym).where(DrugSynonym.drug_id == drug.id))
+            await self.session.execute(delete(DrugDosage).where(DrugDosage.drug_id == drug.id))
+            await self.session.execute(delete(DrugAnalog).where(DrugAnalog.drug_id == drug.id))
+            await self.session.execute(delete(DrugPathway).where(DrugPathway.drug_id == drug.id))
+            await self.session.execute(delete(DrugCombination).where(DrugCombination.drug_id == drug.id))
+            await self.session.execute(delete(DrugResearch).where(DrugResearch.drug_id == drug.id))
+
+        @staticmethod
         async def update_briefly_info(
-                self, drug: Drug, assistant_response: DrugBrieflyAssistantResponse,
-                need_to_clean: bool = False
+                drug: Drug, assistant_response: DrugBrieflyAssistantResponse
         ) -> None:
             try:
-                if need_to_clean:
-                    await self.session.execute(delete(DrugSynonym).where(DrugSynonym.drug_id == drug.id))
-
                 drug.name = assistant_response.drug_name
                 drug.name_ru = assistant_response.drug_name_ru
                 drug.latin_name = assistant_response.latin_name
@@ -243,14 +249,11 @@ class DrugRepository(BaseRepository):
                 logger.exception(f"Failed to update drug for {assistant_response.name}: {str(ex)}")
                 raise
 
+        @staticmethod
         async def update_dosages(
-                self, drug: Drug, assistant_response: DrugDosagesAssistantResponse,
-                need_to_clean: bool = False
+                drug: Drug, assistant_response: DrugDosagesAssistantResponse
         ) -> None:
             try:
-                if need_to_clean:
-                    await self.session.execute(delete(DrugDosage).where(DrugDosage.drug_id == drug.id))
-
                 drug.dosages = [
                     DrugDosage(
                         route=dosage_response.route,
@@ -268,14 +271,11 @@ class DrugRepository(BaseRepository):
                 logger.exception(f"Failed to update drug for {drug.name}: {str(ex)}")
                 raise
 
+        @staticmethod
         async def update_analogs(
-                self, drug: Drug, assistant_response: DrugAnalogsAssistantResponse,
-                need_to_clean: bool = False
+                drug: Drug, assistant_response: DrugAnalogsAssistantResponse
         ) -> None:
             try:
-                if need_to_clean:
-                    await self.session.execute(delete(DrugAnalog).where(DrugAnalog.drug_id == drug.id))
-
                 drug.analogs = [
                     DrugAnalog(
                         analog_name=analog_response.analog_name,
@@ -305,14 +305,11 @@ class DrugRepository(BaseRepository):
                 logger.exception(f"Failed to update drug for {drug.name}: {str(ex)}")
                 raise
 
+        @staticmethod
         async def update_pathways(
-                self, drug: Drug, assistant_response: DrugPathwaysAssistantResponse,
-                need_to_clean: bool = False
+                drug: Drug, assistant_response: DrugPathwaysAssistantResponse
         ) -> None:
             try:
-                if need_to_clean:
-                    await self.session.execute(delete(DrugPathway).where(DrugPathway.drug_id == drug.id))
-
                 drug.pathways = [
                     DrugPathway(
                         receptor=pathway_response.receptor,
@@ -336,14 +333,11 @@ class DrugRepository(BaseRepository):
                 logger.exception(f"Failed to update drug for {drug.name}: {str(ex)}")
                 raise
 
+        @staticmethod
         async def update_combinations(
-                self, drug: Drug, assistant_response: DrugCombinationsAssistantResponse,
-                need_to_clean: bool = False
+                drug: Drug, assistant_response: DrugCombinationsAssistantResponse
         ) -> None:
             try:
-                if need_to_clean:
-                    await self.session.execute(delete(DrugDosage).where(DrugDosage.drug_id == drug.id))
-
                 drug.combinations = [
                     DrugCombination(
                         combination_type=combination_response.combination_type,
@@ -359,30 +353,37 @@ class DrugRepository(BaseRepository):
                 logger.exception(f"Failed to update drug for {drug.name}: {str(ex)}")
                 raise
 
-    @staticmethod
-    async def update_researches(drug: Drug, researches: DrugResearchesAssistantResponse) -> Drug:
-        try:
-            drug.researches = [
-                DrugResearch(
-                    name=research_response.name,
-                    description=research_response.description,
-                    publication_date=research_response.publication_date,
-                    url=research_response.url,
-                    summary=research_response.summary,
-                    journal=research_response.journal,
-                    doi=research_response.doi,
-                    authors=research_response.authors,
-                    study_type=research_response.study_type,
-                    interest=research_response.interest,
-                )
-                for research_response in researches.researches
-            ]
+        async def update_researches(
+                self,
+                drug_id: uuid.UUID,
+                researches: DrugResearchesAssistantResponse
+        ) -> None:
+            """Отдельное обновление таблицы исследований"""
+            try:
+                drug = await self.session.get(Drug, drug_id)
+                if not drug:
+                    logger.error(f"Drug {drug_id} not found for updating researches")
+                    return
 
-            return drug
-
-        except Exception as ex:
-            logger.exception(f"Failed to update drug for {researches.name}: {str(ex)}")
-            raise
+                drug.researches = [
+                    DrugResearch(
+                        name=research.name,
+                        description=research.description,
+                        publication_date=research.publication_date if research.publication_date else None,
+                        url=research.url,
+                        summary=research.summary,
+                        journal=research.journal,
+                        doi=research.doi,
+                        authors=research.authors,
+                        study_type=research.study_type,
+                        interest=research.interest,
+                        research_type=research.research_type
+                    ) for research in researches.researches
+                ]
+                await self.session.commit()
+            except Exception as ex:
+                logger.exception(f"Failed to update drug: {str(ex)}")
+                raise
 
 
 async def get_drug_repository(

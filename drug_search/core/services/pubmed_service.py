@@ -1,10 +1,11 @@
+import asyncio
 import threading
 from typing import Optional
 
 from pymed import PubMed
 
 from drug_search.core.schemas import (AssistantResponsePubmedQuery, ClearResearchesRequest,
-                                      DrugResearchesAssistantResponse, PubmedResearchSchema, DrugResearchSchema)
+                                      DrugResearchesAssistantResponse, PubmedResearchSchema)
 from drug_search.core.services.assistant_service import AssistantService
 
 
@@ -29,9 +30,9 @@ class PubmedService:
     @staticmethod
     def __parse_authors(authors: dict) -> list[str]:
         """
-        Превращает словарь с ФИО в строку. Игнорирует поле affilation.
+        Превращает словарь с ФИО в строку. Игнорирует поле affiliation.
 
-        Возращает массив со строками ФИО.
+        Возвращает массив со строками ФИО.
         """
         str_authors = []
         for author in authors:
@@ -40,8 +41,18 @@ class PubmedService:
             str_authors.append(f'{firstname} {lastname}')
         return str_authors
 
-    async def get_pubmed_query(self, drug_name: str) -> str:
-        assistant_response: AssistantResponsePubmedQuery = await self.assistant_service.get_pubmed_query(
+    async def get_pubmed_query_dosages(self, drug_name: str) -> str:
+        assistant_response: AssistantResponsePubmedQuery = await self.assistant_service.pubmed.get_pubmed_query_dosages(
+            drug_name=drug_name)
+        return assistant_response.pubmed_query
+
+    async def get_pubmed_query_mechanism(self, drug_name: str) -> str:
+        assistant_response: AssistantResponsePubmedQuery = await self.assistant_service.pubmed.get_pubmed_query_mechanism(
+            drug_name=drug_name)
+        return assistant_response.pubmed_query
+
+    async def get_pubmed_query_metabolism(self, drug_name: str) -> str:
+        assistant_response: AssistantResponsePubmedQuery = await self.assistant_service.pubmed.get_pubmed_query_metabolism(
             drug_name=drug_name)
         return assistant_response.pubmed_query
 
@@ -52,36 +63,47 @@ class PubmedService:
         Сам оптимизирует запрос специфично для PubMed с помощью ассистента.
         :param drug_name: Действующее вещество препарата.
         """
-        pubmed_query: str = await self.get_pubmed_query(drug_name=drug_name)
-        pubmed_articles = self.pubmed.query(query=pubmed_query, max_results=100)
+        pubmed_dosages_query, pubmed_mechanism_query, pubmed_metabolism_query = await asyncio.gather(
+            self.get_pubmed_query_dosages(drug_name),
+            self.get_pubmed_query_mechanism(drug_name),
+            self.get_pubmed_query_metabolism(drug_name)
+        )
 
-        researches: list[Optional[PubmedResearchSchema, None]] = []
+        researches = list()
 
-        for pubmed_article in pubmed_articles:
-            # пропуск артиклей с несколькими doi и pubmed_id
-            try:
-                if "\n" in pubmed_article.doi or "\n" in pubmed_article.pubmed_id:
+        for query in [pubmed_dosages_query, pubmed_mechanism_query, pubmed_metabolism_query]:
+            pubmed_articles = self.pubmed.query(query=query, max_results=100)
+            count = 0
+
+            for pubmed_article in pubmed_articles:
+                if count >= 20:
+                    break
+
+                if not pubmed_article:
                     continue
-            except TypeError:
-                # Заканчивает цикл, если итерация пустая
-                break
 
-            researches.append(
-                PubmedResearchSchema(
-                    title=pubmed_article.title,
-                    abstract=pubmed_article.abstract,
-                    authors=self.__parse_authors(pubmed_article.authors),
-                    doi=pubmed_article.doi,
-                    journal=pubmed_article.journal,
-                    publication_date=pubmed_article.publication_date,
-                    pubmed_id=pubmed_article.pubmed_id,
-                    conclusion=pubmed_article.conclusions,
-                    results=pubmed_article.results
+                if "\n" in str(pubmed_article.doi) or "\n" in str(pubmed_article.pubmed_id)\
+                        or not pubmed_article.doi or not pubmed_article.pubmed_id:
+                    continue
+
+                researches.append(
+                    PubmedResearchSchema(
+                        title=pubmed_article.title,
+                        abstract=pubmed_article.abstract,
+                        authors=self.__parse_authors(pubmed_article.authors),
+                        doi=pubmed_article.doi,
+                        journal=pubmed_article.journal,
+                        publication_date=pubmed_article.publication_date,
+                        pubmed_id=pubmed_article.pubmed_id,
+                        conclusion=pubmed_article.conclusions,
+                        results=pubmed_article.results
+                    )
                 )
-            )
-        return researches[:10]  # первые 10 исследований, чтобы не перегружать нейронку
+                count += 1
 
-    async def get_researches_clearly(self, drug_name: str) -> list[DrugResearchSchema]:
+        return researches
+
+    async def get_researches_clearly(self, drug_name: str) -> DrugResearchesAssistantResponse:
         """Возвращает исследования в красивом виде после обработки ИИ"""
         researches: list[Optional[PubmedResearchSchema]] = await self.get_researches_dirty(
             drug_name=drug_name
@@ -92,5 +114,6 @@ class PubmedService:
         )
 
         clear_researches: DrugResearchesAssistantResponse = await self.assistant_service.get_clear_researches(
-            researches_request_to_assistant)
-        return clear_researches.researches
+            researches_request_to_assistant
+        )
+        return clear_researches

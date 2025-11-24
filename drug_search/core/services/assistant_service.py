@@ -35,6 +35,7 @@ class AssistantService:
         self.client = AsyncOpenAI(api_key=config.DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
         self.actions = self.Actions(self)
         self.drug_creation = self.DrugCreation(self)
+        self.pubmed = self.PubMed(self)
         self._session: aiohttp.ClientSession | None = None
 
     async def check_balance(self):
@@ -169,7 +170,8 @@ class AssistantService:
         return await self.get_response(
             input_query=input_query,
             prompt=Prompts.GET_DRUG_RESEARCHES,
-            pydantic_model=DrugResearchesAssistantResponse
+            pydantic_model=DrugResearchesAssistantResponse,
+            max_completion_tokens=4000,
         )
 
     async def get_user_description(self, user_name: str, user_drugs_name: str) -> AssistantResponseUserDescription:
@@ -189,12 +191,40 @@ class AssistantService:
         return await self.get_response(input_query=user_query, prompt=Prompts.DRUG_SEARCH_VALIDATION,
                                        pydantic_model=AssistantResponseDrugValidation, temperature=0.7)
 
-    async def get_pubmed_query(self, drug_name: str) -> AssistantResponsePubmedQuery:
-        """
-        Возвращает оптимизированный поисковой запрос для Pubmed исходя из названия действующего вещества.
-        """
-        return await self.get_response(input_query=drug_name, prompt=Prompts.GET_PUBMED_SEARCH_QUERY,
-                                       pydantic_model=AssistantResponsePubmedQuery)
+    class PubMed:
+        """Методы для работы с парсером"""
+        def __init__(self, assistant_service):
+            self.assistant_service = assistant_service
+
+        async def get_pubmed_query_dosages(self, drug_name: str) -> AssistantResponsePubmedQuery:
+            """
+            Возвращает оптимизированный поисковой запрос для Pubmed исходя из названия действующего вещества.
+            """
+            return await self.assistant_service.get_response(
+                input_query=drug_name,
+                prompt=Prompts.GET_PUBMED_DOSAGES_QUERY,
+                pydantic_model=AssistantResponsePubmedQuery
+            )
+
+        async def get_pubmed_query_mechanism(self, drug_name: str) -> AssistantResponsePubmedQuery:
+            """
+            Возвращает оптимизированный поисковой запрос для Pubmed исходя из названия действующего вещества.
+            """
+            return await self.assistant_service.get_response(
+                input_query=drug_name,
+                prompt=Prompts.GET_PUBMED_MECHANISM_QUERY,
+                pydantic_model=AssistantResponsePubmedQuery
+            )
+
+        async def get_pubmed_query_metabolism(self, drug_name: str) -> AssistantResponsePubmedQuery:
+            """
+            Возвращает оптимизированный поисковой запрос для Pubmed исходя из названия действующего вещества.
+            """
+            return await self.assistant_service.get_response(
+                input_query=drug_name,
+                prompt=Prompts.GET_PUBMED_DOSAGES_QUERY,
+                pydantic_model=AssistantResponsePubmedQuery
+            )
 
     class Actions:
         """Действия пользователя

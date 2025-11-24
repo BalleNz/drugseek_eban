@@ -5,6 +5,7 @@ from drug_search.core.services.assistant_service import AssistantService
 from drug_search.core.services.pubmed_service import PubmedService
 
 
-async def get_pubmed_service(assistant_service: AssistantService = Depends(get_assistant_service)):
+async def get_pubmed_service():
     """Return singletone object"""
+    assistant_service: AssistantService = await get_assistant_service()
     return PubmedService(assistant_service=assistant_service)

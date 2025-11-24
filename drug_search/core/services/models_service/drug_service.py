@@ -3,7 +3,7 @@ import logging
 import uuid
 from typing import Optional
 
-from drug_search.core.schemas import DrugSchema
+from drug_search.core.schemas import DrugSchema, DrugResearchesAssistantResponse
 from drug_search.core.services.assistant_service import AssistantService
 from drug_search.core.services.pubmed_service import PubmedService
 from drug_search.infrastructure.database.repository.drug_repo import DrugRepository
@@ -45,6 +45,7 @@ class DrugService:
         try:
             # параллельное выполнение клиента ассистента
             drug_creation = self.assistant.drug_creation
+
             (
                 assistant_response_briefly,
                 assistant_response_dosages,
@@ -61,7 +62,7 @@ class DrugService:
                 drug_creation.get_combinations(drug_name=drug_name),
             )
 
-            return await self.repo.DrugCreation.update_or_create_drug(
+            drug = await self.repo.DrugCreation.update_or_create_drug(
                 briefly_info=assistant_response_briefly,
                 dosages=assistant_response_dosages,
                 analogs=assistant_response_analogs,
@@ -71,17 +72,26 @@ class DrugService:
                 drug_id=drug_id
             )
 
+            # [ ФОНОВОЕ ОБНОВЛЕНИЕ ТАБЛИЦЫ ИССЛЕДОВАНИЙ ]
+            if self.pubmed_service:
+                asyncio.create_task(
+                    self._update_drug_researches_background(drug.id, drug_name)
+                )
+
+            return drug
+
         except Exception as ex:
             logger.error(f"Ошибка при обновлении препарата.")
             raise ex
 
-    async def update_drug_researches(self, drug_id: uuid.UUID) -> None:
+    async def _update_drug_researches_background(self, drug_id: uuid.UUID, drug_name: str) -> None:
         """Обновляет таблицу с исследованиями препарата.
 
         Использует: Pubmed Service
         """
-        drug = await self.repo.get_model(drug_id)
-        drug_name: str = drug.name
-
-        researches = await self.pubmed_service.get_researches_clearly(drug_name)
-        await self.repo.update_researches(drug=drug, researches=researches)
+        try:
+            researches = await self.pubmed_service.get_researches_clearly(drug_name)
+            await self.repo.DrugCreation.update_researches(drug_id=drug_id, researches=researches)
+            logger.info(f"Исследования для препарата {drug_name} успешно обновлены")
+        except Exception as ex:
+            logger.error(f"Ошибка при фоновом обновлении исследований для {drug_name}: {ex}")

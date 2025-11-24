@@ -97,11 +97,18 @@ class DrugPriceSchema(BaseModel):
         from_attributes = True
 
 
+class ResearchType(str, Enum):
+    DOSAGES = 'dosages'
+    METABOLISM = 'metabolism'
+    MECHANISM = 'mechanism'
+    OTHER = 'other'
+
+
 class DrugResearchSchema(BaseModel):
     """объект из таблицы drug_researches"""
     name: str = Field(..., description="Название исследования")
     description: str = Field(..., description="Описание исследования")
-    publication_date: date = Field(..., description="Дата публикации")
+    publication_date: str = Field(..., description="Дата публикации")
     url: str = Field(..., description="Ссылка на исследование")
     summary: Optional[str] = Field(None, description="Основной вывод")
     journal: str = Field(..., description="Название журнала")
@@ -109,9 +116,21 @@ class DrugResearchSchema(BaseModel):
     authors: Optional[str] = Field(None, description="Авторы")
     study_type: Optional[str] = Field(None, description="Тип исследования")
     interest: float = Field(..., description="Оценка интереса 0.00-1.00")
+    research_type: ResearchType = Field(...)
 
     class Config:
         from_attributes = True
+
+    @property
+    def publication_date_obj(self) -> Optional[date]:
+        """Преобразует строку в объект date"""
+        if not self.publication_date:
+            return None
+
+        try:
+            return datetime.strptime(self.publication_date, "%Y-%m-%d").date()
+        except (ValueError, TypeError):
+            return None
 
 
 class Pharmacokinetics(BaseModel):

@@ -9,7 +9,7 @@ from drug_search.core.dependencies.assistant_service_dep import get_assistant_se
 from drug_search.core.dependencies.drug_service_dep import get_drug_service_with_deps, get_drug_service
 from drug_search.core.dependencies.task_service_dep import get_task_service
 from drug_search.core.dependencies.user_service_dep import get_user_service
-from drug_search.core.lexicon import EXIST_STATUS, UPDATE_DRUG_COST
+from drug_search.core.lexicon import EXIST_STATUS, UPDATE_DRUG_COST, SUBSCRIPTION_TYPES
 from drug_search.core.schemas import (UserSchema, DrugExistingResponse,
                                       AssistantResponseDrugValidation, DrugSchema, UpdateDrugResponse, UpdateDrugStatuses)
 from drug_search.core.services.assistant_service import AssistantService
@@ -18,7 +18,6 @@ from drug_search.core.services.tasks_logic.task_service import TaskService
 from drug_search.core.services.models_service.user_service import UserService
 from drug_search.core.utils.auth import get_auth_user
 from drug_search.core.utils.funcs import layout_converter
-
 
 logger = logging.getLogger(__name__)
 drug_router = APIRouter(prefix="/drugs")
@@ -204,10 +203,11 @@ async def update_old_drug(
 
     # [ проверка на наличие токенов + покупка ]
     if user.allowed_tokens > UPDATE_DRUG_COST:
-        await user_service.reduce_tokens(
-            user.id,
-            tokens_amount=UPDATE_DRUG_COST
-        )
+        if not user.subscription_type == SUBSCRIPTION_TYPES.PREMIUM:
+            await user_service.reduce_tokens(
+                user.id,
+                tokens_amount=UPDATE_DRUG_COST
+            )
     else:
         return UpdateDrugResponse(status=UpdateDrugStatuses.NOT_ENOUGH_TOKENS)
 
@@ -230,22 +230,3 @@ async def get_drug(
 
     drug: DrugSchema | None = await drug_service.repo.get_with_all_relationships(drug_id)
     return drug
-
-
-@drug_router.post(path="/update/{drug_id}/researches", description="Обновляет исследования для препарата")
-async def update_drug_researches(
-        user: Annotated[UserSchema, Depends(get_auth_user)],
-        drug_service: Annotated[DrugService, Depends(get_drug_service_with_deps)],
-        user_service: Annotated[UserService, Depends(get_user_service)],
-        drug_id: UUID = Path(..., description="ID препарата в формате UUID")
-):
-    """Обновляет таблицу с исследованиями препарата. Возвращает схему препарата."""
-    # TODO задачу в arq
-    if not user.allowed_tokens:
-        # TODO сделать обработку недостаточно токенов в клиенте
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов.")
-
-    await user_service.add_tokens(user.id, 1)
-    await drug_service.update_drug_researches(drug_id)
-
-    return await drug_service.repo.get(drug_id)

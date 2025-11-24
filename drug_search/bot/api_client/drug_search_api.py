@@ -194,19 +194,6 @@ class DrugSearchAPIClient(BaseHttpClient):
             response_model=BuyDrugResponse
         )
 
-    async def update_drug_researches(
-            self,
-            drug_id: UUID,
-            access_token: str
-    ) -> DrugSchema:
-        """Обновление исследований препарата"""
-        return await self._request(
-            HTTPMethod.POST,
-            f"/v1/drugs/update/{drug_id}/researches",
-            response_model=DrugSchema,
-            access_token=access_token
-        )
-
     # [ Admin ]
     async def mailing(
             self,

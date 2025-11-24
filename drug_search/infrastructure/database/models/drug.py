@@ -125,9 +125,11 @@ class Drug(IDMixin, TimestampsMixin):
     )
 
     researches: Mapped[list["DrugResearch"]] = relationship(
+        "DrugResearch",
         back_populates="drug",
         cascade="all, delete-orphan",
-        lazy="selectin"
+        lazy="selectin",
+        primaryjoin="Drug.id == DrugResearch.drug_id"
     )
 
     __table_args__ = (
@@ -356,14 +358,15 @@ class DrugResearch(IDMixin):
 
     name: Mapped[str] = mapped_column(String(255))
     description: Mapped[str] = mapped_column(Text)
-    publication_date: Mapped[date] = mapped_column(Date)
+    publication_date: Mapped[str] = mapped_column(String)
     url: Mapped[str] = mapped_column(String(255))
     summary: Mapped[Optional[str]] = mapped_column(Text)
     journal: Mapped[str] = mapped_column(String(255))
     doi: Mapped[str] = mapped_column(String(100), unique=True)
     authors: Mapped[Optional[str]] = mapped_column(Text)
     study_type: Mapped[Optional[str]] = mapped_column(String(150))
-    interest: Mapped[float] = mapped_column()
+    interest: Mapped[float] = mapped_column(Float(10))
+    research_type: Mapped[str] = mapped_column(String(255))
 
     __table_args__ = (
         Index('idx_drug_researches_doi', doi, unique=True),

@@ -60,7 +60,7 @@ async def drug_update(
 
         drug: DrugSchema = await drug_service.repo.get(drug_id)
 
-        drug = await drug_service.update_or_create_drug(drug_name=drug.name)
+        drug = await drug_service.update_or_create_drug(drug_name=drug.name, drug_id=drug_id)
 
         # [ invalidate cache ]
         await redis_service.invalidate_drug(drug_id)

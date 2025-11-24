@@ -11,6 +11,7 @@ from drug_search.core.schemas.telegram_schemas import DrugBrieflySchema
 # [ Enums, types ]
 class UpdateDrugStatuses(str, Enum):
     DRUG_UPDATING = "updating"
+    ALREADY_UPDATING = "already_updating"
     NOT_ENOUGH_TOKENS = "no_tokens"
     NEED_PREMIUM = "need_premium"
 

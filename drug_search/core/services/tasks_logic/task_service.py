@@ -7,6 +7,7 @@ from arq import ArqRedis
 from arq.jobs import Job, JobStatus
 
 from drug_search.core.lexicon import ARROW_TYPES, JobStatuses
+from schemas import UpdateDrugStatuses
 
 logger = logging.getLogger(__name__)
 
@@ -78,9 +79,9 @@ class TaskService:
             _expires=10  # minutes
         )
 
-        status: JobStatuses = JobStatuses.QUEUED
-        if job and job.status() == JobStatus.in_progress:
-            status = JobStatuses.CREATED
+        status: UpdateDrugStatuses = UpdateDrugStatuses.DRUG_UPDATING
+        if job and await job.status() == JobStatus.in_progress:
+            status = UpdateDrugStatuses.ALREADY_UPDATING
 
         logger.info(f"Задача на обновление препарата поставлена в очередь!")
 

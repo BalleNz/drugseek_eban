@@ -129,7 +129,7 @@ async def drug_buy(
     match api_response.status:
         case BuyDrugStatuses.DRUG_CREATED:
             if api_response.job_status == JobStatuses.CREATED:
-                logger.info(f"Юзер {message.from_user.id} создал препарат {api_response.drug_name}")
+                logger.info(f"Юзер {message.from_user.username} создал препарат {api_response.drug_name}")
                 await send_message(
                     text=MessageText.DRUG_BUY_CREATED
                 )

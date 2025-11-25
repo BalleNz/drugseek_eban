@@ -170,7 +170,7 @@ async def drug_buy(
         logger.info(f"Открывается меню препарата {drug.name}: {drug_menu}")
         await open_drug_menu(
             drug=drug,
-            drug_menu=drug_menu,
+            drug_menu=drug_menu or DrugMenu.BRIEFLY,
             message=message,
             user=user
         )

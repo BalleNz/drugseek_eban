@@ -253,7 +253,11 @@ class DrugMessageFormatter:
         }
 
         method = format_methods.get(drug_menu)
-        if method:
+        if drug_menu == DrugMenu.RESEARCHES:
+            return DrugMessageFormatter.format_researches(
+                drug, 0
+            )
+        elif method:
             return method(drug)
         else:
             raise f"Неизвестный тип описания: {drug_menu}"

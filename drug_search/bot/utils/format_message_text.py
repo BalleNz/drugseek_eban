@@ -200,17 +200,29 @@ class DrugMessageFormatter:
         )
 
     @staticmethod
-    def format_researches(drug: DrugSchema) -> str:
+    def format_researches(drug: DrugSchema, research_number: int) -> str:
         """Форматирование информации об исследованиях"""
-        researches_list = ""
-        for research in drug.researches:
-            researches_list += f"<a href='{research.url}'><b>{research.publication_date}</b></a>\n"
-            researches_list += f"<b>{research.name}</b>\n"
-            researches_list += f"{research.summary}\n\n" if research.summary else research.description
+        research_text: str | None = None
+        if drug.researches:
+            research = drug.researches[research_number]
+
+            research_text: str = ""
+            if research.header_name:
+                research_text += f"<b>{research.header}</b>\n"
+                research_text += f"<b>—</b> <a href='{research.url}'>{research.header_name}</a>\n\n"
+            else:
+                research_text += f"<b><a href='{research.url}'>{research.header}</a></b>\n\n"
+
+            research_text += f"<b>Дата:</b> {research.publication_date}\n"
+            reading_level: str = "Лёгкий" if float(research.interest) > 0.8 else "Сложный"
+            research_text += f"<b>Тип чтения:</b> {reading_level}\n\n"
+
+            research_text += f"{research.description}\n\n"
+            research_text += f"<b>Вывод</b>: {research.summary}\n"
 
         return MessageTemplates.DRUG_INFO_RESEARCHES.format(
-            drug_name_ru=drug.name_ru,
-            researches_list=researches_list or "Нет данных об исследованиях."
+            drug_name_ru=drug.name_ru.upper(),
+            researches_list=research_text or "Исследования создаются, зайдите через минуту!"
         )
 
     @staticmethod

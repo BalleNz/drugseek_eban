@@ -29,11 +29,18 @@ class DrugResearchesUpdateCallback(CallbackData, prefix="drug_researches_update"
     drug_id: uuid.UUID
 
 
+class DrugDescribeResearchesCallback(CallbackData, prefix="drug_researches"):
+    """Описание исследований"""
+    drug_id: uuid.UUID
+    research_number: int
+    current_page_number: int | None = None
+
+
 class DrugDescribeCallback(CallbackData, prefix="drug_describe"):
     # Подробное описание препарата
     drug_id: uuid.UUID
-    describe_type: Optional[DrugMenu]
-    page: int | None  # страница с прошлого меню | None (если вне меню)
+    drug_menu: Optional[DrugMenu]
+    page: int | None = None  # страница с прошлого меню | None (если вне меню)
 
 
 # [ ACTIONS ]

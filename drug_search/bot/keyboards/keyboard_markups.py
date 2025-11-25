@@ -1,3 +1,6 @@
+import logging
+import uuid
+
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
 from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback, WrongDrugFoundedCallback)
@@ -5,12 +8,15 @@ from drug_search.bot.keyboards.callbacks import (AssistantQuestionContinueCallba
                                                  UserDescriptionCallback, HelpSectionCallback,
                                                  BuyDrugRequestCallback, FinishPaymentCallback,
                                                  BackToUserProfileCallback, BuySubscriptionCallback, BuyTokensCallback,
-                                                 BuyTokensConfirmationCallback, BuySubscriptionChosenTypeCallback)
+                                                 BuyTokensConfirmationCallback, BuySubscriptionChosenTypeCallback,
+                                                 DrugDescribeResearchesCallback)
 from drug_search.bot.lexicon.enums import ModeTypes, HelpSectionMode, DrugMenu
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.core.lexicon import ARROW_TYPES, TokenPackage, SubscriptionPackage, SUBSCRIPTION_TYPES
-from drug_search.core.schemas import DrugBrieflySchema, DrugSchema, UserSchema
+from drug_search.core.schemas import DrugBrieflySchema, DrugSchema, UserSchema, DrugResearchSchema
 from drug_search.core.utils.funcs import may_update_drug
+
+logger = logging.getLogger(__name__)
 
 # [Reply]
 menu_keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(
@@ -44,7 +50,7 @@ def drug_list_keyboard(drugs: list[DrugBrieflySchema], page: int) -> InlineKeybo
                     text=drug.drug_name_ru,
                     callback_data=DrugDescribeCallback(
                         drug_id=drug.drug_id,
-                        describe_type=DrugMenu.BRIEFLY,
+                        drug_menu=DrugMenu.BRIEFLY,
                         page=page
                     ).pack()
                 )
@@ -76,6 +82,88 @@ def drug_list_keyboard(drugs: list[DrugBrieflySchema], page: int) -> InlineKeybo
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
+def drug_researches_keyboard(
+        researches: list[DrugResearchSchema],
+        drug_id: uuid.UUID,
+        research_number: int = 0,
+        current_page_number: int | None = None
+) -> InlineKeyboardMarkup:
+    """Клавиатура для листинга исследований"""
+
+    page_size = 6
+
+    # [ текущая страница ]
+    # изначально может быть отлИчной от той, в которой сейчас находится исследование
+    if not current_page_number:
+        current_page_number = research_number // page_size
+
+    current_start_index = current_page_number * page_size
+
+    current_page = researches[current_start_index:current_start_index + page_size]
+
+    buttons: list[InlineKeyboardButton] = []
+    for i, research in enumerate(current_page):
+        current_research_number: int = i + (current_start_index * page_size)
+        logger.info(f"Keyboard: \n—— current_i: {i}\n—— current_research_number: {current_research_number}")
+
+        buttons.append(
+            InlineKeyboardButton(
+                text=research.header if current_research_number != research_number else f"| {research.header} |",
+                callback_data=DrugDescribeResearchesCallback(
+                    drug_id=drug_id,
+                    research_number=current_research_number
+                ).pack()
+            )
+        )
+
+    total_pages = len(researches) // page_size
+
+    buttons_arrows: list[InlineKeyboardButton] = []
+    if current_page_number < total_pages:
+        buttons_arrows.append(
+            InlineKeyboardButton(
+                text="——>",
+                callback_data=DrugDescribeResearchesCallback(
+                    drug_id=drug_id,
+                    research_number=research_number
+                ).pack()
+            )
+        )
+    if current_page_number > 1:
+        buttons_arrows.append(
+            InlineKeyboardButton(
+                text="<——",
+                callback_data=DrugDescribeResearchesCallback(
+                    drug_id=drug_id,
+                    research_number=research_number,
+                    current_page_number=current_page_number + 1
+                ).pack()
+            )
+        )
+
+    return_to_menu_button = InlineKeyboardButton(
+        text="Вернуться в меню",
+        callback_data=DrugDescribeCallback(
+            drug_id=drug_id,
+            drug_menu=DrugMenu.BRIEFLY
+        ).pack()
+    )
+
+    keyboard = []
+
+    for button in buttons:
+        keyboard.append([button])
+
+    # Добавляем стрелки навигации в одну строку (если есть)
+    if buttons_arrows:
+        keyboard.append(buttons_arrows)
+
+    # Добавляем кнопку возврата в меню в отдельную строку
+    keyboard.append([return_to_menu_button])
+
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
 def drug_keyboard(
         drug: DrugSchema,
         drug_menu: DrugMenu,
@@ -96,7 +184,7 @@ def drug_keyboard(
                     InlineKeyboardButton(
                         text=ButtonText.LEFT_ARROW,
                         callback_data=DrugDescribeCallback(
-                            describe_type=DrugMenu.BRIEFLY,
+                            drug_menu=DrugMenu.BRIEFLY,
                             drug_id=drug.id,
                             page=page
                         ).pack()
@@ -122,16 +210,6 @@ def drug_keyboard(
                     )
                 ]
             )
-        elif drug_menu == DrugMenu.RESEARCHES:
-            keyboard.inline_keyboard.insert(
-                0,
-                [
-                    InlineKeyboardButton(
-                        text=ButtonText.UPDATE_RESEARCHES,
-                        callback_data=...  # TODO
-                    )
-                ]
-            )
 
         return keyboard
 
@@ -141,7 +219,7 @@ def drug_keyboard(
                 InlineKeyboardButton(
                     text=ButtonText.DOSAGES,
                     callback_data=DrugDescribeCallback(
-                        describe_type=DrugMenu.DOSAGES,
+                        drug_menu=DrugMenu.DOSAGES,
                         drug_id=drug.id,
                         page=page
                     ).pack()
@@ -149,7 +227,7 @@ def drug_keyboard(
                 InlineKeyboardButton(
                     text=ButtonText.METABOLISM,
                     callback_data=DrugDescribeCallback(
-                        describe_type=DrugMenu.METABOLISM,
+                        drug_menu=DrugMenu.METABOLISM,
                         drug_id=drug.id,
                         page=page
                     ).pack()
@@ -159,7 +237,7 @@ def drug_keyboard(
                 InlineKeyboardButton(
                     text=ButtonText.COMBINATIONS,
                     callback_data=DrugDescribeCallback(
-                        describe_type=DrugMenu.COMBINATIONS,
+                        drug_menu=DrugMenu.COMBINATIONS,
                         drug_id=drug.id,
                         page=page
                     ).pack()
@@ -167,7 +245,7 @@ def drug_keyboard(
                 InlineKeyboardButton(
                     text=ButtonText.ANALOGS,
                     callback_data=DrugDescribeCallback(
-                        describe_type=DrugMenu.ANALOGS,
+                        drug_menu=DrugMenu.ANALOGS,
                         drug_id=drug.id,
                         page=page
                     ).pack()
@@ -177,7 +255,7 @@ def drug_keyboard(
                 InlineKeyboardButton(
                     text=ButtonText.MECHANISM,
                     callback_data=DrugDescribeCallback(
-                        describe_type=DrugMenu.MECHANISM,
+                        drug_menu=DrugMenu.MECHANISM,
                         drug_id=drug.id,
                         page=page
                     ).pack()
@@ -186,10 +264,9 @@ def drug_keyboard(
             [
                 InlineKeyboardButton(
                     text=ButtonText.RESEARCHES,
-                    callback_data=DrugDescribeCallback(
-                        describe_type=DrugMenu.RESEARCHES,
+                    callback_data=DrugDescribeResearchesCallback(
                         drug_id=drug.id,
-                        page=page,
+                        research_number=0,
                     ).pack()
                 )
             ],
@@ -202,7 +279,7 @@ def drug_keyboard(
                 InlineKeyboardButton(
                     text=ButtonText.UPDATE_DRUG,
                     callback_data=DrugDescribeCallback(
-                        describe_type=drug_menu.UPDATE_INFO,
+                        drug_menu=drug_menu.UPDATE_INFO,
                         drug_id=drug.id,
                         page=page
                     ).pack()

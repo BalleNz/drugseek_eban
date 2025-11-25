@@ -7,10 +7,12 @@ from aiogram.types import Message, CallbackQuery, LinkPreviewOptions
 
 from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback, drug_list_keyboard,
                                        drug_keyboard)
-from lexicon.enums import DrugMenu
-from drug_search.bot.lexicon.enums import ModeTypes
+from drug_search.bot.keyboards.callbacks import DrugDescribeResearchesCallback
+from drug_search.bot.keyboards.keyboard_markups import drug_researches_keyboard
+from drug_search.bot.lexicon.enums import DrugMenu, ModeTypes
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.bot.lexicon.message_text import MessageText
+from drug_search.bot.utils.format_message_text import DrugMessageFormatter
 from drug_search.core.schemas import DrugSchema, UserSchema, AllowedDrugsInfoSchema
 from drug_search.core.services.cache_logic.cache_service import CacheService
 
@@ -68,6 +70,37 @@ async def drug_list_handler(
     )
 
 
+@router.callback_query(DrugDescribeResearchesCallback.filter())
+async def drug_describe_researches_handler(
+        callback: CallbackQuery,
+        cache_service: CacheService,
+        access_token: str,
+        callback_data: DrugDescribeResearchesCallback,
+        state: FSMContext  # noqa
+):
+    """меню с исследованиями со стрелками"""
+    await callback.answer()
+
+    # [ callback data ]
+    drug_id: UUID = callback_data.drug_id
+    research_number: int = callback_data.research_number
+
+    drug: DrugSchema = await cache_service.get_drug(
+        access_token=access_token,
+        drug_id=drug_id
+    )
+
+    await callback.message.edit_text(
+        text=DrugMessageFormatter.format_researches(drug, research_number),
+        reply_markup=drug_researches_keyboard(
+            researches=drug.researches,
+            drug_id=drug_id,
+            research_number=research_number
+        ),
+        link_preview_options=LinkPreviewOptions(is_disabled=True)
+    )
+
+
 @router.callback_query(DrugDescribeCallback.filter())
 async def drug_describe_handler(
         callback: CallbackQuery,
@@ -84,7 +117,7 @@ async def drug_describe_handler(
 
     # [ callback data ]
     drug_id: UUID = callback_data.drug_id
-    describe_type: DrugMenu = callback_data.describe_type
+    describe_type: DrugMenu = callback_data.drug_menu
     page: int = callback_data.page
 
     drug: DrugSchema = await cache_service.get_drug(

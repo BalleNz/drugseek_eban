@@ -356,6 +356,8 @@ class DrugResearch(IDMixin):
     )
     drug: Mapped["Drug"] = relationship(back_populates="researches")
 
+    header: Mapped[str] = mapped_column(String(255))
+    header_name: Mapped[str] = mapped_column(String(255), nullable=True)
     name: Mapped[str] = mapped_column(String(255))
     description: Mapped[str] = mapped_column(Text)
     publication_date: Mapped[str] = mapped_column(String)

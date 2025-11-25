@@ -106,6 +106,8 @@ class ResearchType(str, Enum):
 
 class DrugResearchSchema(BaseModel):
     """объект из таблицы drug_researches"""
+    header: str = Field(..., description="Интересный заголовок")
+    header_name: str | None = Field(None, description="Продолжение заголовка")
     name: str = Field(..., description="Название исследования")
     description: str = Field(..., description="Описание исследования")
     publication_date: str = Field(..., description="Дата публикации")

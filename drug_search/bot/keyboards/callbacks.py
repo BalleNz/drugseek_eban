@@ -33,7 +33,7 @@ class DrugDescribeResearchesCallback(CallbackData, prefix="drug_researches"):
     """Описание исследований"""
     drug_id: uuid.UUID
     research_number: int
-    current_page_number: int | None = None
+    current_page_number: int
 
 
 class DrugDescribeCallback(CallbackData, prefix="drug_describe"):

@@ -85,22 +85,18 @@ def drug_list_keyboard(drugs: list[DrugBrieflySchema], page: int) -> InlineKeybo
 def drug_researches_keyboard(
         researches: list[DrugResearchSchema],
         drug_id: uuid.UUID,
+        current_page_number: int,
         research_number: int = 0,
-        current_page_number: int | None = None
 ) -> InlineKeyboardMarkup:
     """Клавиатура для листинга исследований"""
 
-    page_size = 6
+    page_size = 4
 
     # [ текущая страница ]
     # изначально может быть отлИчной от той, в которой сейчас находится исследование
     logger.info(f"Current_page_number: {current_page_number}")
-    if not current_page_number:
-        current_page_number = research_number // page_size
 
     current_start_index = current_page_number * page_size
-
-    logger.info(f"Current_page_number after: {current_page_number}")
 
     current_page = researches[current_start_index:current_start_index + page_size]
 
@@ -113,7 +109,8 @@ def drug_researches_keyboard(
                 text=research.header if current_research_number != research_number else f"| {research.header} |",
                 callback_data=DrugDescribeResearchesCallback(
                     drug_id=drug_id,
-                    research_number=current_research_number
+                    research_number=current_research_number,
+                    current_page_number=current_page_number
                 ).pack()
             )
         )
@@ -121,17 +118,7 @@ def drug_researches_keyboard(
     total_pages = len(researches) // page_size
 
     buttons_arrows: list[InlineKeyboardButton] = []
-    if current_page_number < total_pages:
-        buttons_arrows.append(
-            InlineKeyboardButton(
-                text="——>",
-                callback_data=DrugDescribeResearchesCallback(
-                    drug_id=drug_id,
-                    research_number=research_number,
-                    current_page_number=current_page_number + 1
-                ).pack()
-            )
-        )
+
     if current_page_number > 0:
         buttons_arrows.append(
             InlineKeyboardButton(
@@ -140,6 +127,18 @@ def drug_researches_keyboard(
                     drug_id=drug_id,
                     research_number=research_number,
                     current_page_number=current_page_number - 1
+                ).pack()
+            )
+        )
+
+    if current_page_number < total_pages:
+        buttons_arrows.append(
+            InlineKeyboardButton(
+                text="——>",
+                callback_data=DrugDescribeResearchesCallback(
+                    drug_id=drug_id,
+                    research_number=research_number,
+                    current_page_number=current_page_number + 1
                 ).pack()
             )
         )
@@ -270,6 +269,7 @@ def drug_keyboard(
                     callback_data=DrugDescribeResearchesCallback(
                         drug_id=drug.id,
                         research_number=0,
+                        current_page_number=0
                     ).pack()
                 )
             ],

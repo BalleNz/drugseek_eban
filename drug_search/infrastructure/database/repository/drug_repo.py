@@ -368,7 +368,7 @@ class DrugRepository(BaseRepository):
                 drug.researches = [
                     DrugResearch(
                         header=research.header,
-                        name=research.name,
+                        header_name=research.header_name,
                         description=research.description,
                         publication_date=research.publication_date if research.publication_date else None,
                         url=research.url,

@@ -1,4 +1,5 @@
 import datetime
+import logging
 import random
 
 from drug_search.bot.lexicon.consts import SYMBOLS
@@ -8,6 +9,8 @@ from drug_search.bot.utils.funcs import make_google_sources, get_time_when_refre
     decline_tokens
 from drug_search.core.lexicon.enums import SUBSCRIPTION_TYPES, TOKENS_LIMIT
 from drug_search.core.schemas import UserSchema, DrugSchema, CombinationType, AllowedDrugsInfoSchema
+
+logger = logging.getLogger(__name__)
 
 
 class DrugMessageFormatter:
@@ -19,8 +22,8 @@ class DrugMessageFormatter:
         return MessageTemplates.DRUG_INFO_BRIEFLY.format(
             drug_name_ru=drug.name_ru,
             drug_name=drug.name,
-            latin_name=drug.latin_name,
-            classification=drug.classification,
+            # latin_name=drug.latin_name,
+            # classification=drug.classification,
             description=drug.description,
             clinical_effects=drug.clinical_effects,
             fun_fact=drug.fact or ""
@@ -204,12 +207,13 @@ class DrugMessageFormatter:
         """Форматирование информации об исследованиях"""
         research_text: str | None = None
         if drug.researches:
+            logger.info(f"research_number: {research_number}")
             research = drug.researches[research_number]
 
             research_text: str = ""
             if research.header_name:
-                research_text += f"<b>{research.header}</b>\n"
-                research_text += f"<b>—</b> <a href='{research.url}'>{research.header_name}</a>\n\n"
+                research_text += f"<b>{research.header}:</b>\n"
+                research_text += f"<b>—</b> <a href='{research.url}'>{research.header_name}.</a>\n\n"
             else:
                 research_text += f"<b><a href='{research.url}'>{research.header}</a></b>\n\n"
 
@@ -222,7 +226,7 @@ class DrugMessageFormatter:
 
         return MessageTemplates.DRUG_INFO_RESEARCHES.format(
             drug_name_ru=drug.name_ru.upper(),
-            researches_list=research_text or "Исследования создаются, зайдите через минуту!"
+            researches_list=research_text or "Исследования создаются, зайдите через минуту! \n(или их не существует для этого препарата)"
         )
 
     @staticmethod

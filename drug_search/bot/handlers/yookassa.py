@@ -81,9 +81,7 @@ async def buy_subscription_choose_type(
 
     text = MessageText.SUBSCRIPTION_BUY_CHOOSE_TYPE
 
-    keyboard: InlineKeyboardMarkup | None = None
-    if user.subscription_type == SUBSCRIPTION_TYPES.DEFAULT:
-        keyboard = get_subscription_packages_types_keyboard()
+    keyboard: InlineKeyboardMarkup = get_subscription_packages_types_keyboard(user.subscription_type)
 
     await callback_query.message.edit_text(
         text=text,
@@ -100,7 +98,16 @@ async def buy_subscription_choose_package(
     """Выбор пакета подписки"""
     await callback_query.answer()
 
-    text = MessageText.SUBSCRIPTION_BUY_CHOOSE_DURATION
+    chosen_subscription_text: str = ""
+    match callback_data.subscription_type:
+        case SUBSCRIPTION_TYPES.LITE:
+            chosen_subscription_text = "(Лайт)"
+        case SUBSCRIPTION_TYPES.PREMIUM:
+            chosen_subscription_text = "(Премиум)"
+
+    text = MessageText.SUBSCRIPTION_BUY_CHOOSE_DURATION.format(
+        subscription_type=chosen_subscription_text
+    )
 
     keyboard = get_subscription_packages_keyboard(callback_data.subscription_type)
 
@@ -128,7 +135,7 @@ async def buy_subscription_confirmation(
         subscription_price=subscription_package.price,
     )
 
-    url = ...
+    url = ...  # TODO
 
     keyboard = get_url_to_buy_keyboard(
         url="vk.com"

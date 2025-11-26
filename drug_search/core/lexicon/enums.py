@@ -92,18 +92,28 @@ class TokenPackage(Enum):
 
 
 class SubscriptionPackage(Enum):
-    """Пакеты с подписками"""
+    """Пакеты с подписками
+
+    ЦЕНЫ
+    ДЛИТЕЛЬНОСТЬ
+    """
+
     # LITE: в день 20 токенов
     # PREMIUM: в день безлимит или 100 токенов
 
     # [ Ключ, Название пакета (длительность), Тип подписки, длительность, цена ]
+
+    # [ 7 дней ]
+    LITE_7_PACKAGE = ("two_weeks_lite", "Неделя", SUBSCRIPTION_TYPES.LITE, "7", 299.0)
+
     # [ 14 дней ]
-    LITE_14_PACKAGE = ("two_weeks_lite", "Две недели", SUBSCRIPTION_TYPES.LITE, "14", 299.0)
-    PREMIUM_14_PACKAGE = ("two_weeks_premium", "Две недели", SUBSCRIPTION_TYPES.PREMIUM, "14", 599.0)
+    PREMIUM_14_PACKAGE = ("two_weeks_premium", "Две недели", SUBSCRIPTION_TYPES.PREMIUM, "14", 899.0)
+
+    # [ 60 дней ]
+    LITE_60_PACKAGE = ("three_months_lite", "Два месяца", SUBSCRIPTION_TYPES.LITE, "60", 1190.0)
 
     # [ 90 дней ]
-    LITE_90_PACKAGE = ("three_months_lite", "Три месяца", SUBSCRIPTION_TYPES.LITE, "90", 1190.0)
-    PREMIUM_90_PACKAGE = ("three_months_premium", "Три месяца", SUBSCRIPTION_TYPES.PREMIUM, "90", 1799.0)
+    PREMIUM_90_PACKAGE = ("three_months_premium", "Три месяца", SUBSCRIPTION_TYPES.PREMIUM, "90", 2199.0)
 
     # [ 180 дней ]
     PREMIUM_180_PACKAGE = ("six_months_premium", "Полгода", SUBSCRIPTION_TYPES.PREMIUM, "180", 3290.0)
@@ -147,7 +157,7 @@ class SubscriptionPackage(Enum):
     def get_packages_by_type(cls, subscription_type: SUBSCRIPTION_TYPES) -> None | tuple["SubscriptionPackage", ...]:
         match subscription_type:
             case SUBSCRIPTION_TYPES.LITE:
-                return cls.LITE_14_PACKAGE, cls.LITE_90_PACKAGE
+                return cls.LITE_7_PACKAGE, cls.LITE_60_PACKAGE
             case SUBSCRIPTION_TYPES.PREMIUM:
                 return cls.PREMIUM_14_PACKAGE, cls.PREMIUM_90_PACKAGE, cls.PREMIUM_180_PACKAGE, cls.PREMIUM_365_PACKAGE
 

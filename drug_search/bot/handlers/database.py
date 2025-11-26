@@ -84,6 +84,7 @@ async def drug_describe_researches_handler(
     # [ callback data ]
     drug_id: UUID = callback_data.drug_id
     research_number: int = callback_data.research_number
+    current_page_number: int = callback_data.current_page_number
 
     drug: DrugSchema = await cache_service.get_drug(
         access_token=access_token,
@@ -95,7 +96,8 @@ async def drug_describe_researches_handler(
         reply_markup=drug_researches_keyboard(
             researches=drug.researches,
             drug_id=drug_id,
-            research_number=research_number
+            research_number=research_number,
+            current_page_number=current_page_number
         ),
         link_preview_options=LinkPreviewOptions(is_disabled=True)
     )

@@ -94,17 +94,19 @@ def drug_researches_keyboard(
 
     # [ текущая страница ]
     # изначально может быть отлИчной от той, в которой сейчас находится исследование
+    logger.info(f"Current_page_number: {current_page_number}")
     if not current_page_number:
         current_page_number = research_number // page_size
 
     current_start_index = current_page_number * page_size
 
+    logger.info(f"Current_page_number after: {current_page_number}")
+
     current_page = researches[current_start_index:current_start_index + page_size]
 
     buttons: list[InlineKeyboardButton] = []
     for i, research in enumerate(current_page):
-        current_research_number: int = i + (current_start_index * page_size)
-        logger.info(f"Keyboard: \n—— current_i: {i}\n—— current_research_number: {current_research_number}")
+        current_research_number: int = i + (current_page_number * page_size)
 
         buttons.append(
             InlineKeyboardButton(
@@ -125,18 +127,19 @@ def drug_researches_keyboard(
                 text="——>",
                 callback_data=DrugDescribeResearchesCallback(
                     drug_id=drug_id,
-                    research_number=research_number
+                    research_number=research_number,
+                    current_page_number=current_page_number + 1
                 ).pack()
             )
         )
-    if current_page_number > 1:
+    if current_page_number > 0:
         buttons_arrows.append(
             InlineKeyboardButton(
                 text="<——",
                 callback_data=DrugDescribeResearchesCallback(
                     drug_id=drug_id,
                     research_number=research_number,
-                    current_page_number=current_page_number + 1
+                    current_page_number=current_page_number - 1
                 ).pack()
             )
         )
@@ -444,9 +447,14 @@ def get_tokens_packages_to_buy_keyboard() -> InlineKeyboardMarkup:
     )
 
 
-def get_subscription_packages_types_keyboard() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
+def get_subscription_packages_types_keyboard(
+        user_subscription_type: SUBSCRIPTION_TYPES
+) -> InlineKeyboardMarkup:
+    """клавиатура с пакетами подписок в зависимости от текущей подписки пользователя"""
+    buttons = []
+
+    if user_subscription_type in [SUBSCRIPTION_TYPES.DEFAULT]:
+        buttons.append(
             [
                 InlineKeyboardButton(
                     text="⚡ Лайт",
@@ -454,7 +462,11 @@ def get_subscription_packages_types_keyboard() -> InlineKeyboardMarkup:
                         subscription_type=SUBSCRIPTION_TYPES.LITE
                     ).pack()
                 )
-            ],
+            ]
+        )
+
+    if user_subscription_type in [SUBSCRIPTION_TYPES.DEFAULT, SUBSCRIPTION_TYPES.LITE]:
+        buttons.append(
             [
                 InlineKeyboardButton(
                     text="💎️ Премиум",
@@ -463,7 +475,19 @@ def get_subscription_packages_types_keyboard() -> InlineKeyboardMarkup:
                     ).pack()
                 )
             ]
+        )
+
+    buttons.append(
+        [
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data=BackToUserProfileCallback().pack()
+            )
         ]
+    )
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=buttons
     )
 
 
@@ -484,6 +508,15 @@ def get_subscription_packages_keyboard(
                 ).pack()
             )]
         )
+
+    buttons.append(
+        [
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data=BuySubscriptionCallback().pack()
+            )
+        ]
+    )
 
     return InlineKeyboardMarkup(
         inline_keyboard=buttons

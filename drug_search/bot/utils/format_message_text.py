@@ -22,8 +22,8 @@ class DrugMessageFormatter:
         return MessageTemplates.DRUG_INFO_BRIEFLY.format(
             drug_name_ru=drug.name_ru,
             drug_name=drug.name,
-            # latin_name=drug.latin_name,
-            # classification=drug.classification,
+            latin_name=drug.latin_name,
+            classification=drug.classification,
             description=drug.description,
             clinical_effects=drug.clinical_effects,
             fun_fact=drug.fact or ""
@@ -274,13 +274,17 @@ class UserProfileMessageFormatter:
     def format_user_profile(user: UserSchema) -> str:
         """Форматирование профиля пользователя"""
         profile_name: str = ""
+        profile_icon: str = ""
         match user.subscription_type:
             case SUBSCRIPTION_TYPES.DEFAULT:
-                profile_name = "🪰 Ограниченный профиль"
+                profile_name = "Ограниченный профиль"
+                profile_icon = "🪰"
             case SUBSCRIPTION_TYPES.LITE:
-                profile_name = "🧢 Профиль"
+                profile_name = "Профиль"
+                profile_icon = "🧢"
             case SUBSCRIPTION_TYPES.PREMIUM:
-                profile_name = "👑 Премиум профиль"
+                profile_name = "Премиум профиль"
+                profile_icon = "💎"
 
         def get_subscription_end_at_text(subscription_end_at: datetime.datetime) -> str:
             """Получить текст конца подписки
@@ -331,21 +335,25 @@ class UserProfileMessageFormatter:
                 else:
                     return f"Подписка заканчивается через {seconds} секунд."
 
-        # ⏳ Обновление токенов: через 13 часов
         refresh_section: str = get_time_when_refresh_tokens_text(
             user.tokens_last_refresh,
             subscription_type=user.subscription_type
         )
 
-        allowed_tokens = f"{user.allowed_tokens} / <u>{TOKENS_LIMIT.get_limits_from_subscription_type(
+        allowed_tokens = f"<u>{user.allowed_tokens}</u> / {TOKENS_LIMIT.get_limits_from_subscription_type(
             user.subscription_type
-        )}</u>"
+        )}"
+
+        additional_tokens_text = f"Дополнительные токены: <u>{user.additional_tokens}</u>"
 
         return MessageTemplates.USER_PROFILE.format(
             profile_name=profile_name,
-            refresh_section=refresh_section,
+            profile_icon=profile_icon,
+            refresh_section="||  " + refresh_section if refresh_section else "",
             allowed_tokens=allowed_tokens,
             token_word=decline_tokens(user.allowed_tokens),
+            additional_tokens_text=additional_tokens_text if additional_tokens_text else "",
+            additional_tokens_quote="<blockquote>Когда закончатся стандартные токены, начнут расходоваться дополнительные.</blockquote>\n\n" if additional_tokens_text else "",
             subscription_end_at=get_subscription_end_at_text(user.subscription_end) if user.subscription_end else ""
         )
 

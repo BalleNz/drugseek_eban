@@ -2,7 +2,7 @@ class ButtonText:
     # [ REPLY ]
     DRUG_DATABASE = "💊 База препаратов"
     PROFILE = "👤 Профиль"
-    HELP = "🔍 Что умеет бот?"
+    HELP = "🔎 Что умеет бот?"
 
     # [ INLINE ]
     BUY_DRUG = "Купить"
@@ -39,7 +39,7 @@ class ButtonText:
     HELP_SUBSCRIPTION = "Подписка"
 
     HELP_QUERIES_QUESTIONS = "Вопросы по фарме"
-    HELP_QUERIES_PHARMA = "Фарм рекомендации"
+    HELP_QUERIES_PHARMA = "Эффективные препараты"
     HELP_QUERIES_DRUG_SEARCH = "Поиск препаратов"
 
     HELP_TOKENS_FREE = "Как получать токены?"

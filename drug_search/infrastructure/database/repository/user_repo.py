@@ -2,7 +2,7 @@ import datetime
 import logging
 import uuid
 
-from sqlalchemy import select, text, update
+from sqlalchemy import select, text, update, case
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -25,7 +25,7 @@ class UserRepository(BaseRepository):
         """
         user.tokens_last_refresh = datetime.datetime.now()
 
-        match user.subscription_type:  # TODO сделать поле additional tokens (дополнительные токены которые не обнуляются)
+        match user.subscription_type:
             case SUBSCRIPTION_TYPES.DEFAULT:
                 user.allowed_tokens = TOKENS_LIMIT.DEFAULT_TOKENS_LIMIT
             case SUBSCRIPTION_TYPES.LITE:
@@ -51,9 +51,10 @@ class UserRepository(BaseRepository):
             return None
 
         # [ refresh tokens ]
-        refresh_interval_days = TOKENS_LIMIT.get_days_interval_to_refresh_tokens(user.subscription_type)
-        if (datetime.datetime.now() - user.tokens_last_refresh).days >= refresh_interval_days:
-            await self.__refresh_requests(user)
+        if user.subscription_type != SUBSCRIPTION_TYPES.DEFAULT:
+            refresh_interval_days = TOKENS_LIMIT.get_days_interval_to_refresh_tokens(user.subscription_type)
+            if (datetime.datetime.now() - user.tokens_last_refresh).days >= refresh_interval_days:
+                await self.__refresh_requests(user)
 
         return user.get_schema()
 
@@ -141,7 +142,7 @@ class UserRepository(BaseRepository):
         await self.session.execute(stmt)
         await self.session.commit()
 
-    async def increment_user_requests(
+    async def increment_tokens(
             self,
             user_id: uuid.UUID,
             tokens_amount: int = 0,
@@ -154,11 +155,37 @@ class UserRepository(BaseRepository):
             update(User)
             .where(User.id == user_id)
             .values(
-                allowed_tokens=User.allowed_tokens + tokens_amount,
+                additional_tokens=User.additional_tokens + tokens_amount,
 
                 # в случае, если мы тратим запросы, а не добавляем
                 # всегда один прибавляется вне зависимости от потраченных
                 used_tokens=User.used_tokens + (1 if tokens_amount > 0 else 0)
+            )
+        )
+        await self.session.commit()
+
+    async def decrease_tokens(
+            self,
+            user_id: uuid.UUID,
+            tokens_amount: int = 0,
+    ) -> None:
+        """Атомарно уменьшает количество токенов.
+
+        :var tokens_amount: количество токенов на поиск препаратов
+        """
+        await self.session.execute(
+            update(User)
+            .where(User.id == user_id)
+            .values(
+                additional_tokens=case(
+                    (User.allowed_tokens >= tokens_amount, User.additional_tokens),
+                    else_=User.additional_tokens - (tokens_amount - User.allowed_tokens)
+                ),
+                allowed_tokens=case(
+                    (User.allowed_tokens >= tokens_amount, User.allowed_tokens - tokens_amount),
+                    else_=0
+                ),
+                used_tokens=User.used_tokens + 1
             )
         )
         await self.session.commit()

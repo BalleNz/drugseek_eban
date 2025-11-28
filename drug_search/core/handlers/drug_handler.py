@@ -225,8 +225,5 @@ async def get_drug(
         drug_id: UUID = Path(..., description="ID препарата в формате UUID")
 ):
     """Возвращает препарат по его ID"""
-    if not user.allowed_tokens:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="У юзера нет доступных запросов")
-
     drug: DrugSchema | None = await drug_service.repo.get_with_all_relationships(drug_id)
     return drug

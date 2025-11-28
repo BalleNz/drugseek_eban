@@ -6,7 +6,8 @@ from aiogram import BaseMiddleware, Bot
 from aiogram.dispatcher.flags import get_flag
 from aiogram.types import TelegramObject, User, InlineKeyboardMarkup
 
-from drug_search.bot.keyboards.keyboard_markups import get_subscription_packages_keyboard
+from drug_search.bot.keyboards.keyboard_markups import get_subscription_packages_keyboard, \
+    get_subscription_packages_types_keyboard
 from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.bot.utils.funcs import get_telegram_schema_from_data, format_time, format_rate_limit, what_subscription
 from drug_search.core.dependencies.bot.cache_service_dep import get_cache_service
@@ -127,15 +128,6 @@ class MessageLimitsMiddleware(BaseMiddleware):
             message_rate=format_rate_limit(message_count=max_requests, interval_seconds=time_window)
         )
 
-        keyboard: InlineKeyboardMarkup | None = None
-        match user_subscription:
-            case SUBSCRIPTION_TYPES.DEFAULT:
-                keyboard = get_subscription_packages_keyboard(
-                    SUBSCRIPTION_TYPES.LITE
-                )
-            case SUBSCRIPTION_TYPES.LITE:
-                keyboard = get_subscription_packages_keyboard(
-                    SUBSCRIPTION_TYPES.PREMIUM
-                )
+        keyboard: InlineKeyboardMarkup = get_subscription_packages_types_keyboard(user_subscription_type=user_subscription)
 
         await bot.send_message(chat_id=chat_id, text=message, reply_markup=keyboard)

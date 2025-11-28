@@ -37,10 +37,14 @@ def days_text(day: datetime):
 
 def get_time_when_refresh_tokens_text(_datetime: datetime, subscription_type: SUBSCRIPTION_TYPES) -> str:
     """Время до сброса токенов"""
+    # если нет подписки, токены не даются
+    if subscription_type == SUBSCRIPTION_TYPES.DEFAULT:
+        return ""
+
     def __get_time_name_format(count: int, time_type: str) -> str:
         """Преобразование числа в русскоязычный формат времени"""
         forms = {
-            "minutes": ("минуту", "минуты", "минут"),
+            "minutes": ("минута", "минута", "минут"),
             "hours": ("час", "часа", "часов"),
             "days": ("день", "дня", "дней")
         }[time_type]
@@ -52,7 +56,7 @@ def get_time_when_refresh_tokens_text(_datetime: datetime, subscription_type: SU
         else:
             return forms[2]
 
-    text: str = "<b>⏳ Сброс токенов через:</b> {time_to_update} {time_format}"
+    text: str = "⏳ {time_to_update} {time_format}"
 
     refresh_tokens_days_interval: int = TOKENS_LIMIT.get_days_interval_to_refresh_tokens(subscription_type=subscription_type)
     time_diff: timedelta = (_datetime + timedelta(days=refresh_tokens_days_interval)) - datetime.now()

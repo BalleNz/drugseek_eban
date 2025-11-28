@@ -106,7 +106,7 @@ async def main_action(
         match action_response.action:
             case ACTIONS_FROM_ASSISTANT.QUESTION_DRUGS:
                 # [ ответ на вопрос юзера с препаратами ]
-                if user.allowed_tokens:
+                if user.allowed_tokens + user.additional_tokens >= QUESTION_COST:
                     await message_request.edit_text(MessageText.ASSISTANT_WAITING)
                     await api_client.reduce_tokens(access_token, amount_tokens=QUESTION_COST)
 
@@ -126,7 +126,7 @@ async def main_action(
 
             case ACTIONS_FROM_ASSISTANT.QUESTION:
                 # [ ответ на вопрос юзера ]
-                if user.allowed_tokens:
+                if user.allowed_tokens + user.additional_tokens >= QUESTION_COST:
                     await message_request.edit_text(MessageText.ASSISTANT_WAITING)
                     await api_client.reduce_tokens(access_token, amount_tokens=QUESTION_COST)
 

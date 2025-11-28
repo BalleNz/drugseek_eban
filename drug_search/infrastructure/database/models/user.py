@@ -35,7 +35,7 @@ class User(IDMixin, TimestampsMixin):
     # [ TOKENS ]
     allowed_tokens: Mapped[int] = mapped_column(
         Integer,
-        default=TOKENS_LIMIT.DEFAULT_TOKENS_LIMIT,
+        default=TOKENS_LIMIT.TOKENS_AFTER_REGISTRATION,
         server_default=f"{TOKENS_LIMIT.DEFAULT_TOKENS_LIMIT}",
         comment="Количество токенов"
     )

@@ -109,8 +109,8 @@ class SubscriptionPackage(Enum):
     # [ 14 дней ]
     PREMIUM_14_PACKAGE = ("two_weeks_premium", "Две недели", SUBSCRIPTION_TYPES.PREMIUM, "14", 899.0)
 
-    # [ 60 дней ]
-    LITE_60_PACKAGE = ("three_months_lite", "Два месяца", SUBSCRIPTION_TYPES.LITE, "60", 1190.0)
+    # [ 30 дней ]
+    LITE_30_PACKAGE = ("one_months_lite", "Месяц", SUBSCRIPTION_TYPES.LITE, "30", 1090.0)
 
     # [ 90 дней ]
     PREMIUM_90_PACKAGE = ("three_months_premium", "Три месяца", SUBSCRIPTION_TYPES.PREMIUM, "90", 2199.0)
@@ -157,7 +157,7 @@ class SubscriptionPackage(Enum):
     def get_packages_by_type(cls, subscription_type: SUBSCRIPTION_TYPES) -> None | tuple["SubscriptionPackage", ...]:
         match subscription_type:
             case SUBSCRIPTION_TYPES.LITE:
-                return cls.LITE_7_PACKAGE, cls.LITE_60_PACKAGE
+                return cls.LITE_7_PACKAGE, cls.LITE_30_PACKAGE
             case SUBSCRIPTION_TYPES.PREMIUM:
                 return cls.PREMIUM_14_PACKAGE, cls.PREMIUM_90_PACKAGE, cls.PREMIUM_180_PACKAGE, cls.PREMIUM_365_PACKAGE
 
@@ -166,7 +166,8 @@ class TOKENS_LIMIT(int, Enum):
     """
     Дневные | Недельные лимиты (в зависимости от типа подписки) токенов
     """
-    DEFAULT_TOKENS_LIMIT = 5
+    TOKENS_AFTER_REGISTRATION = 5
+    DEFAULT_TOKENS_LIMIT = 0
 
     LITE_TOKENS_LIMIT = 50
 
@@ -176,7 +177,7 @@ class TOKENS_LIMIT(int, Enum):
     def get_days_interval_to_refresh_tokens(cls, subscription_type: SUBSCRIPTION_TYPES) -> int | None:
         match subscription_type:
             case SUBSCRIPTION_TYPES.DEFAULT:
-                return 10
+                return 0  # не обновляются
             case SUBSCRIPTION_TYPES.LITE:
                 return 7
             case SUBSCRIPTION_TYPES.PREMIUM:

@@ -2,8 +2,8 @@ class MessageTemplates:
     """Шаблоны сообщений с форматированием"""
     # [ SECTIONS ]
     DRUG_INFO_BRIEFLY: str = (
-        "<b>{drug_name} — {drug_name_ru}</b>\n\n"
-        # "<i>({classification})</i>\n\n"
+        "<b>{drug_name_ru} ({drug_name}, {latin_name})</b>\n\n"
+        "<i>({classification})</i>\n\n"
         "{description}\n\n"
         "<b>Клинические эффекты:</b>\n{clinical_effects}\n\n"
         "{fun_fact}"
@@ -54,9 +54,10 @@ class MessageTemplates:
     )
 
     USER_PROFILE: str = (
-        "<b>{profile_name}</b>\n\n"
-        "<b>Ваши токены:</b> {allowed_tokens}\n\n"
-        "{refresh_section}\n\n"
+        "<b>{profile_icon} У тебя — {profile_name}</b>\n\n"
+        "<b>Ваши токены:</b> {allowed_tokens}  {refresh_section}\n\n"
+        "<i>{additional_tokens_text}</i>\n"
+        "{additional_tokens_quote}"
         "<i>{subscription_end_at}</i>"
     )
 

@@ -42,7 +42,7 @@ class UserService:
             amount_search_tokens: int = 0,
     ) -> None:
         """Добавляет запросы юзеру"""
-        await self.repo.increment_user_requests(
+        await self.repo.increment_tokens(
             user_id=user_id,
             tokens_amount=amount_search_tokens,
         )
@@ -53,7 +53,7 @@ class UserService:
             tokens_amount: int = 0,
     ) -> None:
         """Отнимает запросы у юзера"""
-        await self.add_tokens(user_id, -tokens_amount)
+        await self.repo.decrease_tokens(user_id, tokens_amount)
 
     async def add_request_log(self, user_id: uuid.UUID, query: str):
         ...

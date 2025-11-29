@@ -7,10 +7,9 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from database.models.user import UserRequestLog
 from drug_search.core.lexicon import SUBSCRIPTION_TYPES, TOKENS_LIMIT, SubscriptionPackage
 from drug_search.core.schemas import UserTelegramDataSchema, UserSchema, DrugBrieflySchema, AllowedDrugsInfoSchema
-from drug_search.infrastructure.database.models.user import AllowedDrugs, User
+from drug_search.infrastructure.database.models.user import AllowedDrugs, User, UserRequestLog
 from drug_search.infrastructure.database.repository.base_repo import BaseRepository
 
 logger = logging.getLogger(__name__)
@@ -203,12 +202,13 @@ class UserRepository(BaseRepository):
                 subscription_end=datetime.datetime.now() + datetime.timedelta(days=subscription_package.duration),
             )
         )
+        await self.session.commit()
 
-    # TODO
     async def add_user_log_request(self, user_id: uuid.UUID, user_query: str) -> None:
         """
         Запись логов юзера (поиск препов / обращение в нейронку)
         """
+        logger.info(f"User log: {user_query}")
         await self.session.execute(
             insert(UserRequestLog)
             .values(
@@ -216,6 +216,7 @@ class UserRepository(BaseRepository):
                 user_query=user_query,
             )
         )
+        await self.session.commit()
 
     def __del__(self):
         logger.info("USER REPO IS COLLECTED BY GARBAGE COLLECTOR")

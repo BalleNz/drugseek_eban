@@ -3,9 +3,9 @@ from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI
 
-from database.engine import clear_metadata_cache
 from drug_search.config import config
 from drug_search.core.app.main import fastapi_app
+from drug_search.infrastructure.database.engine import clear_metadata_cache
 from drug_search.infrastructure.loggerConfig import configure_logging
 
 

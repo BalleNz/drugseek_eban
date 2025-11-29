@@ -44,5 +44,11 @@ class UserSchema(BaseModel):
     def allowed_drug_ids(self):
         return [allowed_drug.drug_id for allowed_drug in self.allowed_drugs]
 
+    @property
+    def subscription_days_remaining(self) -> int:
+        if self.subscription_end:
+            return (datetime.now() - self.subscription_end).days
+        return 0
+
     class Config:
         from_attributes = True

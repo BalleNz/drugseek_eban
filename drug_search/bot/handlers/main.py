@@ -34,10 +34,6 @@ async def main_action(
     """Основная ручка для запросов юзера"""
     user: UserSchema = await cache_service.get_user_profile(access_token=access_token, telegram_id=message.from_user.id)
 
-    if not user.allowed_tokens:
-        await message.answer(MessageText.NO_TOKENS)
-        return
-
     match user.subscription_type:
         case SUBSCRIPTION_TYPES.DEFAULT:
             if message.text.__len__() > MAX_MESSAGE_LENGTH_DEFAULT:
@@ -94,6 +90,11 @@ async def main_action(
 
     # [ определяем действие юзера ]
     else:
+        if not user.allowed_tokens and not user.additional_tokens:
+            logger.info(f"У юзера @{user.username} нет токенов: {user.allowed_tokens} {user.additional_tokens}")
+            await message.answer(text=MessageText.NO_TOKENS)
+            return
+
         message_request: Message = await message.answer(text=MessageText.QUERY_IN_PROCESS)
 
         action_response: SelectActionResponse = await api_client.assistant_get_action(

@@ -99,11 +99,6 @@ class BuyTokensConfirmationCallback(CallbackData, prefix="buy_tokens_conf"):
     token_package_key: str
 
 
-class FinishPaymentCallback(CallbackData, prefix="finish_buying"):
-    """После перехода по ссылке для оплаты"""
-    pass
-
-
 # [ HELP ]
 
 class HelpSectionCallback(CallbackData, prefix="help"):

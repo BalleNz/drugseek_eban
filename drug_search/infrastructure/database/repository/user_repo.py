@@ -7,7 +7,8 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from drug_search.core.lexicon import SUBSCRIPTION_TYPES, TOKENS_LIMIT
+from database.models.user import UserRequestLog
+from drug_search.core.lexicon import SUBSCRIPTION_TYPES, TOKENS_LIMIT, SubscriptionPackage
 from drug_search.core.schemas import UserTelegramDataSchema, UserSchema, DrugBrieflySchema, AllowedDrugsInfoSchema
 from drug_search.infrastructure.database.models.user import AllowedDrugs, User
 from drug_search.infrastructure.database.repository.base_repo import BaseRepository
@@ -190,9 +191,31 @@ class UserRepository(BaseRepository):
         )
         await self.session.commit()
 
+    async def give_subscription(self, user_id: uuid.UUID, subscription_package: SubscriptionPackage):
+        """
+        Выдает или обновляет подписку
+        """
+        await self.session.execute(
+            update(User)
+            .where(User.id == user_id)
+            .values(
+                subscription_type=subscription_package.subscription_type,
+                subscription_end=datetime.datetime.now() + datetime.timedelta(days=subscription_package.duration),
+            )
+        )
+
     # TODO
-    async def add_user_log_request(self):
-        ...
+    async def add_user_log_request(self, user_id: uuid.UUID, user_query: str) -> None:
+        """
+        Запись логов юзера (поиск препов / обращение в нейронку)
+        """
+        await self.session.execute(
+            insert(UserRequestLog)
+            .values(
+                user_id=user_id,
+                user_query=user_query,
+            )
+        )
 
     def __del__(self):
         logger.info("USER REPO IS COLLECTED BY GARBAGE COLLECTOR")

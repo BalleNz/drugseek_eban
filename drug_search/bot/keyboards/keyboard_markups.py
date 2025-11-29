@@ -6,10 +6,10 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback, WrongDrugFoundedCallback)
 from drug_search.bot.keyboards.callbacks import (AssistantQuestionContinueCallback, DrugUpdateRequestCallback,
                                                  UserDescriptionCallback, HelpSectionCallback,
-                                                 BuyDrugRequestCallback, FinishPaymentCallback,
-                                                 BackToUserProfileCallback, BuySubscriptionCallback, BuyTokensCallback,
+                                                 BuyDrugRequestCallback, BackToUserProfileCallback,
+                                                 BuySubscriptionCallback, BuyTokensCallback,
                                                  BuyTokensConfirmationCallback, BuySubscriptionChosenTypeCallback,
-                                                 DrugDescribeResearchesCallback)
+                                                 DrugDescribeResearchesCallback, BuySubscriptionConfirmationCallback)
 from drug_search.bot.lexicon.enums import ModeTypes, HelpSectionMode, DrugMenu
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.core.lexicon import ARROW_TYPES, TokenPackage, SubscriptionPackage, SUBSCRIPTION_TYPES
@@ -492,19 +492,22 @@ def get_subscription_packages_types_keyboard(
 
 
 def get_subscription_packages_keyboard(
-        subscription_type: SUBSCRIPTION_TYPES,
+        chosen_subscription_type: SUBSCRIPTION_TYPES,
+        user_subscription_type: SUBSCRIPTION_TYPES,
+        subscription_days: int | None
 ) -> InlineKeyboardMarkup:
     """клавиатура с выбором пакетов подписок"""
-    subscription_packages: tuple[SubscriptionPackage, ...] = SubscriptionPackage.get_packages_by_type(subscription_type)
+
+    subscription_packages: tuple[SubscriptionPackage, ...] = SubscriptionPackage.get_packages_by_type(chosen_subscription_type)
 
     buttons: list[list[InlineKeyboardButton]] = [[]]
 
     for package in subscription_packages:
         buttons.append([
             InlineKeyboardButton(
-                text=package.name + f" ({int(package.price)} рублей)",
-                callback_data=BuySubscriptionChosenTypeCallback(
-                    subscription_type=package.subscription_type
+                text=package.name + f" ({package.price(subscription_days)} рублей)",
+                callback_data=BuySubscriptionConfirmationCallback(
+                    subscription_package_key=package.key
                 ).pack()
             )]
         )
@@ -529,8 +532,7 @@ def get_url_to_buy_keyboard(url: str) -> InlineKeyboardMarkup:
             [
                 InlineKeyboardButton(
                     text="Перейти в покупке",
-                    url=url,
-                    callback_data=FinishPaymentCallback().pack()
+                    url=url
                 )
             ]
         ]

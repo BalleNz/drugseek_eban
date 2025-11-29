@@ -132,8 +132,9 @@ class MessageTemplates:
 
     SUBSCRIPTION_BUY_CONFIRMATION = (
         "💳 <b>Покупка подписки</b>\n\n"
-        "Выбранная подписка: \n"
-        "— {subscription_name} ({subscription_period})\n\n"
+        "<b>Выбранная подписка:</b>\n"
+        "— <u>{subscription_name}</u> ({subscription_period} дней)\n"
+        "<i>(будет действовать до: {subscription_end})</i>\n\n"
         "<b>Цена:</b>\n"
         "— {subscription_price} рублей"
     )

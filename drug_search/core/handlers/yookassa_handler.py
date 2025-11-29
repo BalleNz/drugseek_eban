@@ -1,12 +1,13 @@
 import json
 
 from aiogram import F
+from fastapi import APIRouter
 
-router = Router
+yookassa_router = APIRouter(prefix="/yookassa")
 
 
 # Webhook endpoint (нужно настроить в админке Юкассы)
-@payment_router.message(F.content_type == ContentType.WEB_APP_DATA)
+@yookassa_router.message(F.content_type == ContentType.WEB_APP_DATA)
 async def handle_yookassa_webhook(message: Message):
     """Обработка webhook от Юкассы"""
     try:
@@ -19,24 +20,8 @@ async def handle_yookassa_webhook(message: Message):
             if payment.status == "succeeded":
                 user_id = payment.metadata.get('user_id')
                 # Обработать успешный платеж
-                await handle_successful_payment(user_id, payment)
+                # TODO: enqueue_yookassa_update_to_admins
+                ...
 
     except Exception as e:
         print(f"Webhook error: {e}")
-
-
-async def handle_successful_payment(user_id: int, payment):
-    """Обработка успешного платежа"""
-    # Здесь можно отправить уведомление пользователю
-    # или обновить статус в БД
-
-    # Пример отправки уведомления
-    from aiogram import Bot
-    bot = Bot.get_current()
-    try:
-        await bot.send_message(
-            user_id,
-            "✅ Ваш платеж успешно обработан! Спасибо за покупку!"
-        )
-    except:
-        pass  # Пользователь мог заблокировать бота

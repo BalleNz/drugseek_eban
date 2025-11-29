@@ -6,8 +6,8 @@ from enum import Enum
 from arq import ArqRedis
 from arq.jobs import Job, JobStatus
 
-from drug_search.core.lexicon import ARROW_TYPES, JobStatuses
-from schemas import UpdateDrugStatuses
+from drug_search.core.lexicon import ARROW_TYPES, JobStatuses, SubscriptionPackage, TokenPackage
+from drug_search.core.schemas import UpdateDrugStatuses
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ class ARQ_JOBS(str, Enum):
     ASSISTANT_QUESTION = "assistant_question"
     MAILING = "mailing"
     USER_DESCRIPTION_UPDATE = "user_description_update"
+    YOOKASSA_UPDATE_TO_ADMINS = "yookassa_update_to_admins"
 
 
 class TaskService:
@@ -161,6 +162,27 @@ class TaskService:
             user_telegram_id
         )
         logger.info(f"Задача на обновление описания юзера поставлена в очередь!")
+
+        return {
+            "status": str(await job.status())
+        }
+
+    async def enqueue_yookassa_update_to_admins(
+            self,
+            username: str,
+            price: float,
+            subscription_package: SubscriptionPackage | None = None,
+            tokens_package: TokenPackage | None = None,
+    ):
+        """задача на рассылку админам о срабатывании платежки"""
+        job: Job = await self.arq_pool.enqueue_job(
+            ARQ_JOBS.YOOKASSA_UPDATE_TO_ADMINS,
+            username,
+            price,
+            subscription_package,
+            tokens_package
+        )
+        logger.info(f"Задача на рассылку админам о покупке в юкассе поставлена в очередь!")
 
         return {
             "status": str(await job.status())

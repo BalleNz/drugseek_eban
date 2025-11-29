@@ -130,16 +130,35 @@ class SubscriptionPackage(Enum):
         return self.value[1]
 
     @property
-    def subscription_type(self) -> SUBSCRIPTION_TYPES:
-        return self.value[2]
+    def subscription_type(self) -> str:
+        """Тип подписки"""
+        match self.value[2]:
+            case SUBSCRIPTION_TYPES.PREMIUM:
+                return "Премиум"
+        match self.value[2]:
+            case SUBSCRIPTION_TYPES.LITE:
+                return "Лайт"
+        return ""
 
     @property
-    def duration(self) -> str:
-        return self.value[3]
+    def duration(self) -> int:
+        """длительность в целых днях"""
+        return int(self.value[3])
 
-    @property
-    def price(self) -> float:
-        return self.value[4]
+    def price(self, subscription_days: int = 0) -> float:
+        base_price = self.value[4]
+
+        # Коэффициенты скидки в зависимости от количества дней
+        days_discount = self._calculate_discount(subscription_days)
+
+        # Применяем оба коэффициента
+        final_price = base_price * days_discount
+
+        return round(final_price, 2)
+
+    def _calculate_discount(self, days: int) -> float:
+        """Рассчитывает скидку в зависимости от количества дней"""
+        return 1.0 - (days / 250)
 
     @classmethod
     def get_by_key(cls, package_key: str):
@@ -148,10 +167,6 @@ class SubscriptionPackage(Enum):
             if package.key == package_key:
                 return package
         raise ValueError(f"Unknown package ID: {package_key}")
-
-    def price_with_discount(self, discount: float) -> float:
-        """Стоимость подписки со скидкой (в процентах)"""
-        return self.price * (1 - discount)
 
     @classmethod
     def get_packages_by_type(cls, subscription_type: SUBSCRIPTION_TYPES) -> None | tuple["SubscriptionPackage", ...]:

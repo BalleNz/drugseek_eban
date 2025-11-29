@@ -3,7 +3,7 @@ from logging.config import dictConfig
 
 
 def configure_logging():
-    """Настройка логирования для ARQ worker"""
+    """Настройка логирования"""
     dictConfig({
         "version": 1,
         "disable_existing_loggers": False,

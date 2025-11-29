@@ -1,5 +1,6 @@
 import logging
 import uuid
+from datetime import datetime
 
 from aiogram import Router
 from aiogram.fsm.context import FSMContext
@@ -19,7 +20,7 @@ from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.bot.utils.format_message_text import DrugMessageFormatter
 from drug_search.bot.utils.message_actions import open_drug_menu
 from drug_search.core.dependencies.bot.cache_service_dep import cache_service
-from drug_search.core.lexicon import ARROW_TYPES, JobStatuses, DANGER_CLASSIFICATION
+from drug_search.core.lexicon import ARROW_TYPES, JobStatuses, DANGER_CLASSIFICATION, SUBSCRIPTION_TYPES
 from drug_search.core.schemas import (
     BuyDrugResponse, BuyDrugStatuses, UpdateDrugResponse, UpdateDrugStatuses, UserSchema, DrugExistingResponse,
     DrugSchema
@@ -58,7 +59,7 @@ async def drug_update(
             )
         case UpdateDrugStatuses.NEED_PREMIUM:
             await callback_query.message.edit_text(
-                text=MessageText.NEED_SUBSCRIPTION_FOR_UPDATE
+                text=MessageText.NEED_SUBSCRIPTION
             )
 
 
@@ -148,8 +149,11 @@ async def drug_buy(
                 reply_markup=keyboard
             )
         case BuyDrugStatuses.NEED_PREMIUM:
+            """предлагает купить подписку"""
             keyboard = get_subscription_packages_keyboard(
-                subscription_type=user.subscription_type
+                chosen_subscription_type=SUBSCRIPTION_TYPES.PREMIUM,
+                user_subscription_type=SUBSCRIPTION_TYPES.PREMIUM,
+                subscription_days=user.subscription_days_remaining
             )
             await send_message(
                 text=MessageText.NEED_SUBSCRIPTION,

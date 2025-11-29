@@ -5,7 +5,7 @@ import uuid
 from typing import Sequence, Generator
 
 from drug_search.core.dependencies.containers.service_container import get_service_container
-from drug_search.core.lexicon import ADMINS_TG_ID, ARROW_TYPES
+from drug_search.core.lexicon import ADMINS_TG_ID, ARROW_TYPES, SubscriptionPackage, TokenPackage
 from drug_search.core.schemas import DrugSchema, QuestionDrugsAssistantResponse, UserSchema, QuestionAssistantResponse
 from drug_search.core.services.assistant_service import AssistantService
 from drug_search.core.services.cache_logic.redis_service import RedisService
@@ -183,6 +183,35 @@ async def mailing(
                 user_telegram_id=admin_id,
                 message=message
             )
+
+
+async def yookassa_update_to_admins(
+        ctx,  # noqa
+        username,
+        price: float,  # рубли
+        subscription_package: SubscriptionPackage | None,
+        tokens_package: TokenPackage | None
+):
+    async with get_service_container() as container:
+        # [ deps ]
+        telegram_service = await container.telegram_service
+
+        # [ logic ]
+        if subscription_package:
+            message = (
+                f"Юзер @{username}"
+                f"Купил подписку: {subscription_package.subscription_type}"
+                f"За: {price}"
+            )
+        elif tokens_package:
+            message = (
+                f"Юзер @{username}"
+                f"Купил токены: {tokens_package.amount} штук"
+                f"За: {price}"
+            )
+
+        for admin_tg_id in ADMINS_TG_ID:
+            await telegram_service.send_message(admin_tg_id, message)
 
 
 async def user_description_update(

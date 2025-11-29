@@ -3,6 +3,7 @@ from drug_search.bot.lexicon.enums import HelpSectionMode
 from drug_search.bot.utils.format_message_text import DrugMessageFormatter, UserProfileMessageFormatter
 from drug_search.bot.utils.funcs import format_time
 from drug_search.core.lexicon import ANTISPAM_DEFAULT, TOKENS_LIMIT, QUESTION_COST, NEW_DRUG_COST
+from lexicon.keyboard_words import ButtonText
 
 
 class MessageText:
@@ -27,7 +28,7 @@ class MessageText:
             "Если остались вопросы, <a href='https://t.me/uaquoa'><b>напиши мне.</b></a>\n"
         )
         QUERIES = (
-            "🔎 <b>Режимы</b>\n\n"
+            f"🔎 <b>{ButtonText.HELP_QUERIES}</b>\n\n"
             "В боте есть <b>3 режима</b> запросов (выбираются автоматически):\n\n"
             "<blockquote>"
             "— Поиск препаратов: поиск препарата по названию со всеми разделами\n\n"
@@ -36,7 +37,7 @@ class MessageText:
             "</blockquote>"
         )
         TOKENS = (
-            "🔎 <b>Токены</b>\n\n"
+            f"🔎 <b>{ButtonText.HELP_TOKENS}</b>\n\n"
             "<b>Как расходуются токены?</b>\n"
             "<blockquote>"
             f"На каждый вопрос / список препаратов тратится: {QUESTION_COST} токен\n"
@@ -53,7 +54,7 @@ class MessageText:
             "</blockquote>\n\n"
         )
         SUBSCRIPTION = (
-            f"🔎 <b>Система подписок</b>\n\n"
+            f"🔎 <b>{ButtonText.HELP_SUBSCRIPTION}</b>\n\n"
             f"Для повседневного использования бота необходимы подписки.\n\n"
             f"<blockquote>"
             f"<u>Без подписки</u> в боте действуют ограничения:\n"
@@ -78,16 +79,17 @@ class MessageText:
         )
 
         QUERIES_QUESTIONS = (
-            "🔎 <b>Запросы: Вопросы</b>\n\n"
+            f"🔎 <b>{ButtonText.HELP_QUERIES} — {ButtonText.HELP_QUERIES_QUESTIONS}</b>\n\n"
             "Задайте любой вопрос боту, он ответит на него детализировано и развернуто.\n\n"
             "<b>Примеры запросов:</b>\n"
             "<blockquote>"
             "— «Как работает запоминание информации в мозге?»\n"
             "— «Объясни принцип дефолт системы мозга на языке нейробиологии»\n"
+            "— «Как происходит гипертрофия мышц?»\n"
             "</blockquote>"
         )
         QUERIES_PHARMA = (
-            "🔎 <b>Запросы: Эффективные препараты</b>\n\n"
+            f"🔎 <b>{ButtonText.HELP_QUERIES} — {ButtonText.HELP_QUERIES_PHARMA}</b>\n\n"
             "Задайте любой вопрос боту, подразумевающий список препаратов.\n\n"
             "<b>Примеры запросов:</b>\n"
             "<blockquote>"
@@ -98,7 +100,7 @@ class MessageText:
             "</blockquote>"
         )
         QUERIES_DRUG_SEARCH = (
-            "🔎 <b>Запросы: Поиск препаратов</b>\n\n"
+            f"🔎 <b>{ButtonText.HELP_QUERIES} — {ButtonText.HELP_QUERIES_DRUG_SEARCH}</b>\n\n"
             "Введите название препарата на русском или английском, включая сленговые названия.\n\n"
             "<b>Примеры запросов:</b>\n"
             "— «Аспирин» или «Aspirin»\n"
@@ -157,7 +159,7 @@ class MessageText:
     NOT_EXIST_DRUG: str = "Такого препарата не существует."
 
     # [ TOKENS ]
-    NO_TOKENS: str = "У вас не осталось токенов."
+    NO_TOKENS: str = "🚫 У вас не осталось токенов для запросов.\n\n/tokens"
 
     NOT_ENOUGH_UPDATE_TOKENS: str = "⚠️ Недостаточно токенов для обновления препарата!"
 

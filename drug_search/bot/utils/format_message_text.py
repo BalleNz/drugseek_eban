@@ -7,7 +7,7 @@ from drug_search.bot.lexicon.enums import DrugMenu
 from drug_search.bot.lexicon.message_templates import MessageTemplates
 from drug_search.bot.utils.funcs import make_google_sources, get_time_when_refresh_tokens_text, \
     decline_tokens
-from drug_search.core.lexicon.enums import SUBSCRIPTION_TYPES, TOKENS_LIMIT
+from drug_search.core.lexicon.enums import SUBSCRIPTION_TYPES, TOKENS_LIMIT, DANGER_CLASSIFICATION
 from drug_search.core.schemas import UserSchema, DrugSchema, CombinationType, AllowedDrugsInfoSchema
 
 logger = logging.getLogger(__name__)
@@ -19,6 +19,12 @@ class DrugMessageFormatter:
     @staticmethod
     def format_drug_briefly(drug: DrugSchema) -> str:
         """Форматирование краткой информации о препарате"""
+        disclaimer = ""
+        if drug.danger_classification == DANGER_CLASSIFICATION.PREMIUM_NEED:
+            disclaimer = (
+                "<b>⚠️ ДАННЫЕ ПРЕДОСТАВЛЯЮТСЯ В ОЗНАКОМИТЕЛЬНЫХ ЦЕЛЯХ</b>\n"
+            )
+
         return MessageTemplates.DRUG_INFO_BRIEFLY.format(
             drug_name_ru=drug.name_ru,
             drug_name=drug.name,
@@ -26,7 +32,8 @@ class DrugMessageFormatter:
             classification=drug.classification,
             description=drug.description,
             clinical_effects=drug.clinical_effects,
-            fun_fact=drug.fact or ""
+            fun_fact=drug.fact or "",
+            disclaimer=disclaimer
         )
 
     @staticmethod
@@ -129,11 +136,19 @@ class DrugMessageFormatter:
 
         dosages_fun_fact = f"{random.choice(drug.fun_facts)}\n\n"
 
+        disclaimer = ""
+        if drug.danger_classification == DANGER_CLASSIFICATION.PREMIUM_NEED:
+            disclaimer = (
+                "<b>⚠️ ДАННЫЕ ПРЕДОСТАВЛЯЮТСЯ В ОЗНАКОМИТЕЛЬНЫХ ЦЕЛЯХ</b>\n\n"
+                "<i>данные дозировок взяты с <a href='https://www.rlsnet.ru/'>РЛС</a></i>"
+            )
+
         return MessageTemplates.DRUG_INFO_DOSAGES.format(
             drug_name_ru=drug.name_ru.upper(),
             dosages=dosages,
             sources_section=sources_section,
-            dosages_fun_fact=dosages_fun_fact
+            dosages_fun_fact=dosages_fun_fact,
+            disclaimer=disclaimer
         )
 
     @staticmethod

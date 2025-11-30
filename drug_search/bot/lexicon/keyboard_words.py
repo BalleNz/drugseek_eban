@@ -34,12 +34,12 @@ class ButtonText:
     RIGHT_ARROW: str = "——>"
 
     # [ HELP ]
-    HELP_QUERIES = "Как пользовать ботом?"
+    HELP_QUERIES = "Как пользоваться ботом?"
     HELP_TOKENS = "Как работают токены?"
     HELP_SUBSCRIPTION = "Что за подписки?"
 
-    HELP_QUERIES_QUESTIONS = "Вопросы"
-    HELP_QUERIES_PHARMA = "Эффективные препараты"
     HELP_QUERIES_DRUG_SEARCH = "База препаратов"
+    HELP_QUERIES_PHARMA = "Эффективные препараты"
+    HELP_QUERIES_QUESTIONS = "Вопросы по фарме"
 
     HELP_TOKENS_FREE = "Как получать токены?"

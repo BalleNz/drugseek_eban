@@ -1,9 +1,9 @@
 from drug_search.bot.lexicon import MessageTemplates
 from drug_search.bot.lexicon.enums import HelpSectionMode
+from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.bot.utils.format_message_text import DrugMessageFormatter, UserProfileMessageFormatter
 from drug_search.bot.utils.funcs import format_time
 from drug_search.core.lexicon import ANTISPAM_DEFAULT, TOKENS_LIMIT, QUESTION_COST, NEW_DRUG_COST
-from lexicon.keyboard_words import ButtonText
 
 
 class MessageText:
@@ -31,7 +31,7 @@ class MessageText:
             f"🔎 <b>{ButtonText.HELP_QUERIES}</b>\n\n"
             "В боте есть <b>3 режима</b> запросов (выбираются автоматически):\n\n"
             "<blockquote>"
-            "— Поиск препаратов: поиск препарата по названию со всеми разделами\n\n"
+            "— База препаратов: поиск препарата по названию со всеми разделами\n\n"
             "— Эффективные препараты: рекомендации препаратов по симптомам или желаниям\n\n"
             "— Вопросы по фарме: ответы на любые вопросы фармакологического ассистента\n\n"
             "</blockquote>"
@@ -56,12 +56,11 @@ class MessageText:
         SUBSCRIPTION = (
             f"🔎 <b>{ButtonText.HELP_SUBSCRIPTION}</b>\n\n"
             f"Для повседневного использования бота необходимы подписки.\n\n"
-            f"<blockquote>"
             f"<u>Без подписки</u> в боте действуют ограничения:\n"
             f"       ❌ нельзя просматривать разделы «Исследования» и «Механизм действия»\n"
             f"       ❌ 5 токенов при регистрации и больше токены не начисляются\n"
             f"       ❌ ограничение на частоту запросов: {ANTISPAM_DEFAULT["max_requests"]} сообщения раз в {format_time(ANTISPAM_DEFAULT["time_limit"])}"
-            f"</blockquote>\n\n"
+            f"\n\n"
             f"<blockquote>"
             f"<b>🧢 <u>Лайт:</u></b>\n"
             f"      ✅ каждую неделю вы получаете {TOKENS_LIMIT.LITE_TOKENS_LIMIT.value} токенов\n"

@@ -63,7 +63,8 @@ class MessageTemplates:
         "<b>Ваши токены:</b> {allowed_tokens}  {refresh_section}\n\n"
         "<i>{additional_tokens_text}</i>\n"
         "{additional_tokens_quote}"
-        "<i>{subscription_end_at}</i>"
+        "<i>{subscription_end_at}</i>\n"
+        "{simple_mode_text}"
     )
 
     USER_PROFILE_DESCRIPTION: str = (

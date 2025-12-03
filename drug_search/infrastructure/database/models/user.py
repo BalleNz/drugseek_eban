@@ -80,6 +80,7 @@ class User(IDMixin, TimestampsMixin):
             username=self.username,
             first_name=self.first_name,
             last_name=self.last_name,
+            simple_mode=self.simple_mode,
             subscription_type=self.subscription_type,
             subscription_end=self.subscription_end,
             allowed_tokens=self.allowed_tokens,

@@ -359,7 +359,14 @@ class UserProfileMessageFormatter:
             user.subscription_type
         )}"
 
-        additional_tokens_text = f"Дополнительные токены: <u>{user.additional_tokens}</u>"
+        additional_tokens_text = ""
+        if user.additional_tokens:
+            additional_tokens_text = f"Дополнительные токены: <u>{user.additional_tokens}</u>"
+
+        if user.simple_mode:
+            simple_mode_text = "<b>Упрощенный режим:</b> ответы ассистента будут проще."
+        else:
+            simple_mode_text = "<b>Упрощенный режим:</b> ответы ассистента будут объясняться научным языком."
 
         return MessageTemplates.USER_PROFILE.format(
             profile_name=profile_name,
@@ -369,7 +376,8 @@ class UserProfileMessageFormatter:
             token_word=decline_tokens(user.allowed_tokens),
             additional_tokens_text=additional_tokens_text if additional_tokens_text else "",
             additional_tokens_quote="<blockquote>Когда закончатся стандартные токены, начнут расходоваться дополнительные.</blockquote>\n\n" if additional_tokens_text else "",
-            subscription_end_at=get_subscription_end_at_text(user.subscription_end) if user.subscription_end else ""
+            subscription_end_at=get_subscription_end_at_text(user.subscription_end) if user.subscription_end else "",
+            simple_mode_text=simple_mode_text
         )
 
     @staticmethod

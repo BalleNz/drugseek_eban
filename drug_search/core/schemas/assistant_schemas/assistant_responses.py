@@ -3,7 +3,6 @@ from typing import Optional, List
 
 from pydantic import BaseModel, Field
 
-from drug_search.bot.lexicon.enums import DrugMenu
 from drug_search.core.lexicon import EXIST_STATUS, DANGER_CLASSIFICATION
 from drug_search.core.schemas.drug_schemas import DrugDosageSchema, DrugAnalogSchema, MechanismSummary, \
     DrugPathwaySchema, DrugCombinationSchema, DrugResearchSchema, MetabolismPhase, Pharmacokinetics, EliminationInfo
@@ -94,11 +93,11 @@ class AssistantResponseUserDescription(BaseModel):
     user_description: str = Field(...)
 
 
-class SelectActionResponse(BaseModel):
+"""class SelectActionResponse(BaseModel):
     action: str = Field(..., description="Тип действия пользователя")
     drug_name: Optional[str] = Field(None, description="Название препарата на английском")
     drug_name_ru: Optional[str] = Field(None, description="Название препарата на русском")
-    drug_menu: DrugMenu | None = Field(None, description="Пункт меню препарата")
+    drug_menu: DrugMenu | None = Field(None, description="Пункт меню препарата")"""
 
 
 class QuestionDrugResponse(BaseModel):

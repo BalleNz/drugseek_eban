@@ -10,9 +10,10 @@ from drug_search.bot.keyboards.callbacks import (AssistantQuestionContinueCallba
                                                  BuySubscriptionCallback, BuyTokensCallback,
                                                  BuyTokensConfirmationCallback, BuySubscriptionChosenTypeCallback,
                                                  DrugDescribeResearchesCallback, BuySubscriptionConfirmationCallback)
-from drug_search.bot.lexicon.enums import ModeTypes, HelpSectionMode, DrugMenu
+from drug_search.bot.lexicon.enums import ModeTypes, HelpSectionMode
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.core.lexicon import ARROW_TYPES, TokenPackage, SubscriptionPackage, SUBSCRIPTION_TYPES
+from drug_search.core.lexicon.enums import DrugMenu
 from drug_search.core.schemas import DrugBrieflySchema, DrugSchema, UserSchema, DrugResearchSchema
 from drug_search.core.utils.funcs import may_update_drug
 

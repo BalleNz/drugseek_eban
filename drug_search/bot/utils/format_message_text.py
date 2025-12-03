@@ -3,11 +3,10 @@ import logging
 import random
 
 from drug_search.bot.lexicon.consts import SYMBOLS
-from drug_search.bot.lexicon.enums import DrugMenu
 from drug_search.bot.lexicon.message_templates import MessageTemplates
 from drug_search.bot.utils.funcs import make_google_sources, get_time_when_refresh_tokens_text, \
     decline_tokens
-from drug_search.core.lexicon.enums import SUBSCRIPTION_TYPES, TOKENS_LIMIT, DANGER_CLASSIFICATION
+from drug_search.core.lexicon.enums import SUBSCRIPTION_TYPES, TOKENS_LIMIT, DANGER_CLASSIFICATION, DrugMenu
 from drug_search.core.schemas import UserSchema, DrugSchema, CombinationType, AllowedDrugsInfoSchema
 
 logger = logging.getLogger(__name__)
@@ -174,6 +173,7 @@ class DrugMessageFormatter:
         # [ пути метаболизма ]
         metabolism_phases = {
             "-1": "Экскреция",
+            "0": "Всасывание",
             "1": "Фаза Ⅰ",
             "2": "Фаза Ⅱ",
             "3": "Фаза Ⅲ",

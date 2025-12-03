@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from drug_search.core.lexicon.enums import ACTIONS_FROM_ASSISTANT, DANGER_CLASSIFICATION, JobStatuses
+from drug_search.core.lexicon.enums import ACTIONS_FROM_ASSISTANT, DANGER_CLASSIFICATION, JobStatuses, DrugMenu
 from drug_search.core.schemas.drug_schemas import DrugSchema
 from drug_search.core.schemas.telegram_schemas import DrugBrieflySchema
 
@@ -44,9 +44,10 @@ class DrugExistingResponse(BaseModel):
 
 
 class SelectActionResponse(BaseModel):
-    action: ACTIONS_FROM_ASSISTANT
-    drug_name: str | None = Field(default=None, description="ДВ")
-    drug_menu: str | None = Field(default=None, description="predicted Callback")
+    action: ACTIONS_FROM_ASSISTANT = Field(..., description="Тип действия пользователя")
+    drug_name: str | None = Field(default=None, description="Название препарата на английском")
+    drug_name_ru: Optional[str] = Field(None, description="Название препарата на русском")
+    drug_menu: DrugMenu | None = Field(default=DrugMenu.BRIEFLY, description="Пункт меню препарата")
 
 
 class QuestionAssistantResponse(BaseModel):

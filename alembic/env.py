@@ -12,7 +12,10 @@ if config.config_file_name is not None:
 
 from drug_search.config import config as app_config
 
-database_url: str = app_config.DATABASE_URL.replace("db:", "localhost:") + "?async_fallback=True"
+if bool(app_config.DEBUG):
+    database_url = app_config.DATABASE_URL.replace("db:", "localhost:") + "?async_fallback=True"
+database_url = app_config.DATABASE_URL + "?async_fallback=True"
+
 config.set_main_option("sqlalchemy.url", database_url)
 
 # Импортируем ВСЕ модели и типы ДО определения target_metadata

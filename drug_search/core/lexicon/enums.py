@@ -207,3 +207,14 @@ class TOKENS_LIMIT(int, Enum):
                 return cls.LITE_TOKENS_LIMIT.value
             case SUBSCRIPTION_TYPES.PREMIUM:
                 return cls.PREMIUM_TOKENS_LIMIT.value
+
+
+class DrugMenu(str, Enum):
+    BRIEFLY = "Briefly"
+    DOSAGES = "Dosages"
+    MECHANISM = "Mechanism"
+    COMBINATIONS = "Combinations"
+    RESEARCHES = "Researches"
+    ANALOGS = "Analogs"
+    METABOLISM = "Metabolism"
+    UPDATE_INFO = "UpdateInfo"

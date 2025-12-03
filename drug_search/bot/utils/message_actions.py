@@ -4,8 +4,9 @@ import logging
 from aiogram.types import Message, LinkPreviewOptions
 
 from drug_search.bot.keyboards import drug_keyboard
-from drug_search.bot.lexicon.enums import DrugMenu, ModeTypes
+from drug_search.bot.lexicon.enums import ModeTypes
 from drug_search.bot.utils.format_message_text import DrugMessageFormatter
+from drug_search.core.lexicon.enums import DrugMenu
 from drug_search.core.schemas import DrugSchema, UserSchema
 
 logger = logging.getLogger(name=__name__)

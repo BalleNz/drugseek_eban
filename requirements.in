@@ -1,6 +1,7 @@
 fastapi
 sqlalchemy
 aiogram
+alembic
 uvicorn
 PyJWT
 dotenv

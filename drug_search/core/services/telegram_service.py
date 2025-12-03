@@ -4,10 +4,11 @@ import aiohttp
 from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup
 
 from drug_search.bot.keyboards.keyboard_markups import question_continue_keyboard, drug_keyboard
-from drug_search.bot.lexicon.enums import DrugMenu, ModeTypes
+from drug_search.bot.lexicon.enums import ModeTypes
 from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.config import config
 from drug_search.core.lexicon import ARROW_TYPES
+from drug_search.core.lexicon.enums import DrugMenu
 from drug_search.core.lexicon.message_templates import MessageTemplates
 from drug_search.core.schemas import DrugSchema, QuestionDrugsAssistantResponse, QuestionAssistantResponse
 from drug_search.core.utils.formatter import ARQMessageTemplates

@@ -5,7 +5,6 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 from drug_search.core.lexicon.enums import DANGER_CLASSIFICATION, ARROW_TYPES
-from drug_search.bot.lexicon.enums import DrugMenu
 
 
 class AddTokensRequest(BaseModel):

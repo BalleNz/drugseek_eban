@@ -9,10 +9,11 @@ from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback, d
                                        drug_keyboard)
 from drug_search.bot.keyboards.callbacks import DrugDescribeResearchesCallback
 from drug_search.bot.keyboards.keyboard_markups import drug_researches_keyboard
-from drug_search.bot.lexicon.enums import DrugMenu, ModeTypes
+from drug_search.bot.lexicon.enums import ModeTypes
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.bot.utils.format_message_text import DrugMessageFormatter
+from drug_search.core.lexicon.enums import DrugMenu
 from drug_search.core.schemas import DrugSchema, UserSchema, AllowedDrugsInfoSchema
 from drug_search.core.services.cache_logic.cache_service import CacheService
 

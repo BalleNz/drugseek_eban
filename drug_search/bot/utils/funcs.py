@@ -83,7 +83,7 @@ def get_time_when_refresh_tokens_text(_datetime: datetime, subscription_type: SU
 async def get_telegram_schema_from_data(user: User) -> UserTelegramDataSchema:
     return UserTelegramDataSchema(
         telegram_id=str(user.id),
-        username=user.username,
+        username=user.username or "",
         first_name=user.first_name,
         last_name=user.last_name,
         auth_date=None

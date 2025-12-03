@@ -12,6 +12,7 @@ services:
       - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}" ]
       interval: 5s
@@ -27,10 +28,13 @@ services:
       - "8000:8000"
     command: python3 asgi.py
     environment:
-      DEBUG: False  # с докера дебага нет
+      DEBUG: 'False'  # с докера дебага нет
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - ./alembic:/drug_search/alembic
+      - ./alembic.ini:/drug_search/alembic.ini
     restart: unless-stopped
   redis:
     image: redis:7-alpine
@@ -59,6 +63,17 @@ services:
       - redis
       - db
     command: arq drug_search.infrastructure.arq_config.WorkerSettings
+    restart: unless-stopped
+  bot:
+    build: .
+    container_name: bot
+    env_file:
+      - .env
+    environment:
+      - DEBUG=false  # с докера дебага нет
+    depends_on:
+      - fastapi
+    command: python3 drug_search/bot/bot_app.py
     restart: unless-stopped
 
 volumes:

@@ -3,8 +3,8 @@ from typing import Optional
 
 from aiogram.filters.callback_data import CallbackData
 
-from drug_search.bot.lexicon.enums import HelpSectionMode, DrugMenu
-from drug_search.core.lexicon.enums import ARROW_TYPES, SUBSCRIPTION_TYPES
+from drug_search.bot.lexicon.enums import HelpSectionMode
+from drug_search.core.lexicon.enums import ARROW_TYPES, SUBSCRIPTION_TYPES, DrugMenu
 
 
 # [ CALLBACKS ]

@@ -1,6 +1,5 @@
 import logging
 import uuid
-from datetime import datetime
 
 from aiogram import Router
 from aiogram.fsm.context import FSMContext
@@ -15,12 +14,13 @@ from drug_search.bot.keyboards.keyboard_markups import (
     buy_request_keyboard, get_tokens_packages_to_buy_keyboard, get_subscription_packages_keyboard
 )
 from drug_search.bot.lexicon import MessageTemplates
-from drug_search.bot.lexicon.enums import ModeTypes, DrugMenu
+from drug_search.bot.lexicon.enums import ModeTypes
 from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.bot.utils.format_message_text import DrugMessageFormatter
 from drug_search.bot.utils.message_actions import open_drug_menu
 from drug_search.core.dependencies.bot.cache_service_dep import cache_service
 from drug_search.core.lexicon import ARROW_TYPES, JobStatuses, DANGER_CLASSIFICATION, SUBSCRIPTION_TYPES
+from drug_search.core.lexicon.enums import DrugMenu
 from drug_search.core.schemas import (
     BuyDrugResponse, BuyDrugStatuses, UpdateDrugResponse, UpdateDrugStatuses, UserSchema, DrugExistingResponse,
     DrugSchema

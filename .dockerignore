@@ -6,5 +6,4 @@ venv/
 .venv
 .idea/
 tests/
-alembic.ini
 *.log

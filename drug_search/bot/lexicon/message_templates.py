@@ -61,9 +61,9 @@ class MessageTemplates:
     USER_PROFILE: str = (
         "<b>{profile_icon} У тебя — {profile_name}</b>\n\n"
         "<b>Ваши токены:</b> {allowed_tokens}  {refresh_section}\n\n"
-        "<i>{additional_tokens_text}</i>\n"
+        "<i>{additional_tokens_text}</i>"
         "{additional_tokens_quote}"
-        "<i>{subscription_end_at}</i>\n"
+        "<i>{subscription_end_at}</i>"
         "{simple_mode_text}"
     )
 

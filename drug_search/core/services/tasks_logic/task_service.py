@@ -97,6 +97,7 @@ class TaskService:
             user_telegram_id: str,
             question: str,
             old_message_id: str,
+            simple_mode: bool  # упрощенный режим
     ):
         """Задача не уникальная"""
         job: Job = await self.arq_pool.enqueue_job(
@@ -104,6 +105,7 @@ class TaskService:
             user_telegram_id,
             question,
             old_message_id,
+            simple_mode
         )
         logger.info(f"Задача на вопрос ассистенту поставлена в очередь!")
 

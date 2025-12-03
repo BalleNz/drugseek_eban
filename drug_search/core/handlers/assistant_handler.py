@@ -48,10 +48,12 @@ async def drugs_question_answer(
 async def question_answer(
         request: QuestionRequest,
         task_service: Annotated[TaskService, Depends(get_task_service)],
+        user: Annotated[UserSchema, Depends(get_auth_user)]
 ):
     """Отвечает на вопрос юзера в красивом формате HTML"""
     await task_service.enqueue_assistant_question(
         user_telegram_id=request.user_telegram_id,
         question=request.question,
         old_message_id=request.old_message_id,
+        simple_mode=user.simple_mode
     )

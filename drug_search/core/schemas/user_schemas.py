@@ -21,6 +21,8 @@ class UserSchema(BaseModel):
     first_name: Optional[str] = Field(None, description="first name")
     last_name: Optional[str] = Field(None, description="last name")
 
+    simple_mode: bool | None = Field(None, description="Упрощенный режим")
+
     allowed_tokens: int = Field(..., description="токены")
 
     used_tokens: int = Field(..., description="использованные токены")

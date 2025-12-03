@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional, Type, TypeVar, Union
 
 from pydantic import BaseModel
-from sqlalchemy import String, ForeignKey, Text, Index, func, DateTime, Integer, UUID as PG_UUID
+from sqlalchemy import String, ForeignKey, Text, Index, func, DateTime, Integer, UUID as PG_UUID, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from drug_search.core.lexicon import SUBSCRIPTION_TYPES, TOKENS_LIMIT
@@ -22,6 +22,9 @@ class User(IDMixin, TimestampsMixin):
     username: Mapped[str] = mapped_column(String, comment="telegram username")
     first_name: Mapped[Optional[str]] = mapped_column(String, comment="telegram first name")
     last_name: Mapped[Optional[str]] = mapped_column(String, comment="telegram last name")
+
+    # [ settings ]
+    simple_mode: Mapped[Optional[bool]] = mapped_column(Boolean, server_default="false", comment="Упрощенный режим")
 
     # subscription
     subscription_type: Mapped[UserSubscriptionTypes] = mapped_column(

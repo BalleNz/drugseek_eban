@@ -107,6 +107,16 @@ class DrugSearchAPIClient(BaseHttpClient):
             )
         )
 
+    async def simple_mode_toggle(
+            self,
+            access_token: str
+    ):
+        return await self._request(
+            endpoint=f"/v1/user/simple_mode",
+            method=HTTPMethod.PUT,
+            access_token=access_token,
+        )
+
     # [ DRUG ]
     async def update_drug(
             self,

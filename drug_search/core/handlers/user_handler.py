@@ -30,6 +30,19 @@ async def get_user(
     return user
 
 
+@user_router.put(
+    path="/simple_mode",
+    description="переключить упрощенный режим"
+)
+async def simple_mode_toggle(
+        user: Annotated[UserSchema, Depends(get_auth_user)],
+        user_service: Annotated[UserService, Depends(get_user_service)],
+        cache_service: Annotated[CacheService, Depends(get_cache_service)]
+):
+    await user_service.repo.simple_mode_toggle(user.id)
+    await cache_service.redis_service.invalidate_user_data(telegram_id=user.telegram_id)
+
+
 @user_router.get(
     path="/allowed",
     description="Получение всех разрешенных препаратов, а также общее количество препаратов в базе.",

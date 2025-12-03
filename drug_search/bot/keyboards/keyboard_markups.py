@@ -9,7 +9,8 @@ from drug_search.bot.keyboards.callbacks import (AssistantQuestionContinueCallba
                                                  BuyDrugRequestCallback, BackToUserProfileCallback,
                                                  BuySubscriptionCallback, BuyTokensCallback,
                                                  BuyTokensConfirmationCallback, BuySubscriptionChosenTypeCallback,
-                                                 DrugDescribeResearchesCallback, BuySubscriptionConfirmationCallback)
+                                                 DrugDescribeResearchesCallback, BuySubscriptionConfirmationCallback,
+                                                 SimpleModeProfileCallback)
 from drug_search.bot.lexicon.enums import ModeTypes, HelpSectionMode
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.core.lexicon import ARROW_TYPES, TokenPackage, SubscriptionPackage, SUBSCRIPTION_TYPES
@@ -406,6 +407,13 @@ def user_profile_keyboard(
         InlineKeyboardButton(
             text=ButtonText.BUY_TOKENS,
             callback_data=BuyTokensCallback().pack()
+        )
+    ])
+
+    buttons.append([
+        InlineKeyboardButton(
+            text=ButtonText.SIMPLE_MODE_ON if user.simple_mode else ButtonText.SIMPLE_MODE_OFF,
+            callback_data=SimpleModeProfileCallback().pack()
         )
     ])
 

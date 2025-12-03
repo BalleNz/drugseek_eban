@@ -218,5 +218,19 @@ class UserRepository(BaseRepository):
         )
         await self.session.commit()
 
+    async def simple_mode_toggle(self, user_id: uuid.UUID) -> None:
+        """Переключение упрощенного режима"""
+        await self.session.execute(
+            update(User)
+            .where(User.id == user_id)
+            .values(
+                simple_mode=case(
+                    (User.simple_mode.is_(True), False),
+                    else_=True
+                ),
+            )
+        )
+        await self.session.commit()
+
     def __del__(self):
         logger.info("USER REPO IS COLLECTED BY GARBAGE COLLECTOR")

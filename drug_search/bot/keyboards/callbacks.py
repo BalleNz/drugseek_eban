@@ -94,6 +94,11 @@ class BuyTokensCallback(CallbackData, prefix="buy_tokens"):
     pass
 
 
+class SimpleModeProfileCallback(CallbackData, prefix="simple_mode"):
+    """Переключение упрощенного режима"""
+    pass
+
+
 class BuyTokensConfirmationCallback(CallbackData, prefix="buy_tokens_conf"):
     """Клик на выбор пакета токенов"""
     token_package_key: str

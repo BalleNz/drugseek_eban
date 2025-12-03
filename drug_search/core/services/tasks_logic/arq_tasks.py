@@ -78,6 +78,7 @@ async def assistant_question(
         user_telegram_id: str,
         question: str,
         old_message_id: str,
+        simple_mode: bool
 ):
     """
     Отправляется ответ от нейронки в телеграм.
@@ -88,7 +89,10 @@ async def assistant_question(
         assistant_service: AssistantService = await container.assistant_service
         telegram_service: TelegramService = await container.telegram_service
 
-        question_response: QuestionAssistantResponse = await assistant_service.actions.answer_to_question(question)
+        question_response: QuestionAssistantResponse = await assistant_service.actions.answer_to_question(
+            question,
+            simple_mode
+        )
 
         await telegram_service.edit_message_with_assistant_answer(
             question_response=question_response,

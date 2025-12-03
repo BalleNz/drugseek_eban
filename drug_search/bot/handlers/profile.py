@@ -5,7 +5,8 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup
 
-from drug_search.bot.keyboards.callbacks import UserDescriptionCallback, BackToUserProfileCallback
+from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
+from drug_search.bot.keyboards.callbacks import UserDescriptionCallback, BackToUserProfileCallback, SimpleModeProfileCallback
 from drug_search.bot.keyboards.keyboard_markups import back_to_user_profile, user_profile_keyboard
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.bot.lexicon.message_text import MessageText
@@ -82,3 +83,18 @@ async def get_profile_from_message(
         state: FSMContext,
 ):
     await _show_user_profile(message, cache_service, access_token, state)
+
+
+@router.callback_query(SimpleModeProfileCallback.filter())
+async def simple_mode_toggle(
+        callback_query: CallbackQuery,
+        api_client: DrugSearchAPIClient,
+        cache_service: CacheService,
+        access_token: str,
+        state: FSMContext,
+):
+    await callback_query.answer()
+
+    await api_client.simple_mode_toggle(access_token)
+
+    await _show_user_profile(callback_query, cache_service, access_token, state)

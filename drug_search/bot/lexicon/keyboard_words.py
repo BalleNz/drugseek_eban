@@ -13,6 +13,8 @@ class ButtonText:
     BUY_SUBSCRIPTION = "Купить подписку"
     UPGRADE_SUBSCRIPTION = "Улучшить подписку"
     BUY_TOKENS = "Купить токены"
+    SIMPLE_MODE_ON = "✅ Упрощенный режим"
+    SIMPLE_MODE_OFF = "❌ Упрощенный режим"
 
     # [ DRUGS SECTION ]
     DOSAGES = "📋 Дозировки"

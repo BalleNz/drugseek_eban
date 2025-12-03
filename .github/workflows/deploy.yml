@@ -75,16 +75,16 @@ jobs:
             docker builder prune -f -a
             docker image prune -f -a
           
-            docker-compose -f ${{ steps.compose.outputs.COMPOSE_FILE }} down
-            docker-compose -f ${{ steps.compose.outputs.COMPOSE_FILE }} pull
-            docker-compose -f ${{ steps.compose.outputs.COMPOSE_FILE }} build --no-cache
-            docker-compose -f ${{ steps.compose.outputs.COMPOSE_FILE }} up -d
+            docker-compose -f down
+            docker-compose -f pull
+            docker-compose -f build --no-cache
+            docker-compose -f up -d
                   
             sleep 15
             echo "=== Container status ==="
-            docker-compose -f ${{ steps.compose.outputs.COMPOSE_FILE }} ps
+            docker-compose -f ps
             echo "=== Recent logs ==="
-            docker-compose -f ${{ steps.compose.outputs.COMPOSE_FILE }} logs --tail=15
+            docker-compose -f logs --tail=15
           EOF
       - name: Run Alembic migrations
         run: |

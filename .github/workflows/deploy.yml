@@ -1,0 +1,94 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ main, dev ]
+  workflow_dispatch:
+
+# TODO: tests
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: 'production'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          
+          echo "${{ secrets.SSH_PRIVATE_KEY }}
+          echo "${{ secrets.SSH_HOST }}
+
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github_action_key
+          chmod 600 ~/.ssh/github_action_key
+
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Copy files with rsync
+        run: |
+          echo "Copying files with rsync..."
+          rsync -avz --delete \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='__pycache__' \
+            --exclude='.env' \
+            --exclude='.venv' \
+            -e "ssh -i ~/.ssh/github_action_key -o StrictHostKeyChecking=no" \
+            ./ \
+            ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:~/drug_search
+
+      - name: Create production .env file on server
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/github_action_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
+            cd ~/drug_search
+            echo "DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}" > .env
+            
+            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+            echo "DATABASE_NAME=${{ secrets.DATABASE_NAME }}" >> .env
+            echo "DATABASE_USER=${{ secrets.DATABASE_USER }}" >> .env
+            echo "DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}" >> .env
+            
+            echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" >> .env
+           
+            echo "WEBHOOK_URL=${{ secrets.WEBHOOK_URL }}" >> .env
+            
+            echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> .env
+            echo "ARQ_REDIS_URL=${{ secrets.ARQ_REDIS_URL }}" >> .env
+          EOF
+
+      - name: Deploy with Docker Compose with Cleanup
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/github_action_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} <<- 'EOF'
+            cd ~/drug_search
+          
+            # Cleanup docker cache
+            docker builder prune -f -a
+            docker image prune -f -a
+          
+            docker-compose -f ${{ steps.compose.outputs.COMPOSE_FILE }} down
+            docker-compose -f ${{ steps.compose.outputs.COMPOSE_FILE }} pull
+            docker-compose -f ${{ steps.compose.outputs.COMPOSE_FILE }} build --no-cache
+            docker-compose -f ${{ steps.compose.outputs.COMPOSE_FILE }} up -d
+                  
+            sleep 15
+            echo "=== Container status ==="
+            docker-compose -f ${{ steps.compose.outputs.COMPOSE_FILE }} ps
+            echo "=== Recent logs ==="
+            docker-compose -f ${{ steps.compose.outputs.COMPOSE_FILE }} logs --tail=15
+          EOF
+      - name: Run Alembic migrations
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/github_action_key ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
+            cd ~/drug_search
+            docker exec api alembic upgrade head
+          EOF

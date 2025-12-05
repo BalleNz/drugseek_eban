@@ -50,7 +50,7 @@ async def referrals_menu(
     user_referrals_count = user.referrals_count
 
     ref_level = get_ref_level(user_referrals_count)
-    ref_tokens_next_level = REFERRALS_REWARDS[ref_level+1]
+    ref_tokens_next_level = REFERRALS_REWARDS[ref_level + 1]
 
     def tokens_text(tokens: int) -> str:
         """
@@ -69,7 +69,7 @@ async def referrals_menu(
         else:
             return f"{tokens} токенов"
 
-    referrals_count_next = REFERRALS_LEVELS[ref_level+1] - user_referrals_count
+    referrals_count_next = REFERRALS_LEVELS[ref_level + 1] - user_referrals_count
     referrals_count_next_text = str(referrals_count_next) + " человек" if referrals_count_next != 1 else "1 человека"
 
     text = MessageText.REFERRALS_MENU.format(
@@ -78,11 +78,19 @@ async def referrals_menu(
         url=generate_referral_url(user.telegram_id, BOT_USERNAME)
     )
 
-    await query.message.edit_text(
-        text=text,
-        reply_markup=referrals_menu_keyboard(),
-        link_preview_options=LinkPreviewOptions(is_disabled=True)
-    )
+    if type(query) is CallbackQuery:
+        await query.message.edit_text(
+            text=text,
+            reply_markup=referrals_menu_keyboard(),
+            link_preview_options=LinkPreviewOptions(is_disabled=True)
+        )
+    else:
+        await query.answer(
+            text=text,
+            reply_markup=referrals_menu_keyboard(),
+            link_preview_options=LinkPreviewOptions(is_disabled=True)
+        )
+
 
 @router.callback_query(ReferralsMenuCallback.filter())
 async def referrals_menu_from_callback(
@@ -96,6 +104,7 @@ async def referrals_menu_from_callback(
         cache_service,
         access_token
     )
+
 
 @router.message(Command("referrals"))
 async def referrals_menu_from_command(

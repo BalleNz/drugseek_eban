@@ -1,0 +1,48 @@
+import logging
+from typing import Annotated
+
+from fastapi import APIRouter, Depends
+
+from drug_search.core.dependencies.bot.cache_service_dep import get_cache_service
+from drug_search.core.dependencies.user_service_dep import get_user_service_with_assistant
+from drug_search.core.schemas import UserSchema
+from drug_search.core.services.cache_logic.cache_service import CacheService
+from drug_search.core.services.models_service.user_service import UserService
+from drug_search.core.utils.auth import get_auth_user
+
+logger = logging.getLogger(__name__)
+referrals_router = APIRouter(prefix="/referrals")
+
+
+@referrals_router.put(path="/new_referral")
+async def new_referral(
+        user: Annotated[UserSchema, Depends(get_auth_user)],
+        user_service: Annotated[UserService, Depends(get_user_service_with_assistant)],
+        cache_service: Annotated[CacheService, Depends(get_cache_service)],
+        request: dict
+):
+    """Новый реферал перешел по ссылке"""
+
+    referrer_telegram_id = request["referrer_id"]
+
+    referrer_user: UserSchema = await user_service.repo.get_user_from_telegram_id(referrer_telegram_id)
+
+    await user_service.repo.create_referral(
+        referrer_user=referrer_user,
+        referral_user=user,
+    )
+    logger.info(f"Новый реферал для юзера {referrer_user.username}!")
+
+    await cache_service.redis_service.invalidate_user_data(referrer_telegram_id)
+
+
+@referrals_router.put(path="/free_tokens")
+async def get_free_tokens(
+        user: Annotated[UserSchema, Depends(get_auth_user)],
+        user_service: Annotated[UserService, Depends(get_user_service_with_assistant)],
+        cache_service: Annotated[CacheService, Depends(get_cache_service)],
+):
+    """Разовое получение токенов"""
+    await user_service.repo.update(user.id, got_free_tokens="true")
+
+    await cache_service.redis_service.invalidate_user_data(user.telegram_id)

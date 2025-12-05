@@ -167,3 +167,11 @@ class MessageTemplates:
         "<b>Цена:</b>\n"
         "— {subscription_price} рублей"
     )
+
+    # [ REFERRALS ]
+    REFERRALS_MENU = (
+        "🧚‍♀️<b>Реферальная система</b>\n\n"
+        "Твой уровень: {ref_level}\n\n"
+        "За следующий уровень ты получишь: {ref_tokens_next_level}\n\n"
+        "Всего зашедших по твоей ссылке: {ref_members_count}"
+    )

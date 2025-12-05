@@ -219,3 +219,30 @@ class DrugSearchAPIClient(BaseHttpClient):
             ),
             access_token=access_token
         )
+
+    # [ REFERRALS ]
+    async def new_referral(
+            self,
+            access_token: str,
+            referrer_telegram_id: str,
+            referral_telegram_id: str
+    ):
+        return await self._request(
+            HTTPMethod.PUT,
+            endpoint="referrals/new_referral",
+            access_token=access_token,
+            request_body={
+                'referrer_telegram_id': referrer_telegram_id,
+                "referral_telegram_id": referral_telegram_id
+            }
+        )
+
+    async def get_free_tokens(
+            self,
+            access_token: str
+    ):
+        return await self._request(
+            HTTPMethod.PUT,
+            endpoint="referrals/free_tokens",
+            access_token=access_token
+        )

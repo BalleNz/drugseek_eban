@@ -35,6 +35,7 @@ __all__ = [
     'DrugExistingResponse',
     'DrugCombinationSchema',
     'PubmedResearchSchema',
+    'ReferralSchema',
     # [ User ]
     'UserSchema',
     'UserTelegramDataSchema',

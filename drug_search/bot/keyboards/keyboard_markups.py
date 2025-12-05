@@ -10,7 +10,8 @@ from drug_search.bot.keyboards.callbacks import (AssistantQuestionContinueCallba
                                                  BuySubscriptionCallback, BuyTokensCallback,
                                                  BuyTokensConfirmationCallback, BuySubscriptionChosenTypeCallback,
                                                  DrugDescribeResearchesCallback, BuySubscriptionConfirmationCallback,
-                                                 SimpleModeProfileCallback)
+                                                 SimpleModeProfileCallback, GetFreeTokensCallback,
+                                                 GetTokensForSubscriptionCallback, ReferralsMenuCallback)
 from drug_search.bot.lexicon.enums import ModeTypes, HelpSectionMode
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.core.lexicon import ARROW_TYPES, TokenPackage, SubscriptionPackage, SUBSCRIPTION_TYPES
@@ -507,7 +508,8 @@ def get_subscription_packages_keyboard(
 ) -> InlineKeyboardMarkup:
     """клавиатура с выбором пакетов подписок"""
 
-    subscription_packages: tuple[SubscriptionPackage, ...] = SubscriptionPackage.get_packages_by_type(chosen_subscription_type)
+    subscription_packages: tuple[SubscriptionPackage, ...] = SubscriptionPackage.get_packages_by_type(
+        chosen_subscription_type)
 
     buttons: list[list[InlineKeyboardButton]] = [[]]
 
@@ -621,4 +623,58 @@ def get_help_keyboard(
 
     return InlineKeyboardMarkup(
         inline_keyboard=buttons
+    )
+
+
+# [ REFERRALS ]
+def get_free_tokens_menu_keyboard(
+        got_free_tokens: bool
+):
+    """Клавиатура с кнопками:
+    — Токены бесплатно (единоразово)
+    — Токены за подписку
+    """
+    buttons: list[list[InlineKeyboardButton]] = [
+        [
+            InlineKeyboardButton(
+                text="Токены за подписку",
+                callback_data=GetTokensForSubscriptionCallback().pack()
+            )
+        ]
+    ]
+
+    if got_free_tokens:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Получить 4 токена",
+                    callback_data=GetFreeTokensCallback().pack()
+                )
+            ],
+        )
+
+    buttons.append(
+        [
+            InlineKeyboardButton(
+                text="Реферальная система",
+                callback_data=ReferralsMenuCallback().pack()
+            )
+        ]
+    )
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=buttons
+    )
+
+
+def referrals_menu_keyboard():
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="Обновить страницу",
+                    callback_data=ReferralsMenuCallback().pack()
+                )
+            ]
+        ]
     )

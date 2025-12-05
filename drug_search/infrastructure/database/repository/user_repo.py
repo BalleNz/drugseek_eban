@@ -1,6 +1,7 @@
 import datetime
 import logging
 import uuid
+from typing import Sequence
 
 from sqlalchemy import select, text, update, case
 from sqlalchemy.dialects.postgresql import insert
@@ -8,8 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from drug_search.core.lexicon import SUBSCRIPTION_TYPES, TOKENS_LIMIT, SubscriptionPackage
-from drug_search.core.schemas import UserTelegramDataSchema, UserSchema, DrugBrieflySchema, AllowedDrugsInfoSchema
-from drug_search.infrastructure.database.models.user import AllowedDrugs, User, UserRequestLog
+from drug_search.core.schemas import (UserTelegramDataSchema, UserSchema, DrugBrieflySchema,
+                                      AllowedDrugsInfoSchema, ReferralSchema)
+from drug_search.infrastructure.database.models.user import AllowedDrugs, User, UserRequestLog, Referral
 from drug_search.infrastructure.database.repository.base_repo import BaseRepository
 
 logger = logging.getLogger(__name__)
@@ -34,6 +36,24 @@ class UserRepository(BaseRepository):
                 user.allowed_tokens = TOKENS_LIMIT.PREMIUM_TOKENS_LIMIT
 
         await self.session.commit()
+
+    async def get_user_from_telegram_id(self, telegram_id: str) -> UserSchema | None:
+        """Возвращает схему юзера с телеграм айди"""
+        stmt = (
+            select(User).where(
+                User.telegram_id == telegram_id
+            )
+            .options(
+                selectinload(User.allowed_drugs)
+            )
+        )
+        result = await self.session.execute(stmt)
+        user: User | None = result.scalar_one_or_none()
+
+        if not user:
+            return None
+
+        return user.get_schema()
 
     async def get_user(self, user_id: uuid.UUID) -> UserSchema | None:
         """Возвращает модель юзер со всеми смежными таблицами"""
@@ -231,6 +251,56 @@ class UserRepository(BaseRepository):
             )
         )
         await self.session.commit()
+
+    # [ REFERRALS ]
+    async def get_referrals(self, referrer_telegram_id: int) -> Sequence[ReferralSchema]:
+        """Получить всех рефералов пользователя"""
+        stmt = select(Referral).where(
+            Referral.referrer_telegram_id == referrer_telegram_id
+        )
+
+        result = await self.session.execute(stmt)
+        referrals = result.scalars().all()
+
+        return [referral.get_schema() for referral in referrals]
+
+    async def check_referral_exists(self, referral_telegram_id: str) -> bool:
+        """Проверить, существует ли реферал с таким telegram_id"""
+        stmt = select(Referral).where(
+            Referral.referral_telegram_id == referral_telegram_id
+        )
+
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none() is not None
+
+    async def create_referral(
+            self,
+            referrer_user: UserSchema,
+            referral_user: UserSchema,
+    ) -> ReferralSchema:
+        """Создать новую реферальную связь"""
+
+        referrer_telegram_id = referrer_user.telegram_id
+        referral_telegram_id = referral_user.telegram_id
+
+        # не существует ли уже такая связь
+        if self.check_referral_exists(referral_telegram_id):
+            raise ValueError(f"Реферал с telegram_id {referral_telegram_id} уже существует")
+
+        if referrer_telegram_id == referral_telegram_id:
+            raise ValueError("Пользователь не может пригласить самого себя")
+
+        await self.update(referrer_user.id, referrals_count=referral_user.referrals_count+1)
+
+        referral = Referral(
+            referrer_telegram_id=referrer_telegram_id,
+            referral_telegram_id=referral_telegram_id
+        )
+
+        self.session.add(referral)
+        await self.session.commit()
+
+        return referral.get_schema()
 
     def __del__(self):
         logger.info("USER REPO IS COLLECTED BY GARBAGE COLLECTOR")

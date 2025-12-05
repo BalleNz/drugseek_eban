@@ -364,9 +364,9 @@ class UserProfileMessageFormatter:
             additional_tokens_text = f"Дополнительные токены: <u>{user.additional_tokens}</u>\n"
 
         if user.simple_mode:
-            simple_mode_text = "<b>Упрощенный режим:</b> ответы ассистента будут проще."
+            simple_mode_text = "<b>Ассистент:</b> ответы будут проще."
         else:
-            simple_mode_text = "<b>Упрощенный режим:</b> ответы ассистента будут объясняться научным языком."
+            simple_mode_text = "<b>Ассистент:</b> ответы сложные, подробно объясняются."
 
         return MessageTemplates.USER_PROFILE.format(
             profile_name=profile_name,

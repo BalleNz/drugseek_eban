@@ -201,3 +201,10 @@ class MessageText:
 
     MESSAGE_LENGTH_EXCEED = MessageTemplates.MESSAGE_LENGTH_EXCEED
     MESSAGE_LENGTH_EXCEED_PREMIUM = "⚠️ Вы превысили количество символов в сообщении!"
+
+    # [ REFERRALS ]
+    GET_FREE_TOKENS_MENU = (
+        "🧚‍♀️ Здесь ты можешь получить токены бесплатно!"
+    )
+
+    REFERRALS_MENU = MessageTemplates.REFERRALS_MENU

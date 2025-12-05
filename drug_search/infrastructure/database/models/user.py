@@ -7,7 +7,7 @@ from sqlalchemy import String, ForeignKey, Text, Index, func, DateTime, Integer,
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from drug_search.core.lexicon import SUBSCRIPTION_TYPES, TOKENS_LIMIT
-from drug_search.core.schemas import UserSchema, UserRequestLogSchema, AllowedDrugSchema
+from drug_search.core.schemas import UserSchema, UserRequestLogSchema, AllowedDrugSchema, ReferralSchema
 from drug_search.infrastructure.database.models.base import IDMixin, TimestampsMixin
 from drug_search.infrastructure.database.models.types import UserSubscriptionTypes
 
@@ -26,7 +26,7 @@ class User(IDMixin, TimestampsMixin):
     # [ settings ]
     simple_mode: Mapped[Optional[bool]] = mapped_column(Boolean, server_default="false", comment="Упрощенный режим")
 
-    # subscription
+    # [ subscription ]
     subscription_type: Mapped[UserSubscriptionTypes] = mapped_column(
         UserSubscriptionTypes,
         server_default=SUBSCRIPTION_TYPES.DEFAULT.value,
@@ -59,11 +59,24 @@ class User(IDMixin, TimestampsMixin):
         comment="последний сброс счётчика"
     )
 
+    # [ Bonuses ]
+    got_free_tokens: Mapped[bool] = mapped_column(Boolean, server_default="false", comment="получены бесплатные токены")
+    got_free_tokens_for_subscription: Mapped[bool] = mapped_column(Boolean, server_default="false", comment="получены токены за подписки на каналы")
+
+    # [ REFERRALS ]
+    referred_by_telegram_id: Mapped[Optional[str]] = mapped_column(
+        String,
+        ForeignKey("users.telegram_id", ondelete="SET NULL"),
+        nullable=True,
+        comment="Telegram ID пользователя, который пригласил"
+    )
+    referrals_count: Mapped[int] = mapped_column(Integer, server_default="0", comment="количество рефералов")
+
     # [ DESCRIPTION ]
     description: Mapped[Optional[str]] = mapped_column(
         Text,
         default=None,
-        comment="Каждые 10 запросов о пользователе обновляется его описание. Аля 'какой ты биофакер/химик/фармацевт?'"
+        comment="описание юзера"
     )
 
     # [ RELATIONSHIPS ]
@@ -76,18 +89,29 @@ class User(IDMixin, TimestampsMixin):
     def get_schema(self) -> Union[S, list[None]]:
         return UserSchema(
             id=self.id,
+
             telegram_id=self.telegram_id,
             username=self.username,
             first_name=self.first_name,
             last_name=self.last_name,
+
             simple_mode=self.simple_mode,
+
             subscription_type=self.subscription_type,
             subscription_end=self.subscription_end,
+
             allowed_tokens=self.allowed_tokens,
             used_tokens=self.used_tokens,
             additional_tokens=self.additional_tokens,
             tokens_last_refresh=self.tokens_last_refresh,
+
+            got_free_tokens=self.got_free_tokens,
+            got_free_tokens_for_subscription=self.got_free_tokens_for_subscription,
+            referrals_count=self.referrals_count,
+            referred_by_telegram_id=self.referred_by_telegram_id,
+
             description=self.description,
+
             allowed_drugs=[al for al in self.allowed_drugs],
             created_at=self.created_at,
             updated_at=self.updated_at
@@ -139,3 +163,26 @@ class AllowedDrugs(IDMixin):
     @property
     def schema_class(cls) -> Type[S]:
         return AllowedDrugSchema
+
+
+class Referral(IDMixin):
+    __tablename__ = "referrals"
+
+    referrer_telegram_id: Mapped[str] = mapped_column(
+        String,
+        ForeignKey("users.telegram_id", ondelete="CASCADE"),
+        nullable=False,
+        comment="ID пригласившего"
+    )
+
+    referral_telegram_id: Mapped[str] = mapped_column(
+        String,
+        ForeignKey("users.telegram_id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,  # Один пользователь может быть приглашен только один раз
+        comment="ID приглашенного"
+    )
+
+    @property
+    def schema_class(cls) -> Type[S]:
+        return ReferralSchema

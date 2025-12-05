@@ -62,3 +62,9 @@ class BuyDrugRequest(BaseModel):
 # [ ADMIN ]
 class MailingRequest(BaseModel):
     message: str
+
+
+# [ referrals ]
+class NewReferralsRequest(BaseModel):
+    referrer_telegram_id: str
+    referral_telegram_id: str

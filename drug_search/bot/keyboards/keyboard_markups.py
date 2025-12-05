@@ -1,7 +1,8 @@
 import logging
 import uuid
 
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, \
+    KeyboardButtonRequestChat
 
 from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback, WrongDrugFoundedCallback)
 from drug_search.bot.keyboards.callbacks import (AssistantQuestionContinueCallback, DrugUpdateRequestCallback,
@@ -10,10 +11,12 @@ from drug_search.bot.keyboards.callbacks import (AssistantQuestionContinueCallba
                                                  BuySubscriptionCallback, BuyTokensCallback,
                                                  BuyTokensConfirmationCallback, BuySubscriptionChosenTypeCallback,
                                                  DrugDescribeResearchesCallback, BuySubscriptionConfirmationCallback,
-                                                 SimpleModeProfileCallback)
+                                                 SimpleModeProfileCallback, GetTokensForSubscriptionCallback,
+                                                 ReferralsMenuCallback)
 from drug_search.bot.lexicon.enums import ModeTypes, HelpSectionMode
 from drug_search.bot.lexicon.keyboard_words import ButtonText
-from drug_search.core.lexicon import ARROW_TYPES, TokenPackage, SubscriptionPackage, SUBSCRIPTION_TYPES
+from drug_search.core.lexicon import (ARROW_TYPES, TokenPackage, SubscriptionPackage,
+                                      SUBSCRIPTION_TYPES, BOT_USERNAME)
 from drug_search.core.lexicon.enums import DrugMenu
 from drug_search.core.schemas import DrugBrieflySchema, DrugSchema, UserSchema, DrugResearchSchema
 from drug_search.core.utils.funcs import may_update_drug
@@ -507,7 +510,8 @@ def get_subscription_packages_keyboard(
 ) -> InlineKeyboardMarkup:
     """клавиатура с выбором пакетов подписок"""
 
-    subscription_packages: tuple[SubscriptionPackage, ...] = SubscriptionPackage.get_packages_by_type(chosen_subscription_type)
+    subscription_packages: tuple[SubscriptionPackage, ...] = SubscriptionPackage.get_packages_by_type(
+        chosen_subscription_type)
 
     buttons: list[list[InlineKeyboardButton]] = [[]]
 
@@ -621,4 +625,90 @@ def get_help_keyboard(
 
     return InlineKeyboardMarkup(
         inline_keyboard=buttons
+    )
+
+
+# [ REFERRALS ]
+def get_free_tokens_menu_keyboard(
+        got_free_tokens: bool
+):
+    """Клавиатура с кнопками:
+    — Токены бесплатно (единоразово)
+    — Токены за подписку
+    """
+    buttons: list[list[InlineKeyboardButton]] = []
+
+    if not got_free_tokens:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Токены за подписку",
+                    callback_data=GetTokensForSubscriptionCallback().pack()
+                )
+            ]
+        )
+
+    buttons.append(
+        [
+            InlineKeyboardButton(
+                text="Реферальная система",
+                callback_data=ReferralsMenuCallback().pack()
+            )
+        ]
+    )
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=buttons
+    )
+
+
+def get_tokens_for_subscription_channel_list(
+        channels_username_check: list[tuple[str, str]]
+) -> InlineKeyboardMarkup:
+    buttons: list[list[InlineKeyboardButton]] = []
+    for i, channel_info in enumerate(channels_username_check, start=1):
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text=f"{i} Канал {"✅" if channel_info[1] else "❌"}",
+                    url=f"https://t.me/{channel_info[0]}"
+                )
+            ]
+        )
+    buttons.append(
+        [
+            InlineKeyboardButton(
+                text=f"Проверить подписки",
+                callback_data=GetTokensForSubscriptionCallback().pack()
+            )
+        ]
+    )
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=buttons
+    )
+
+
+def referrals_menu_keyboard(
+        url: str
+):
+
+    request_chat = KeyboardButtonRequestChat(
+        request_id=1,
+        chat_is_channel=False,  # Только private/группы (не каналы) — для недавних диалогов
+        chat_is_forum=False,  # Исключаем форумы
+    )
+    PREFILLED_TEXT = "\n\nПривет! Рекомендую тебе бота, который подскажет тебе за лекарства, которые ты принимаешь!"
+    DEEP_LINK = f"https://t.me/share/url?url={url}&text={PREFILLED_TEXT}"
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="Поделиться с друзьями",
+                    url=DEEP_LINK,
+                    request_chat=request_chat
+                )
+            ]
+        ]
     )

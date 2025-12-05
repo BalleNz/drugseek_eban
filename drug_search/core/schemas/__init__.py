@@ -35,6 +35,7 @@ __all__ = [
     'DrugExistingResponse',
     'DrugCombinationSchema',
     'PubmedResearchSchema',
+    'ReferralSchema',
     # [ User ]
     'UserSchema',
     'UserTelegramDataSchema',
@@ -50,6 +51,7 @@ __all__ = [
     'MailingRequest',
     'ClearResearchesRequest',
     'QuestionRequest',
+    'NewReferralsRequest',
     # [ API Responses ]
     'SelectActionResponse',
     'UpdateDrugResponse',

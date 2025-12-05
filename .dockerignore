@@ -2,6 +2,7 @@
 __pycache__
 .git
 .env
+.env_prod
 venv/
 .venv
 .idea/

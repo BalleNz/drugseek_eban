@@ -55,8 +55,6 @@ class Config(BaseSettings):
     # AUTH ENDPOINT
     ACCESS_TOKEN_ENDPOINT: str = "v1/auth/"
 
-
-
     def __init__(self, **data):
         super().__init__(**data)
 

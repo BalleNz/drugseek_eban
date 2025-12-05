@@ -1,11 +1,13 @@
 import datetime
 import logging
 
-from aiogram import Router, F
+from aiogram import Router
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, InlineKeyboardMarkup
+from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message
 
-from drug_search.bot.keyboards.callbacks import BuySubscriptionCallback, BuyTokensCallback, BuySubscriptionChosenTypeCallback
+from drug_search.bot.keyboards.callbacks import BuySubscriptionCallback, BuyTokensCallback, \
+    BuySubscriptionChosenTypeCallback
 from drug_search.bot.keyboards.callbacks import BuyTokensConfirmationCallback, BuySubscriptionConfirmationCallback
 from drug_search.bot.keyboards.keyboard_markups import get_tokens_packages_to_buy_keyboard, get_url_to_buy_keyboard, \
     get_subscription_packages_types_keyboard, get_subscription_packages_keyboard
@@ -18,28 +20,48 @@ router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
 
 
-@router.callback_query(BuyTokensCallback.filter())
 async def buy_tokens(
-        callback_query: CallbackQuery,
-        state: FSMContext,  # noqa
+        query: CallbackQuery | Message,
 ):
     """Описание пакетов токенов"""
-    await callback_query.answer()
-
     text = MessageText.TOKENS_BUY
     keyboard = get_tokens_packages_to_buy_keyboard()
 
-    await callback_query.message.edit_text(
-        text=text,
-        reply_markup=keyboard
-    )
+    if type(query) is CallbackQuery:
+        await query.message.edit_text(
+            text=text,
+            reply_markup=keyboard
+        )
+    else:
+        await query.answer(
+            text=text,
+            reply_markup=keyboard
+        )
+
+
+@router.callback_query(BuyTokensCallback.filter())
+async def buy_tokens_from_callback(
+        callback_query: CallbackQuery,
+        state: FSMContext,  # noqa
+):
+    await callback_query.answer()
+
+    await buy_tokens(callback_query)
+
+
+@router.message(Command("tokens"))
+async def buy_tokens_from_command(
+        message: Message,
+        state: FSMContext,  # noqa
+):
+    await buy_tokens(message)
 
 
 @router.callback_query(BuyTokensConfirmationCallback.filter())
 async def buy_tokens_conf(
         callback_query: CallbackQuery,
         callback_data: BuyTokensConfirmationCallback,
-        state: FSMContext,
+        state: FSMContext,  # noqa
 ):
     """Описание пакетов токенов"""
     await callback_query.answer()
@@ -65,8 +87,40 @@ async def buy_tokens_conf(
 
 # [ SUBSCRIPTION PACKAGES ]
 
-@router.callback_query(BuySubscriptionCallback.filter())
 async def buy_subscription_choose_type(
+        query: CallbackQuery | Message,
+        state: FSMContext,  # noqa
+        cache_service: CacheService,
+        access_token: str
+):
+    user: UserSchema = await cache_service.get_user_profile(
+        access_token,
+        str(query.from_user.id)
+    )
+
+    text = MessageText.SUBSCRIPTION_BUY_CHOOSE_TYPE
+
+    keyboard: InlineKeyboardMarkup = get_subscription_packages_types_keyboard(user.subscription_type)
+
+    if type(query) is CallbackQuery:
+        await query.message.edit_text(
+            text=text,
+            reply_markup=keyboard
+        )
+    else:
+        if user.subscription_type == SUBSCRIPTION_TYPES.PREMIUM:
+            await query.answer(
+                text="У вас премиум подписка!"
+            )
+        else:
+            await query.answer(
+                text=text,
+                reply_markup=keyboard
+            )
+
+
+@router.callback_query(BuySubscriptionCallback.filter())
+async def buy_subscription_choose_type_from_callback(
         callback_query: CallbackQuery,
         state: FSMContext,  # noqa
         cache_service: CacheService,
@@ -74,18 +128,26 @@ async def buy_subscription_choose_type(
 ):
     await callback_query.answer()
 
-    user: UserSchema = await cache_service.get_user_profile(
-        access_token,
-        str(callback_query.from_user.id)
+    await buy_subscription_choose_type(
+        callback_query,
+        state,
+        cache_service,
+        access_token
     )
 
-    text = MessageText.SUBSCRIPTION_BUY_CHOOSE_TYPE
 
-    keyboard: InlineKeyboardMarkup = get_subscription_packages_types_keyboard(user.subscription_type)
-
-    await callback_query.message.edit_text(
-        text=text,
-        reply_markup=keyboard
+@router.message(Command("subscription"))
+async def buy_subscription_choose_type_from_command(
+        message: Message,
+        state: FSMContext,  # noqa
+        cache_service: CacheService,
+        access_token: str
+):
+    await buy_subscription_choose_type(
+        message,
+        state,
+        cache_service,
+        access_token
     )
 
 

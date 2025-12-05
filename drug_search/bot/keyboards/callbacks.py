@@ -73,7 +73,6 @@ class BackToUserProfileCallback(CallbackData, prefix="back_to_profile"):
 
 
 # [ PAYMENT ]
-
 class BuySubscriptionCallback(CallbackData, prefix="buy_subscription"):
     """Клик на 'Купить подписку' | 'Улучшить подписку' из Профиля"""
     pass
@@ -104,7 +103,15 @@ class BuyTokensConfirmationCallback(CallbackData, prefix="buy_tokens_conf"):
     token_package_key: str
 
 
-# [ HELP ]
+# [ REFERRALS ]
+class GetTokensForSubscriptionCallback(CallbackData, prefix="get_tokens_for_subscription"):
+    pass
 
+
+class ReferralsMenuCallback(CallbackData, prefix="referrals_menu"):
+    pass
+
+
+# [ HELP ]
 class HelpSectionCallback(CallbackData, prefix="help"):
     mode: HelpSectionMode

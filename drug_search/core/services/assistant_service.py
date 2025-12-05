@@ -248,9 +248,15 @@ class AssistantService:
 
         async def answer_to_question(self, question: str, simple_mode: bool = False) -> QuestionAssistantResponse:
             """Отвечает на вопрос пользователя и дает ему список препаратов для его решения"""
+            prompt = Prompts.ANSWER_TO_QUESTION
+            if simple_mode:
+                prompt += Prompts.ANSWER_TO_QUESTION_SIMPLE_PREFIX
+            else:
+                prompt += Prompts.ANSWER_TO_QUESTION_COMPLEX_PREFIX
+
             return await self.assistant_service.get_response(
                 input_query=question,
-                prompt=Prompts.ANSWER_TO_QUESTION if not simple_mode else Prompts.ANSWER_TO_QUESTION_SIMPLE_PREFIX + Prompts.ANSWER_TO_QUESTION,
+                prompt=prompt,
                 pydantic_model=QuestionAssistantResponse,
                 # max_completion_tokens=600
             )

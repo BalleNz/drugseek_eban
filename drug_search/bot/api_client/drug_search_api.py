@@ -7,7 +7,7 @@ from drug_search.core.schemas import (UserTelegramDataSchema, UserSchema, DrugEx
                                       DrugSchema, QuestionDrugsAssistantResponse, SelectActionResponse,
                                       QuestionDrugsRequest, AddTokensRequest,
                                       BuyDrugRequest, BuyDrugResponse, UpdateDrugResponse, MailingRequest,
-                                      AllowedDrugsInfoSchema)
+                                      AllowedDrugsInfoSchema, NewReferralsRequest)
 
 
 class DrugSearchAPIClient(BaseHttpClient):
@@ -229,12 +229,12 @@ class DrugSearchAPIClient(BaseHttpClient):
     ):
         return await self._request(
             HTTPMethod.PUT,
-            endpoint="referrals/new_referral",
+            endpoint="/v1/referrals/new_referral",
             access_token=access_token,
-            request_body={
-                'referrer_telegram_id': referrer_telegram_id,
-                "referral_telegram_id": referral_telegram_id
-            }
+            request_body=NewReferralsRequest(
+                referrer_telegram_id=referrer_telegram_id,
+                referral_telegram_id=referral_telegram_id,
+            )
         )
 
     async def get_free_tokens(
@@ -243,6 +243,6 @@ class DrugSearchAPIClient(BaseHttpClient):
     ):
         return await self._request(
             HTTPMethod.PUT,
-            endpoint="referrals/free_tokens",
+            endpoint="/v1/referrals/free_tokens",
             access_token=access_token
         )

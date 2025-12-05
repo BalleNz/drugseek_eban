@@ -17,7 +17,7 @@ def get_ref_level(referrals_count: int):
 def generate_referral_url(user_id: str, bot_username: str):
     # [ encode ]
     token_bytes = user_id.encode()
-    token = base64.b64encode(token_bytes).decode()[:10]
+    token = base64.b64encode(token_bytes).decode()
 
     link = f"https://t.me/{bot_username}?start=ref_{token}"
 

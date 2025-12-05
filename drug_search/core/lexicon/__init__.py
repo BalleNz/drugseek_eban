@@ -34,5 +34,6 @@ __all__ = [
     'NEW_DRUG_COST',
     'QUESTION_COST',
     'REFERRALS_REWARDS',
-    'BOT_USERNAME'
+    'BOT_USERNAME',
+    'REFERRALS_LEVELS'
 ]

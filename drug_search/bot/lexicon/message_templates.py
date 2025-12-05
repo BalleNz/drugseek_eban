@@ -170,8 +170,10 @@ class MessageTemplates:
 
     # [ REFERRALS ]
     REFERRALS_MENU = (
-        "🧚‍♀️<b>Реферальная система</b>\n\n"
-        "Твой уровень: {ref_level}\n\n"
-        "За следующий уровень ты получишь: {ref_tokens_next_level}\n\n"
-        "Всего зашедших по твоей ссылке: {ref_members_count}"
+        "🧚‍♀️ <b>Реферальная система</b>\n\n"
+        "<blockquote>"
+        "Твоя ссылка:\n"
+        "— {url}"
+        "</blockquote>\n\n"
+        "До получения {ref_tokens_next_level_text} осталось пригласить {referrals_count_next_text}."
     )

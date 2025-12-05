@@ -11,11 +11,12 @@ from aiogram.fsm.storage.redis import RedisStorage
 from drug_search.bot.handlers.actions import router as drug_actions_router
 from drug_search.bot.handlers.admin_tools import router as admin_router
 from drug_search.bot.handlers.database import router as database_router
-from drug_search.bot.handlers.main import router as actions_router
+from drug_search.bot.handlers.main import router as main_router
 from drug_search.bot.handlers.profile import router as profile_router
 from drug_search.bot.handlers.start import router as start_router
 from drug_search.bot.handlers.help import router as help_router
 from drug_search.bot.handlers.yookassa import router as yookassa_router
+from drug_search.bot.handlers.referrals import router as referrals_router
 from drug_search.bot.middlewares.depends_injectors import DependencyInjectionMiddleware
 from drug_search.bot.middlewares.limits import MessageLimitsMiddleware
 from drug_search.config import config
@@ -35,9 +36,10 @@ def setup_auth(dp: Dispatcher):
         admin_router,
         database_router,
         profile_router,
-        actions_router,
+        referrals_router,
+        main_router,
         drug_actions_router,
-        yookassa_router
+        yookassa_router,
     ]:
         dp.include_router(router)
 

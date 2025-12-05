@@ -66,11 +66,11 @@ REFERRALS_REWARDS = {
 }
 
 REFERRALS_LEVELS = {
-    0: 1,  # level: m. count
+    0: 1,  # level: referrals need
     1: 2,
     2: 5,
-    3: 8,
-    4: 12,
+    3: 10,
+    4: 15,
     5: 20,
     6: 30,
     7: 40,
@@ -88,3 +88,5 @@ REFERRALS_LEVELS = {
     19: 10000,
     20: 100000,
 }
+
+FREE_TOKENS_AMOUNT = 7

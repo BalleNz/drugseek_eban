@@ -66,7 +66,7 @@ class User(IDMixin, TimestampsMixin):
     # [ REFERRALS ]
     referred_by_telegram_id: Mapped[Optional[str]] = mapped_column(
         String,
-        ForeignKey("users.telegram_id"),
+        ForeignKey("users.telegram_id", ondelete="SET NULL"),
         nullable=True,
         comment="Telegram ID пользователя, который пригласил"
     )

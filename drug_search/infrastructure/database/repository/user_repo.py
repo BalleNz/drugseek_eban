@@ -13,6 +13,8 @@ from drug_search.core.schemas import (UserTelegramDataSchema, UserSchema, DrugBr
                                       AllowedDrugsInfoSchema, ReferralSchema)
 from drug_search.infrastructure.database.models.user import AllowedDrugs, User, UserRequestLog, Referral
 from drug_search.infrastructure.database.repository.base_repo import BaseRepository
+from drug_search.core.utils.referrals_funcs import get_ref_level
+from drug_search.core.lexicon import REFERRALS_REWARDS
 
 logger = logging.getLogger(__name__)
 
@@ -284,13 +286,24 @@ class UserRepository(BaseRepository):
         referral_telegram_id = referral_user.telegram_id
 
         # не существует ли уже такая связь
-        if self.check_referral_exists(referral_telegram_id):
+        if not self.check_referral_exists(referral_telegram_id):
             raise ValueError(f"Реферал с telegram_id {referral_telegram_id} уже существует")
 
         if referrer_telegram_id == referral_telegram_id:
             raise ValueError("Пользователь не может пригласить самого себя")
 
-        await self.update(referrer_user.id, referrals_count=referral_user.referrals_count+1)
+        await self.update(referrer_user.id, referrals_count=referrer_user.referrals_count+1)
+
+        # [ check level ]
+        ref_count: int = referrer_user.referrals_count
+        ref_level_before: int = get_ref_level(ref_count)
+
+        ref_level_after: int = get_ref_level(ref_count+1)
+        if ref_level_before < ref_level_after:
+            new_tokens_count = REFERRALS_REWARDS[ref_level_after] + referrer_user.additional_tokens
+            await self.update(referrer_user.id, additional_tokens=new_tokens_count)
+
+        await self.update(referral_user.id, referred_by_telegram_id=referrer_telegram_id)
 
         referral = Referral(
             referrer_telegram_id=referrer_telegram_id,

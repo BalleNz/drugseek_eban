@@ -193,7 +193,7 @@ class MessageText:
 
     # [ REFERRALS ]
     GET_FREE_TOKENS_MENU = (
-        "<b>🧚‍♀️ Здесь ты можешь получить токены бесплатно!</b>"
+        "🧚‍♀️ Здесь ты можешь получить токены бесплатно!"
     )
 
     REFERRALS_MENU = MessageTemplates.REFERRALS_MENU

@@ -30,13 +30,13 @@ def setup_auth(dp: Dispatcher):
     for router in [
         start_router,
         help_router,
+        yookassa_router,
         admin_router,
         database_router,
         profile_router,
         referrals_router,
         main_router,
         drug_actions_router,
-        yookassa_router,
     ]:
         dp.include_router(router)
 

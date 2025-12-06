@@ -38,20 +38,11 @@ class MessageText:
         )
         TOKENS = (
             f"🔎 <b>{ButtonText.HELP_TOKENS}</b>\n\n"
-            "<b>Как расходуются токены?</b>\n"
-            "<blockquote>"
-            f"На каждый вопрос / список препаратов тратится: {QUESTION_COST} токен\n"
-            f"Для записи препарата в базу тратится: {NEW_DRUG_COST} токена"
-            "</blockquote>\n\n"
-            "<b>Вам даются токены в зависимости от вашей подписки:</b>\n"
-            "<blockquote>"
-            f"<b>💎️ Премиум:</b>\n"
-            f"       — {TOKENS_LIMIT.PREMIUM_TOKENS_LIMIT.value} токенов в день\n"
-            f"<b>⚡ Лайт:</b>\n"
-            f"       — {TOKENS_LIMIT.LITE_TOKENS_LIMIT.value} токенов в неделю\n"
-            f"<b>❌ Без подписки:</b>\n"
-            f"       — {TOKENS_LIMIT.DEFAULT_TOKENS_LIMIT.value} токенов в неделю"
-            "</blockquote>\n\n"
+            "<b>Зачем нужны токены:</b>\n"
+            "— Токены нужны, чтобы делать запросы в бота.\n\n"
+            "<b>Как тратятся токены:</b>\n"
+            f"На каждый вопрос тратится: {QUESTION_COST} токен\n"
+            f"На запись препарата в базу: {NEW_DRUG_COST} токена\n\n"
         )
         SUBSCRIPTION = (
             f"🔎 <b>{ButtonText.HELP_SUBSCRIPTION}</b>\n\n"
@@ -111,11 +102,9 @@ class MessageText:
 
         TOKENS_FREE = (
             "🔎 <b>Как получать токены?</b>\n\n"
-            "<blockquote>"
-            f"<b>Реферальная система</b> /referrals\n\n"
-            f"<b>Токены за подписку на каналы</b> /free_tokens\n\n"
-            f"<b>Купить подписку</b> /subscription"
-            f"</blockquote>"
+            f"<b>Реферальная система</b> \n/referrals\n\n"
+            f"<b>Токены за подписку на каналы</b>\n /free_tokens\n\n"
+            f"<b>Купить подписку</b>\n /subscription"
         )
 
         help_format_by_mode = {

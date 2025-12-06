@@ -108,6 +108,7 @@ class User(IDMixin, TimestampsMixin):
             got_free_tokens=self.got_free_tokens,
             got_free_tokens_for_subscription=self.got_free_tokens_for_subscription,
             referrals_count=self.referrals_count,
+            referred_by_telegram_id=self.referred_by_telegram_id,
 
             description=self.description,
 

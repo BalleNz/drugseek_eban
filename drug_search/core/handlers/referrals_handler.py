@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
@@ -29,13 +30,14 @@ async def new_referral(
     referrer_user: UserSchema = await user_service.repo.get_user_from_telegram_id(referrer_telegram_id)
     referral_user: UserSchema = await user_service.repo.get_user_from_telegram_id(referral_telegram_id)
 
-    await user_service.repo.create_referral(
-        referrer_user=referrer_user,
-        referral_user=referral_user
-    )
-    logger.info(f"Новый реферал для юзера {referrer_user.username}!")
+    if datetime.now() - referral_user.created_at < timedelta(minutes=1) and not referral_user.referred_by_telegram_id:
+        await user_service.repo.create_referral(
+            referrer_user=referrer_user,
+            referral_user=referral_user
+        )
+        logger.info(f"Новый реферал для юзера {referrer_user.username}!")
 
-    await cache_service.redis_service.invalidate_user_data(referrer_telegram_id)
+        await cache_service.redis_service.invalidate_user_data(referrer_telegram_id)
 
 
 @referrals_router.put(path="/free_tokens")

@@ -34,7 +34,7 @@ class UserSchema(BaseModel):
     got_free_tokens: bool = Field(..., description="получены бесплатные токены")
     got_free_tokens_for_subscription: bool = Field(..., description="получены токены за подписки")
 
-    referred_by_telegram_id: str = Field(..., description="кто пригласил")
+    referred_by_telegram_id: str | None = Field(..., description="кто пригласил")
     referrals_count: int = Field(..., description="количество рефералов")
 
     description: Optional[str] = Field(None, description="описание пользователя")

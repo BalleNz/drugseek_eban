@@ -10,11 +10,12 @@ from drug_search.bot.keyboards.callbacks import (AssistantQuestionContinueCallba
                                                  BuySubscriptionCallback, BuyTokensCallback,
                                                  BuyTokensConfirmationCallback, BuySubscriptionChosenTypeCallback,
                                                  DrugDescribeResearchesCallback, BuySubscriptionConfirmationCallback,
-                                                 SimpleModeProfileCallback, GetFreeTokensCallback,
-                                                 GetTokensForSubscriptionCallback, ReferralsMenuCallback)
+                                                 SimpleModeProfileCallback, GetTokensForSubscriptionCallback,
+                                                 ReferralsMenuCallback)
 from drug_search.bot.lexicon.enums import ModeTypes, HelpSectionMode
 from drug_search.bot.lexicon.keyboard_words import ButtonText
-from drug_search.core.lexicon import ARROW_TYPES, TokenPackage, SubscriptionPackage, SUBSCRIPTION_TYPES
+from drug_search.core.lexicon import (ARROW_TYPES, TokenPackage, SubscriptionPackage,
+                                      SUBSCRIPTION_TYPES)
 from drug_search.core.lexicon.enums import DrugMenu
 from drug_search.core.schemas import DrugBrieflySchema, DrugSchema, UserSchema, DrugResearchSchema
 from drug_search.core.utils.funcs import may_update_drug
@@ -634,23 +635,16 @@ def get_free_tokens_menu_keyboard(
     — Токены бесплатно (единоразово)
     — Токены за подписку
     """
-    buttons: list[list[InlineKeyboardButton]] = [
-        [
-            InlineKeyboardButton(
-                text="Токены за подписку",
-                callback_data=GetTokensForSubscriptionCallback().pack()
-            )
-        ]
-    ]
+    buttons: list[list[InlineKeyboardButton]] = []
 
-    if got_free_tokens:
+    if not got_free_tokens:
         buttons.append(
             [
                 InlineKeyboardButton(
-                    text="Получить 4 токена",
-                    callback_data=GetFreeTokensCallback().pack()
+                    text="Токены за подписку",
+                    callback_data=GetTokensForSubscriptionCallback().pack()
                 )
-            ],
+            ]
         )
 
     buttons.append(
@@ -658,6 +652,33 @@ def get_free_tokens_menu_keyboard(
             InlineKeyboardButton(
                 text="Реферальная система",
                 callback_data=ReferralsMenuCallback().pack()
+            )
+        ]
+    )
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=buttons
+    )
+
+
+def get_tokens_for_subscription_channel_list(
+        channels_username_check: list[tuple[str, str]]
+) -> InlineKeyboardMarkup:
+    buttons: list[list[InlineKeyboardButton]] = []
+    for i, channel_info in enumerate(channels_username_check, start=1):
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text=f"{i} Канал {"✅" if channel_info[1] else "❌"}",
+                    url=f"https://t.me/{channel_info[0]}"
+                )
+            ]
+        )
+    buttons.append(
+        [
+            InlineKeyboardButton(
+                text=f"Проверить подписки",
+                callback_data=GetTokensForSubscriptionCallback().pack()
             )
         ]
     )

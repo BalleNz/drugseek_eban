@@ -89,4 +89,11 @@ REFERRALS_LEVELS = {
     20: 100000,
 }
 
-FREE_TOKENS_AMOUNT = 7
+
+# [ BONUSES ]
+CHANNELS_USERNAME_FREE_TOKENS = (
+    "drugseeks",
+    "zmtlk",
+)
+
+FREE_TOKENS_AMOUNT = 10  # за подписки

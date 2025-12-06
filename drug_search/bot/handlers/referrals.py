@@ -5,13 +5,16 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, LinkPreviewOptions
 
-from drug_search.bot.keyboards.callbacks import ReferralsMenuCallback
-from drug_search.bot.keyboards.keyboard_markups import get_free_tokens_menu_keyboard, referrals_menu_keyboard
+from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
+from drug_search.bot.bot_instance import bot
+from drug_search.bot.keyboards.callbacks import ReferralsMenuCallback, GetTokensForSubscriptionCallback
+from drug_search.bot.keyboards.keyboard_markups import get_free_tokens_menu_keyboard, referrals_menu_keyboard, \
+    get_tokens_for_subscription_channel_list
 from drug_search.bot.lexicon.message_text import MessageText
-from drug_search.core.lexicon import REFERRALS_REWARDS, BOT_USERNAME, REFERRALS_LEVELS
+from drug_search.core.lexicon import REFERRALS_REWARDS, BOT_USERNAME, REFERRALS_LEVELS, CHANNELS_USERNAME_FREE_TOKENS
 from drug_search.core.schemas import UserSchema
 from drug_search.core.services.cache_logic.cache_service import CacheService
-from drug_search.core.utils.referrals_funcs import get_ref_level, generate_referral_url
+from drug_search.core.utils.referrals_funcs import get_ref_level, generate_referral_url, is_user_subscribed
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
@@ -34,6 +37,41 @@ async def free_tokens(
         text=MessageText.GET_FREE_TOKENS_MENU,
         reply_markup=keyboard
     )
+
+
+@router.callback_query(GetTokensForSubscriptionCallback.filter())
+async def tokens_for_subscription(
+        callback_query: CallbackQuery,
+        state: FSMContext,  # noqa
+        api_client: DrugSearchAPIClient,
+        access_token: str
+):
+    """токены за подписку"""
+    all_subscribed = True
+    channels_username_check = list(tuple())
+    for channel_username in CHANNELS_USERNAME_FREE_TOKENS:
+        is_subscribed: bool = await is_user_subscribed(
+            callback_query.from_user.id,
+            channel_username,
+            bot=bot
+        )
+
+        if not is_subscribed:
+            all_subscribed = False
+
+        channels_username_check.append((channel_username, is_subscribed))
+
+    if all_subscribed:  # если подписки есть
+        await api_client.get_free_tokens(access_token)
+        await callback_query.message.edit_text(
+            text="<b>Вам начислены бонусные токены!</b>"
+        )
+
+    else:
+        await callback_query.message.edit_text(
+            text="🧚‍♀️ Подпишись на эти каналы, чтобы получить бонус",
+            reply_markup=get_tokens_for_subscription_channel_list(channels_username_check)
+        )
 
 
 async def referrals_menu(

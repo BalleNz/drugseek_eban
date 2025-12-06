@@ -104,17 +104,13 @@ class BuyTokensConfirmationCallback(CallbackData, prefix="buy_tokens_conf"):
 
 
 # [ REFERRALS ]
-class GetFreeTokensCallback(CallbackData, prefix="get_free_tokens"):
-    """Бесплатные токены разово"""
-    pass
-
-
 class GetTokensForSubscriptionCallback(CallbackData, prefix="get_tokens_for_subscription"):
     pass
 
 
 class ReferralsMenuCallback(CallbackData, prefix="referrals_menu"):
     pass
+
 
 # [ HELP ]
 class HelpSectionCallback(CallbackData, prefix="help"):

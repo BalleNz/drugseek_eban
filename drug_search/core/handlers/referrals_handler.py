@@ -45,9 +45,12 @@ async def get_free_tokens(
         cache_service: Annotated[CacheService, Depends(get_cache_service)],
 ):
     """Разовое получение токенов"""
+    if user.got_free_tokens:
+        return
+
     await user_service.repo.update(
         user.id,
-        got_free_tokens="true",
+        got_free_tokens=True,
         additional_tokens=user.additional_tokens+FREE_TOKENS_AMOUNT
     )
     logger.info(f"Юзер {user.telegram_id} получил доп токены")

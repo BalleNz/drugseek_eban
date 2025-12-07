@@ -386,6 +386,13 @@ class DrugRepository(BaseRepository):
                 logger.exception(f"Failed to update drug: {str(ex)}")
                 raise
 
+        async def _delete_researches(self, drug_id: uuid.UUID):
+            await self.session.execute(
+                delete(DrugResearch).where(DrugResearch.drug_id == drug_id)
+            )
+            await self.session.commit()
+            logger.info(f"Исследования для {drug_id} удалены.")
+
 
 async def get_drug_repository(
         session_generator: AsyncGenerator[AsyncSession, None] = Depends(get_async_session)

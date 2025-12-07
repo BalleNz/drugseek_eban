@@ -6,16 +6,17 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.params import Path
 
 from drug_search.core.dependencies.assistant_service_dep import get_assistant_service
-from drug_search.core.dependencies.drug_service_dep import get_drug_service_with_deps, get_drug_service
+from drug_search.core.dependencies.drug_service_dep import get_drug_service, get_drug_service_with_deps
 from drug_search.core.dependencies.task_service_dep import get_task_service
 from drug_search.core.dependencies.user_service_dep import get_user_service
 from drug_search.core.lexicon import EXIST_STATUS, UPDATE_DRUG_COST, SUBSCRIPTION_TYPES
 from drug_search.core.schemas import (UserSchema, DrugExistingResponse,
-                                      AssistantResponseDrugValidation, DrugSchema, UpdateDrugResponse, UpdateDrugStatuses)
+                                      AssistantResponseDrugValidation, DrugSchema, UpdateDrugResponse,
+                                      UpdateDrugStatuses)
 from drug_search.core.services.assistant_service import AssistantService
 from drug_search.core.services.models_service.drug_service import DrugService
-from drug_search.core.services.tasks_logic.task_service import TaskService
 from drug_search.core.services.models_service.user_service import UserService
+from drug_search.core.services.tasks_logic.task_service import TaskService
 from drug_search.core.utils.auth import get_auth_user
 from drug_search.core.utils.funcs import layout_converter
 
@@ -226,3 +227,21 @@ async def get_drug(
     """Возвращает препарат по его ID"""
     drug: DrugSchema | None = await drug_service.repo.get_with_all_relationships(drug_id)
     return drug
+
+
+@drug_router.post(path="/update_researches/{drug_id}")
+async def update_researches(
+        user: Annotated[UserSchema, Depends(get_auth_user)],
+        drug_service: Annotated[DrugService, Depends(get_drug_service_with_deps)],
+        drug_id: UUID = Path(..., description="ID препарата в формате UUID"),
+):
+    """Обновляет исследования препарата"""
+    if user.telegram_id not in ["1257313065"]:
+        raise HTTPException(status_code=401, detail="Only for admins")
+
+    drug: DrugSchema = await drug_service.repo.get(drug_id)
+
+    await drug_service._update_drug_researches_background(
+        drug_id,
+        drug.name
+    )

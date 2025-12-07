@@ -121,7 +121,7 @@ def drug_researches_keyboard(
             )
         )
 
-    total_pages = len(researches) // page_size
+    total_pages = (len(researches) // page_size) - 1
 
     buttons_arrows: list[InlineKeyboardButton] = []
 

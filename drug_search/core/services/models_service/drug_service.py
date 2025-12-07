@@ -90,6 +90,8 @@ class DrugService:
         Использует: Pubmed Service
         """
         try:
+            await self.repo.DrugCreation._delete_researches(drug_id)
+
             researches = await self.pubmed_service.get_researches_clearly(drug_name)
             await self.repo.DrugCreation.update_researches(drug_id=drug_id, researches=researches)
             logger.info(f"Исследования для препарата {drug_name} успешно обновлены")

@@ -1,4 +1,5 @@
 import logging
+import urllib.parse
 import uuid
 
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, \
@@ -16,7 +17,7 @@ from drug_search.bot.keyboards.callbacks import (AssistantQuestionContinueCallba
 from drug_search.bot.lexicon.enums import ModeTypes, HelpSectionMode
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.core.lexicon import (ARROW_TYPES, TokenPackage, SubscriptionPackage,
-                                      SUBSCRIPTION_TYPES, BOT_USERNAME)
+                                      SUBSCRIPTION_TYPES)
 from drug_search.core.lexicon.enums import DrugMenu
 from drug_search.core.schemas import DrugBrieflySchema, DrugSchema, UserSchema, DrugResearchSchema
 from drug_search.core.utils.funcs import may_update_drug
@@ -692,14 +693,13 @@ def get_tokens_for_subscription_channel_list(
 def referrals_menu_keyboard(
         url: str
 ):
-
     request_chat = KeyboardButtonRequestChat(
         request_id=1,
         chat_is_channel=False,  # Только private/группы (не каналы) — для недавних диалогов
         chat_is_forum=False,  # Исключаем форумы
     )
     PREFILLED_TEXT = "\n\nПривет! Рекомендую тебе бота, который подскажет тебе за лекарства, которые ты принимаешь!"
-    DEEP_LINK = f"https://t.me/share/url?url={url}&text={PREFILLED_TEXT}"
+    DEEP_LINK = f"https://t.me/share/url?url={url}&text={urllib.parse.quote(PREFILLED_TEXT, safe='')}"
 
     return InlineKeyboardMarkup(
         inline_keyboard=[

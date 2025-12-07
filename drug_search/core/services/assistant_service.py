@@ -193,8 +193,19 @@ class AssistantService:
 
     class PubMed:
         """Методы для работы с парсером"""
+
         def __init__(self, assistant_service):
             self.assistant_service = assistant_service
+
+        async def get_pubmed_query(self, drug_name: str) -> AssistantResponsePubmedQuery:
+            """
+            Возвращает оптимизированный поисковой запрос для Pubmed исходя из названия действующего вещества.
+            """
+            return await self.assistant_service.get_response(
+                input_query=drug_name,
+                prompt=Prompts.GET_PUBMED_QUERY,
+                pydantic_model=AssistantResponsePubmedQuery
+            )
 
         async def get_pubmed_query_dosages(self, drug_name: str) -> AssistantResponsePubmedQuery:
             """

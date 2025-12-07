@@ -323,32 +323,32 @@ class UserProfileMessageFormatter:
             # Определяем подходящую единицу времени для отображения
             if days > 0:
                 if days == 1:
-                    return f"Подписка заканчивается через 1 день."
+                    return f"Подписка заканчивается через 1 день.\n"
                 elif str(days)[-1] in ("2", "3", "4"):
-                    return f"Подписка заканчивается через {days} дня."
+                    return f"Подписка заканчивается через {days} дня.\n"
                 else:
-                    return f"Подписка заканчивается через {days} дней."
+                    return f"Подписка заканчивается через {days} дней.\n"
             elif hours > 0:
                 if hours == 1:
-                    return f"Подписка заканчивается через 1 час."
+                    return f"Подписка заканчивается через 1 час.\n"
                 elif str(hours)[-1] in ("2", "3", "4"):
-                    return f"Подписка заканчивается через {hours} часа."
+                    return f"Подписка заканчивается через {hours} часа.\n"
                 else:
-                    return f"Подписка заканчивается через {hours} часов."
+                    return f"Подписка заканчивается через {hours} часов.\n"
             elif minutes > 0:
                 if minutes == 1:
-                    return f"Подписка заканчивается через 1 минуту."
+                    return f"Подписка заканчивается через 1 минуту.\n"
                 elif str(minutes)[-1] in ("2", "3", "4"):
-                    return f"Подписка заканчивается через {minutes} минуты."
+                    return f"Подписка заканчивается через {minutes} минуты.\n"
                 else:
-                    return f"Подписка заканчивается через {minutes} минут."
+                    return f"Подписка заканчивается через {minutes} минут.\n"
             else:
                 if seconds == 1:
-                    return f"Подписка заканчивается через 1 секунду."
+                    return f"Подписка заканчивается через 1 секунду.\n"
                 elif str(seconds)[-1] in ("2", "3", "4"):
-                    return f"Подписка заканчивается через {seconds} секунды."
+                    return f"Подписка заканчивается через {seconds} секунды.\n"
                 else:
-                    return f"Подписка заканчивается через {seconds} секунд."
+                    return f"Подписка заканчивается через {seconds} секунд.\n"
 
         refresh_section: str = get_time_when_refresh_tokens_text(
             user.tokens_last_refresh,

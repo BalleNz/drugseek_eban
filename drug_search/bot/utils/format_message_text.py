@@ -390,7 +390,7 @@ class UserProfileMessageFormatter:
             case SUBSCRIPTION_TYPES.LITE:
                 profile_icon = "🧢"
             case SUBSCRIPTION_TYPES.PREMIUM:
-                profile_icon = "👑"
+                profile_icon = "💎"
 
         user_description: str = '.\n\n'.join(user.description.split(". ")) if user.description else ""
 

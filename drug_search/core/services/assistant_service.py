@@ -171,7 +171,6 @@ class AssistantService:
             input_query=input_query,
             prompt=Prompts.GET_DRUG_RESEARCHES,
             pydantic_model=DrugResearchesAssistantResponse,
-            max_completion_tokens=4000,
         )
 
     async def get_user_description(self, user_name: str, user_drugs_name: str) -> AssistantResponseUserDescription:

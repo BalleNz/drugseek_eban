@@ -70,7 +70,7 @@ async def buy_tokens_conf(
 
     text = MessageText.TOKENS_CONFIRMATION.format(
         package_name=tokens_package.name,
-        package_tokens=tokens_package.amount,
+        package_price=tokens_package.price,
     )
 
     url = ...

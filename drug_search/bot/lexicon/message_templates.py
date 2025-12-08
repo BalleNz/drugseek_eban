@@ -60,10 +60,10 @@ class MessageTemplates:
 
     USER_PROFILE: str = (
         "<b>{profile_icon} У тебя — {profile_name}</b>\n\n"
+        "<i>{subscription_end_at}</i>"
         "<b>Ваши токены:</b> {allowed_tokens}  {refresh_section}\n\n"
         "<i>{additional_tokens_text}</i>"
         "{additional_tokens_quote}"
-        "<i>{subscription_end_at}</i>"
         "{simple_mode_text}"
     )
 
@@ -148,7 +148,7 @@ class MessageTemplates:
     TOKENS_BUY_CONFIRMATION = (
         "💳 <b>Покупка токенов</b>\n\n"
         "Выбранный пак: \n"
-        "— {package_name} ({package_tokens} токенов)"
+        "— {package_name} ({package_price} рублей)"
     )
 
     SUBSCRIPTION_BUY_CONFIRMATION = (

@@ -241,7 +241,11 @@ async def update_researches(
 
     drug: DrugSchema = await drug_service.repo.get(drug_id)
 
-    await drug_service._update_drug_researches_background(
-        drug_id,
-        drug.name
-    )
+    try:
+        await drug_service._update_drug_researches_background(
+            drug_id,
+            drug.name,
+            user.telegram_id
+        )
+    except:
+        raise HTTPException(404, detail="хуйня какая-то произошла")

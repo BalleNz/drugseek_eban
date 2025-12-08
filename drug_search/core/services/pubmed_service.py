@@ -100,6 +100,9 @@ class PubmedService:
             if not self._is_valid_article(pubmed_article):
                 continue
 
+            if pubmed_article.doi in (research.doi for research in researches):
+                continue
+
             researches.append(
                 PubmedResearchSchema(
                     title=pubmed_article.title,

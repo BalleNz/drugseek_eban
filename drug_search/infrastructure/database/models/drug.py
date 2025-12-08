@@ -336,10 +336,6 @@ class DrugDosage(IDMixin):
 
     notes: Mapped[Optional[str]] = mapped_column(Text)
 
-    __table_args__ = (
-        UniqueConstraint('drug_id', 'route', 'method', name='uq_drug_dosage'),
-    )
-
     @property
     def schema_class(cls) -> Type[S]:
         return DrugDosageSchema

@@ -31,7 +31,10 @@ async def drug_create(
         user_service: UserService = await container.get_user_service()
         redis_service: RedisService = await container.redis_service
 
-        drug: DrugSchema = await drug_service.update_or_create_drug(drug_name)
+        drug: DrugSchema = await drug_service.update_or_create_drug(
+            drug_name,
+            user_telegram_id=user_telegram_id
+        )
         logger.info(f"Successfully created drug '{drug_name}' with ID: {drug.id}")
 
         await telegram_service.send_drug_created_notification(
@@ -60,7 +63,11 @@ async def drug_update(
 
         drug: DrugSchema = await drug_service.repo.get(drug_id)
 
-        drug = await drug_service.update_or_create_drug(drug_name=drug.name, drug_id=drug_id)
+        drug = await drug_service.update_or_create_drug(
+            drug_name=drug.name,
+            user_telegram_id=user_telegram_id,
+            drug_id=drug_id
+        )
 
         # [ invalidate cache ]
         await redis_service.invalidate_drug(drug_id)

@@ -227,7 +227,7 @@ class DrugRepository(BaseRepository):
         ) -> None:
             try:
                 drug.name = assistant_response.drug_name
-                drug.name_ru = assistant_response.drug_name_ru
+                drug.name_ru = assistant_response.drug_name_ru.capitalize()
                 drug.latin_name = assistant_response.latin_name
                 drug.description = assistant_response.description
                 drug.classification = assistant_response.classification
@@ -254,6 +254,8 @@ class DrugRepository(BaseRepository):
                 drug: Drug, assistant_response: DrugDosagesAssistantResponse
         ) -> None:
             try:
+                for line in assistant_response.dosages:
+                    print(line.json())
                 drug.dosages = [
                     DrugDosage(
                         route=dosage_response.route,

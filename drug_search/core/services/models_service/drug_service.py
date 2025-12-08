@@ -3,7 +3,8 @@ import logging
 import uuid
 from typing import Optional
 
-from drug_search.core.schemas import DrugSchema, DrugResearchesAssistantResponse
+from drug_search.core.dependencies.telegram_service_dep import get_telegram_service
+from drug_search.core.schemas import DrugSchema
 from drug_search.core.services.assistant_service import AssistantService
 from drug_search.core.services.pubmed_service import PubmedService
 from drug_search.infrastructure.database.repository.drug_repo import DrugRepository
@@ -33,7 +34,8 @@ class DrugService:
     async def update_or_create_drug(
             self,
             drug_name: str,
-            drug_id: uuid.UUID | None = None
+            user_telegram_id: str,
+            drug_id: uuid.UUID | None = None,
     ) -> DrugSchema:
         """
         Обновляет или создает препарат, кроме исследований.
@@ -75,7 +77,11 @@ class DrugService:
             # [ ФОНОВОЕ ОБНОВЛЕНИЕ ТАБЛИЦЫ ИССЛЕДОВАНИЙ ]
             if self.pubmed_service:
                 asyncio.create_task(
-                    self._update_drug_researches_background(drug.id, drug_name)
+                    self._update_drug_researches_background(
+                        drug.id,
+                        drug_name,
+                        user_telegram_id
+                    )
                 )
 
             return drug
@@ -84,7 +90,12 @@ class DrugService:
             logger.error(f"Ошибка при обновлении препарата.")
             raise ex
 
-    async def _update_drug_researches_background(self, drug_id: uuid.UUID, drug_name: str) -> None:
+    async def _update_drug_researches_background(
+            self,
+            drug_id: uuid.UUID,
+            drug_name: str,
+            user_telegram_id: str
+    ) -> None:
         """Обновляет таблицу с исследованиями препарата.
 
         Использует: Pubmed Service
@@ -94,6 +105,14 @@ class DrugService:
 
             researches = await self.pubmed_service.get_researches_clearly(drug_name)
             await self.repo.DrugCreation.update_researches(drug_id=drug_id, researches=researches)
+
+            # [ send notification to user ]
+            telegram_service = await get_telegram_service()
+            await telegram_service.send_message(
+                user_telegram_id,
+                f"Найдены исследования для препарата {drug_name}!"
+            )
+
             logger.info(f"Исследования для препарата {drug_name} успешно обновлены")
         except Exception as ex:
             logger.error(f"Ошибка при фоновом обновлении исследований для {drug_name}: {ex}")

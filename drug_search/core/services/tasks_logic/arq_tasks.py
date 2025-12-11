@@ -101,11 +101,15 @@ async def assistant_question(
             simple_mode
         )
 
-        await telegram_service.edit_message_with_assistant_answer(
-            question_response=question_response,
-            user_telegram_id=user_telegram_id,
-            old_message_id=old_message_id,
-        )
+        try:
+            await telegram_service.edit_message_with_assistant_answer(
+                question_response=question_response,
+                user_telegram_id=user_telegram_id,
+                old_message_id=old_message_id,
+            )
+        except ValueError:
+            logger.info(f"Ошибка парсинга сообщения:\n {question_response.answer}")
+            raise
 
 
 async def assistant_drugs_question(

@@ -583,8 +583,8 @@ def get_help_keyboard(
         ],
         HelpSectionMode.QUERIES: [
             (ButtonText.HELP_QUERIES_DRUG_SEARCH, HelpSectionMode.QUERIES_DRUG_SEARCH),
-            (ButtonText.HELP_QUERIES_PHARMA, HelpSectionMode.QUERIES_PHARMA_QUESTIONS),
             (ButtonText.HELP_QUERIES_QUESTIONS, HelpSectionMode.QUERIES_QUESTIONS),
+            (ButtonText.HELP_QUERIES_PHARMA, HelpSectionMode.QUERIES_PHARMA_QUESTIONS),
         ],
         HelpSectionMode.TOKENS: [
             (ButtonText.HELP_TOKENS_FREE, HelpSectionMode.TOKENS_FREE)

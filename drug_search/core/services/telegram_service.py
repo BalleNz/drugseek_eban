@@ -1,4 +1,5 @@
 import json
+import logging
 
 import aiohttp
 from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup
@@ -12,6 +13,9 @@ from drug_search.core.lexicon.enums import DrugMenu
 from drug_search.core.lexicon.message_templates import MessageTemplates
 from drug_search.core.schemas import DrugSchema, QuestionDrugsAssistantResponse, QuestionAssistantResponse
 from drug_search.core.utils.formatter import ARQMessageTemplates
+from drug_search.core.utils.html_tags import escape_lt_gt_outside_tags_simple
+
+logger = logging.getLogger(__name__)
 
 
 class TelegramService:
@@ -154,10 +158,12 @@ class TelegramService:
         """Редактирует сообщение ответ на вопрос"""
         message_text: str = question_response.answer
 
+        logger.info(message_text)
+
         await self.edit_message(
             user_telegram_id=user_telegram_id,
             old_message_id=old_message_id,
-            message_text=message_text,
+            message_text=escape_lt_gt_outside_tags_simple(message_text),
             reply_markup=None
         )
 

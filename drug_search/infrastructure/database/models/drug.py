@@ -322,8 +322,8 @@ class DrugDosage(IDMixin):
         comment="intravenous/intramuscular/eye_drops/skin/nasal/peroral/inhalation/rectal/vaginal"
     )
 
-    per_time: Mapped[Optional[str]] = mapped_column(String(100))
-    max_day: Mapped[Optional[str]] = mapped_column(String(100))
+    per_time: Mapped[Optional[str]] = mapped_column(Text)
+    max_day: Mapped[Optional[str]] = mapped_column(Text)
 
     per_time_weight_based: Mapped[Optional[str]] = mapped_column(
         String(100),

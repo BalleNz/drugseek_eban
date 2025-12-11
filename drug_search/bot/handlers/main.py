@@ -109,7 +109,7 @@ async def main_action(
             case ACTIONS_FROM_ASSISTANT.QUESTION_DRUGS:
                 # [ ответ на вопрос юзера с препаратами ]
                 if user.allowed_tokens + user.additional_tokens >= QUESTION_COST:
-                    await message_request.edit_text(MessageText.ASSISTANT_WAITING)
+                    await message_request.edit_text(MessageText.ASSISTANT_WAITING_DRUGS)
                     await api_client.reduce_tokens(access_token, amount_tokens=QUESTION_COST)
 
                     await api_client.question_drugs_answer(  # via TaskService

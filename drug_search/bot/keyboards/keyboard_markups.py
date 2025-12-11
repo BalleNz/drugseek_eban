@@ -446,9 +446,16 @@ def get_tokens_packages_to_buy_keyboard() -> InlineKeyboardMarkup:
     buttons: list[list[InlineKeyboardButton]] = []
 
     for token_package in TokenPackage.get_token_packages():
+        emoji = ""
+        match token_package.key:
+            case "business":
+                emoji = "⚡ "
+            case "maximum":
+                emoji = "🔥 "
+
         buttons.append([
             InlineKeyboardButton(
-                text=token_package.name + f" ({int(token_package.price)} рублей)",
+                text=emoji + token_package.name + f" ({int(token_package.price)} рублей) {emoji}",
                 callback_data=BuyTokensConfirmationCallback(
                     token_package_key=token_package.key
                 ).pack()
@@ -517,9 +524,18 @@ def get_subscription_packages_keyboard(
     buttons: list[list[InlineKeyboardButton]] = [[]]
 
     for package in subscription_packages:
+        emoji = ""
+        match package.key:
+            case 'two_weeks_lite':
+                emoji = "⚡ "
+            case "three_months_premium":
+                emoji = "⚡ "
+            case "year_premium":
+                emoji = "💎 "
+
         buttons.append([
             InlineKeyboardButton(
-                text=package.name + f" ({package.price(subscription_days)} рублей)",
+                text=emoji + package.name + f" ({package.price(subscription_days)} рублей) {emoji}",
                 callback_data=BuySubscriptionConfirmationCallback(
                     subscription_package_key=package.key
                 ).pack()

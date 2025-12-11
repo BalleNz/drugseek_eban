@@ -256,20 +256,28 @@ class AssistantService:
                 max_completion_tokens=50
             )
 
-        async def answer_to_question(self, question: str, simple_mode: bool = False) -> QuestionAssistantResponse:
-            """Отвечает на вопрос пользователя и дает ему список препаратов для его решения"""
+        async def answer_to_question(self, question: str, simple_mode: bool = False) -> QuestionAssistantResponse | None:
+            """Отвечает на вопрос пользователя"""
             prompt = Prompts.ANSWER_TO_QUESTION
             if simple_mode:
                 prompt += Prompts.ANSWER_TO_QUESTION_SIMPLE_PREFIX
             else:
                 prompt += Prompts.ANSWER_TO_QUESTION_COMPLEX_PREFIX
 
-            return await self.assistant_service.get_response(
-                input_query=question,
-                prompt=prompt,
-                pydantic_model=QuestionAssistantResponse,
-                # max_completion_tokens=600
-            )
+            for i in range(5):
+                """5 попыток"""
+                try:
+                    return await self.assistant_service.get_response(
+                        input_query=question,
+                        prompt=prompt,
+                        pydantic_model=QuestionAssistantResponse,
+                    )
+                except ValueError:
+                    logger.info(f"Ошибка ValueError при парсинге ответа ассистента, повторяем запрос (попытка {i+1})...")
+                    continue
+                except Exception:
+                    break
+            return None
 
         async def answer_to_drugs_question(self, question: str) -> QuestionDrugsAssistantResponse:
             """Отвечает на вопрос пользователя и дает ему список препаратов для его решения"""

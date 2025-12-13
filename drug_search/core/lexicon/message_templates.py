@@ -5,6 +5,14 @@ class MessageTemplates:
         "{drugs_section}"
     )
 
+    ASSISTANT_ANSWER = (
+        "<b>{header_with_emoji}</b>\n\n"
+        "{content}"
+        "<blockquote>"
+        "💡 {conclusion_section}"
+        "</blockquote>"
+    )
+
     # [ ARQ ]
     DRUG_CREATED_NOTIFICATION = (
         "<i>{name_ru} теперь в вашей базе!</i>"

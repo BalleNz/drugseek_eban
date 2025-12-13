@@ -21,7 +21,7 @@ router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
 
 
-@router.message(F.text == ButtonText.DRUG_DATABASE)
+@router.message(F.text == ButtonText.HISTORY)
 async def drug_menu_handler(
         message: Message,
         cache_service: CacheService,

@@ -106,13 +106,37 @@ class QuestionDrugResponse(BaseModel):
     description: str = Field(..., description="Описание препарата в контексте вопроса")
 
 
+# [ ASSISTANT QUESTION ]
+class Brick(BaseModel):
+    brick_header: str | None = Field(None, description="Заголовок для кирпича, обязательное поле")
+    brick_description: str | None = Field(None, description="Основной текст для кирпича, необязательное поле")
+
+
+class ContentBlock(BaseModel):
+    block_header: str = Field(..., description="Заголовок для кирпичей, обязательное поле")
+    bricks: list[Brick] = Field(..., description="Список кирпичей")
+
+
+class BlocksContent(BaseModel):
+    blocks_header: str | None = Field(None, description="Заголовок для блоков из content, необязательное поле")
+    blocks_description: str | None = Field(None, description="Описание для блоков из content, необязательное поле")
+    content: list[ContentBlock] = Field(..., description="Список контент-блоков")
+
+
+class Conclusion(BaseModel):
+    conclusion_header: str | None = Field(None, description="слова для заголовка, которые нужно подчеркнуть")
+    conclusion_description: str = Field(..., description="Заключение, обязательное поле")
+
+
 class QuestionAssistantResponse(BaseModel):
-    answer: str = Field(..., description="Ответ на вопрос c HTML тегами")
+    header: str = Field(..., description="Главный заголовок со смайликом")
+    blocks_content: list[BlocksContent] = Field(..., description="Список блоков контента")
+    conclusion: Conclusion = Field(..., description="Заключительная часть")
 
 
 class QuestionDrugsAssistantResponse(BaseModel):
     answer: str = Field(..., description="Ответ на вопрос")
-    drugs: List[QuestionDrugResponse] = Field(..., description="Список препаратов")
+    drugs: list[QuestionDrugResponse] = Field(..., description="Список препаратов")
 
 
 class AssistantResponseDrugValidation(BaseModel):

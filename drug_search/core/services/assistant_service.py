@@ -74,7 +74,7 @@ class AssistantService:
             prompt: str,
             pydantic_model: Type[AssistantResponseModel],
             temperature: float = 0.3,
-            max_completion_tokens: int | NotGiven = NOT_GIVEN
+            max_tokens: int | NotGiven = NOT_GIVEN
     ):
         try:
             await self.check_balance()
@@ -87,8 +87,11 @@ class AssistantService:
                 ],
                 response_format={"type": "json_object"},
                 temperature=temperature,
-                max_completion_tokens=max_completion_tokens
+                max_tokens=max_tokens
             )
+
+            logger.info("статистика по токенам:\n")
+            logger.info(response.usage)
 
             if not response.choices:
                 raise AssistantResponseError("ERROR: No data from assistant.")
@@ -252,8 +255,7 @@ class AssistantService:
             return await self.assistant_service.get_response(
                 input_query=query,
                 prompt=Prompts.PREDICT_USER_ACTION,
-                pydantic_model=SelectActionResponse,
-                max_completion_tokens=50
+                pydantic_model=SelectActionResponse
             )
 
         async def answer_to_question(self, question: str, simple_mode: bool = False) -> QuestionAssistantResponse | None:
@@ -267,8 +269,7 @@ class AssistantService:
             return await self.assistant_service.get_response(
                 input_query=question,
                 prompt=prompt,
-                pydantic_model=QuestionAssistantResponse,
-                max_completion_tokens=1550
+                pydantic_model=QuestionAssistantResponse
             )
 
         async def answer_to_drugs_question(self, question: str) -> QuestionDrugsAssistantResponse:

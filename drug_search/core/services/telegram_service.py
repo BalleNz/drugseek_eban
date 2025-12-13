@@ -12,8 +12,8 @@ from drug_search.core.lexicon import ARROW_TYPES
 from drug_search.core.lexicon.enums import DrugMenu
 from drug_search.core.lexicon.message_templates import MessageTemplates
 from drug_search.core.schemas import DrugSchema, QuestionDrugsAssistantResponse, QuestionAssistantResponse
-from drug_search.core.utils.formatter import ARQMessageTemplates
-from drug_search.core.utils.html_tags import escape_lt_gt_outside_tags_simple
+from drug_search.core.utils.formatter import TelegramMessageTemplates
+from drug_search.core.utils.telegram_message_validation import escape_lt_gt_outside_tags_simple
 
 logger = logging.getLogger(__name__)
 
@@ -151,20 +151,22 @@ class TelegramService:
 
     async def edit_message_with_assistant_answer(
             self,
-            question_response: QuestionAssistantResponse,
+            assistant_response: QuestionAssistantResponse,
             user_telegram_id: str,
             old_message_id: str,
     ):
         """Редактирует сообщение ответ на вопрос"""
-        message_text: str = question_response.answer
+        message_text: str = TelegramMessageTemplates.format_assistant_answer(
+            assistant_response
+        )
 
         logger.info(message_text)
 
         await self.edit_message(
-            user_telegram_id=user_telegram_id,
-            old_message_id=old_message_id,
-            message_text=escape_lt_gt_outside_tags_simple(message_text),
-            reply_markup=None
+                user_telegram_id=user_telegram_id,
+                old_message_id=old_message_id,
+                message_text=escape_lt_gt_outside_tags_simple(message_text),  # валидация на "<" и ">" при отправке в телеграм
+                reply_markup=None
         )
 
     async def edit_message_with_assistant_drugs_answer(
@@ -176,7 +178,7 @@ class TelegramService:
             arrow: ARROW_TYPES
     ):
         """Редактирует сообщение ответ на вопрос с препаратами"""
-        message_text: str = ARQMessageTemplates.format_assistant_answer(question_response, arrow)
+        message_text: str = TelegramMessageTemplates.format_assistant_answer_drugs(question_response, arrow)
 
         await self.edit_message(
             user_telegram_id=user_telegram_id,

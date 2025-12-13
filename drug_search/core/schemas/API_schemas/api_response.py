@@ -47,7 +47,7 @@ class SelectActionResponse(BaseModel):
     action: ACTIONS_FROM_ASSISTANT = Field(..., description="Тип действия пользователя")
     drug_name: str | None = Field(default=None, description="Название препарата на английском")
     drug_name_ru: Optional[str] = Field(None, description="Название препарата на русском")
-    drug_menu: DrugMenu | None = Field(default=DrugMenu.BRIEFLY, description="Пункт меню препарата")
+    drug_menu: DrugMenu | str | None = Field(default=DrugMenu.BRIEFLY, description="Пункт меню препарата")
 
 
 class QuestionAssistantResponse(BaseModel):

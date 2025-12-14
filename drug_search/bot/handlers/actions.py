@@ -152,7 +152,6 @@ async def drug_buy(
             """предлагает купить подписку"""
             keyboard = get_subscription_packages_keyboard(
                 chosen_subscription_type=SUBSCRIPTION_TYPES.PREMIUM,
-                user_subscription_type=SUBSCRIPTION_TYPES.PREMIUM,
                 subscription_days=user.subscription_days_remaining
             )
             await send_message(

@@ -89,6 +89,8 @@ REFERRALS_LEVELS = {
     20: 100000,
 }
 
+# [ CHANNELS ]
+ZMTLK_CHANNEL_URL = f"https://t.me/zmtlk"
 
 # [ BONUSES ]
 CHANNELS_USERNAME_FREE_TOKENS = (
@@ -96,4 +98,4 @@ CHANNELS_USERNAME_FREE_TOKENS = (
     "zmtlk",
 )
 
-FREE_TOKENS_AMOUNT = 10  # за подписки
+FREE_TOKENS_AMOUNT = 7  # за подписки

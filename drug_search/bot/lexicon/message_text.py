@@ -60,7 +60,7 @@ class MessageText:
             f"      ❌️ нет доступа к изучению запретных препаратов\n"
             f"      ❌️ нет доступа к исследованиям\n\n"
             f"<b>💎 <u>Премиум:</u></b>\n"
-            f"      ✅ вы получаете 100 токенов каждый день\n"
+            f"      ✅ вы получаете {TOKENS_LIMIT.PREMIUM_TOKENS_LIMIT} токенов каждый день\n"
             f"      ✅ разблокирована возможность изучать запретные препараты\n"
             f"      ✅ убраны ограничения сообщений\n"
             f"      ✅ полный доступ ко всему функционалу\n"
@@ -184,10 +184,15 @@ class MessageText:
 
     # [ QUERY ]
     QUERY_IN_PROCESS: str = "Обработка запроса..."
-    ASSISTANT_WAITING: str = "Ожидание ответа на вопрос у ассистента..."
+    ASSISTANT_WAITING: str = "Ожидание ответа на вопрос..."
     ASSISTANT_WAITING_DRUGS: str = "Получение списка препаратов..."
 
+    # [ LIMITS ]
     ANTISPAM_MESSAGE = MessageTemplates.ANTISPAM_MESSAGE
+
+    MESSAGE_NEED_SUBSCRIPTION = (
+        "⚠️ Для использования бота без подписки необходимо подписаться на канал создателя!"
+    )
 
     MESSAGE_LENGTH_EXCEED = MessageTemplates.MESSAGE_LENGTH_EXCEED
     MESSAGE_LENGTH_EXCEED_PREMIUM = "⚠️ Вы превысили количество символов в сообщении!"

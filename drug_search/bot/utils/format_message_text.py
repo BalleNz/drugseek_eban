@@ -320,35 +320,36 @@ class UserProfileMessageFormatter:
             minutes = (time_difference.seconds % 3600) // 60
             seconds = time_difference.seconds % 60
 
-            # Определяем подходящую единицу времени для отображения
+            subscription_end_at_text = "конец через "
             if days > 0:
                 if days == 1:
-                    return f"Подписка заканчивается через 1 день.\n"
+                    subscription_end_at_text += f"1 день"
                 elif str(days)[-1] in ("2", "3", "4"):
-                    return f"Подписка заканчивается через {days} дня.\n"
+                    subscription_end_at_text += f"{days} дня"
                 else:
-                    return f"Подписка заканчивается через {days} дней.\n"
+                    subscription_end_at_text += f"{days} дней"
             elif hours > 0:
                 if hours == 1:
-                    return f"Подписка заканчивается через 1 час.\n"
+                    subscription_end_at_text += f"1 час"
                 elif str(hours)[-1] in ("2", "3", "4"):
-                    return f"Подписка заканчивается через {hours} часа.\n"
+                    subscription_end_at_text += f"{hours} часа"
                 else:
-                    return f"Подписка заканчивается через {hours} часов.\n"
+                    subscription_end_at_text += f"{hours} часов"
             elif minutes > 0:
                 if minutes == 1:
-                    return f"Подписка заканчивается через 1 минуту.\n"
+                    subscription_end_at_text += f"1 минуту"
                 elif str(minutes)[-1] in ("2", "3", "4"):
-                    return f"Подписка заканчивается через {minutes} минуты.\n"
+                    subscription_end_at_text += f"{minutes} минуты"
                 else:
-                    return f"Подписка заканчивается через {minutes} минут.\n"
+                    subscription_end_at_text += f"{minutes} минут"
             else:
                 if seconds == 1:
-                    return f"Подписка заканчивается через 1 секунду.\n"
+                    subscription_end_at_text += f"1 секунду"
                 elif str(seconds)[-1] in ("2", "3", "4"):
-                    return f"Подписка заканчивается через {seconds} секунды.\n"
+                    subscription_end_at_text += f"{seconds} секунды"
                 else:
-                    return f"Подписка заканчивается через {seconds} секунд.\n"
+                    subscription_end_at_text += f"{seconds} секунд"
+            return f"({subscription_end_at_text})\n\n"
 
         refresh_section: str = get_time_when_refresh_tokens_text(
             user.tokens_last_refresh,
@@ -361,7 +362,7 @@ class UserProfileMessageFormatter:
 
         additional_tokens_text = ""
         if user.additional_tokens:
-            additional_tokens_text = f"Дополнительные токены: <u>{user.additional_tokens}</u>\n"
+            additional_tokens_text = f"дополнительные: <u>{user.additional_tokens}</u>\n\n"
 
         if user.simple_mode:
             simple_mode_text = "<b>Ассистент:</b> ответы будут проще."
@@ -369,14 +370,14 @@ class UserProfileMessageFormatter:
             simple_mode_text = "<b>Ассистент:</b> ответы сложные, подробно объясняются."
 
         return MessageTemplates.USER_PROFILE.format(
-            profile_name=profile_name,
+            profile_name=profile_name + "\n" if not user.subscription_end else profile_name,
             profile_icon=profile_icon,
             refresh_section="||  " + refresh_section if refresh_section else "",
             allowed_tokens=allowed_tokens,
             token_word=decline_tokens(user.allowed_tokens),
             additional_tokens_text=additional_tokens_text if additional_tokens_text else "",
-            additional_tokens_quote="<blockquote>Когда закончатся стандартные токены, начнут расходоваться дополнительные.</blockquote>\n\n" if additional_tokens_text else "",
-            subscription_end_at=get_subscription_end_at_text(user.subscription_end) + "\n" if user.subscription_end else "",
+            additional_tokens_quote="<blockquote>Когда кончатся токены, начнут расходоваться дополнительные.</blockquote>\n\n" if additional_tokens_text else "",
+            subscription_end_at=get_subscription_end_at_text(user.subscription_end) if user.subscription_end else "",
             simple_mode_text=simple_mode_text
         )
 

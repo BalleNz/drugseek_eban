@@ -180,7 +180,6 @@ async def buy_subscription_choose_package(
 
     keyboard = get_subscription_packages_keyboard(
         chosen_subscription_type=callback_data.subscription_type,
-        user_subscription_type=user.subscription_type,
         subscription_days=user.subscription_days_remaining
     )
 

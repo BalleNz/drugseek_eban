@@ -184,9 +184,9 @@ class TOKENS_LIMIT(int, Enum):
     TOKENS_AFTER_REGISTRATION = 5
     DEFAULT_TOKENS_LIMIT = 0
 
-    LITE_TOKENS_LIMIT = 50
+    LITE_TOKENS_LIMIT = 50  # в неделю
 
-    PREMIUM_TOKENS_LIMIT = 100
+    PREMIUM_TOKENS_LIMIT = 50
 
     @classmethod
     def get_days_interval_to_refresh_tokens(cls, subscription_type: SUBSCRIPTION_TYPES) -> int | None:

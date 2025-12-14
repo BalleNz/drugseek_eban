@@ -44,7 +44,7 @@ class TelegramMessageTemplates:
             content += f"{block_description}\n\n" if block_description else ""
 
             for block in blocks_content.content:
-                content += f"<b>{block.block_header}</b>\n"
+                content += f"<b>{block.block_header}:</b>\n"
                 for i, brick in enumerate(block.bricks):
 
                     brick_header = ""

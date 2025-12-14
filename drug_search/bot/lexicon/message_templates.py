@@ -1,4 +1,4 @@
-from drug_search.core.lexicon import QUESTION_COST, NEW_DRUG_COST
+from drug_search.core.lexicon import QUESTION_COST, NEW_DRUG_COST, TOKENS_LIMIT
 
 
 class MessageTemplates:
@@ -59,9 +59,9 @@ class MessageTemplates:
     )
 
     USER_PROFILE: str = (
-        "<b>{profile_icon} {profile_name}</b>\n\n"
+        "<b>{profile_icon} {profile_name}</b>\n"
         "<i>{subscription_end_at}</i>"
-        "<b>Ваши токены:</b> {allowed_tokens}  {refresh_section}\n\n"
+        "<b>Токены:</b> {allowed_tokens}  {refresh_section}\n"
         "<i>{additional_tokens_text}</i>"
         "{additional_tokens_quote}"
         "{simple_mode_text}"
@@ -121,11 +121,11 @@ class MessageTemplates:
         "💳 <b>Покупка подписки</b>\n\n"
         "<b>Что дают подписки?</b>\n\n"
         "<b>🧢 Лайт:</b>\n"
-        "— каждую неделю ты получаешь 50 токенов\n"
+        f"— каждую неделю ты получаешь {TOKENS_LIMIT.LITE_TOKENS_LIMIT} токенов\n"
         "— доступен раздел «Механизм действия»\n"
         "— уменьшено ограничение на запросы\n\n"
         "<b>💎 Премиум:</b>\n"
-        "— каждый день ты получаешь 100 токенов\n"
+        f"— каждый день ты получаешь {TOKENS_LIMIT.PREMIUM_TOKENS_LIMIT} токенов\n"
         "— разблокирована возможность изучать запретные препараты\n"
         "— бесплатное обновление базы\n"
         "— убраны все ограничения\n\n"

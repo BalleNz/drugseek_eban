@@ -17,7 +17,7 @@ from drug_search.bot.keyboards.callbacks import (AssistantQuestionContinueCallba
 from drug_search.bot.lexicon.enums import ModeTypes, HelpSectionMode
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.core.lexicon import (ARROW_TYPES, TokenPackage, SubscriptionPackage,
-                                      SUBSCRIPTION_TYPES)
+                                      SUBSCRIPTION_TYPES, ZMTLK_CHANNEL_URL)
 from drug_search.core.lexicon.enums import DrugMenu
 from drug_search.core.schemas import DrugBrieflySchema, DrugSchema, UserSchema, DrugResearchSchema
 from drug_search.core.utils.funcs import may_update_drug
@@ -514,7 +514,6 @@ def get_subscription_packages_types_keyboard(
 
 def get_subscription_packages_keyboard(
         chosen_subscription_type: SUBSCRIPTION_TYPES,
-        user_subscription_type: SUBSCRIPTION_TYPES,
         subscription_days: int | None
 ) -> InlineKeyboardMarkup:
     """клавиатура с выбором пакетов подписок"""
@@ -707,9 +706,31 @@ def get_tokens_for_subscription_channel_list(
     )
 
 
+def check_subscription_condition() -> InlineKeyboardMarkup:
+    """Клавиатура -> купить подписку или подписаться на канал"""
+    DEEP_LINK = ZMTLK_CHANNEL_URL
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="Подписаться на канал",
+                    url=DEEP_LINK
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="Приобрести подписку",
+                    callback_data=BuySubscriptionCallback().pack()
+                )
+            ]
+        ]
+    )
+
+
 def referrals_menu_keyboard(
         url: str
-):
+) -> InlineKeyboardMarkup:
     request_chat = KeyboardButtonRequestChat(
         request_id=1,
         chat_is_channel=False,  # Только private/группы (не каналы) — для недавних диалогов

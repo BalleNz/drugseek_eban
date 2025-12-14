@@ -25,6 +25,7 @@ logger = logging.getLogger(name=__name__)
 
 
 @router.message()
+@flags.check_subscription(True)
 @flags.antispam(True)
 async def main_action(
         message: Message,

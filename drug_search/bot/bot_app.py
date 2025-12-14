@@ -17,6 +17,7 @@ from drug_search.bot.handlers.start import router as start_router
 from drug_search.bot.handlers.yookassa import router as yookassa_router
 from drug_search.bot.middlewares.depends_injectors import DependencyInjectionMiddleware
 from drug_search.bot.middlewares.limits import MessageLimitsMiddleware
+from drug_search.bot.middlewares.check_subscription import CheckSubscriptionMiddleware
 from drug_search.core.dependencies.redis_service_dep import redis_client
 from drug_search.infrastructure.loggerConfig import configure_logging
 
@@ -24,6 +25,7 @@ from drug_search.infrastructure.loggerConfig import configure_logging
 def setup_auth(dp: Dispatcher):
     # Регистрация middleware
     dp.update.outer_middleware(DependencyInjectionMiddleware())
+    dp.message.middleware(CheckSubscriptionMiddleware())
     dp.message.middleware(MessageLimitsMiddleware())
 
     # Регистрация хендлеров (порядок важен)

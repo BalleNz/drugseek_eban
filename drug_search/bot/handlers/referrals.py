@@ -14,7 +14,8 @@ from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.core.lexicon import REFERRALS_REWARDS, BOT_USERNAME, REFERRALS_LEVELS, CHANNELS_USERNAME_FREE_TOKENS
 from drug_search.core.schemas import UserSchema
 from drug_search.core.services.cache_logic.cache_service import CacheService
-from drug_search.core.utils.referrals_funcs import get_ref_level, generate_referral_url, is_user_subscribed
+from drug_search.core.utils.referrals_funcs import get_ref_level, generate_referral_url
+from drug_search.core.utils.subscription_check import is_user_subscribed
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)

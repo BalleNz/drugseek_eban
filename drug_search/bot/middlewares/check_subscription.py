@@ -5,16 +5,16 @@ from aiogram import BaseMiddleware, Bot
 from aiogram.dispatcher.flags import get_flag
 from aiogram.types import TelegramObject, User, InlineKeyboardMarkup
 
-from drug_search.bot.keyboards.keyboard_markups import get_subscription_packages_types_keyboard
+from drug_search.bot.keyboards.keyboard_markups import check_subscription_condition
 from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.bot.utils.funcs import get_telegram_schema_from_data
 from drug_search.core.dependencies.bot.cache_service_dep import get_cache_service
 from drug_search.core.dependencies.redis_service_dep import get_redis_service
-from drug_search.core.lexicon import SUBSCRIPTION_TYPES, ZMTLK_CHANNEL_URL
+from drug_search.core.lexicon import SUBSCRIPTION_TYPES, ZMTLK_CHANNEL_USERNAME
 from drug_search.core.schemas import UserSchema, UserTelegramDataSchema
 from drug_search.core.services.cache_logic.cache_service import CacheService
 from drug_search.core.services.cache_logic.redis_service import RedisService
-from drug_search.core.utils.subscription_check import is_user_subscribed
+from drug_search.core.utils.subscription_check import check_subscription_with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class CheckSubscriptionMiddleware(BaseMiddleware):
 
         # [ deps ]
         cache_service: CacheService = await get_cache_service()
-        channel_username: str = ZMTLK_CHANNEL_URL
+        channel_username: str = ZMTLK_CHANNEL_USERNAME
 
         # [ variables ]
         bot: Bot = data.get("bot")
@@ -59,31 +59,46 @@ class CheckSubscriptionMiddleware(BaseMiddleware):
 
         is_subscribed: bool | None = await cache_service.redis_service.redis.get(redis_key)
         if not is_subscribed:
-            is_subscribed: bool = await is_user_subscribed(
+            message = MessageText.MESSAGE_NEED_SUBSCRIPTION
+
+            await self.send_message(
+                bot,
+                chat_id,
+                message,
+                True
+            )
+
+            is_subscribed: bool = await check_subscription_with_retry(
                 user.telegram_id,
                 channel_username,
                 bot
             )
 
-            if not is_subscribed:
-                await self.send_limit_message(
+            if is_subscribed:
+                message = "Теперь ты можешь пользоваться ботом!"
+                await self.send_message(
                     bot,
                     chat_id,
-                    user.subscription_type
+                    message,
+                    False
                 )
-            else:
                 await cache_service.redis_service.redis.set(redis_key, 1, ex=1800)
+        else:
+            return await handler(event, data)
 
-    async def send_limit_message(
+    async def send_message(
             self,
             bot: Bot,
             chat_id: str,
-            user_subscription: SUBSCRIPTION_TYPES,
+            message: str,
+            need_keyboard: bool
     ):
         """Отправляем информационное сообщение о лимите"""
-        message = MessageText.MESSAGE_NEED_SUBSCRIPTION
 
-        keyboard: InlineKeyboardMarkup = get_subscription_packages_types_keyboard(
-            user_subscription_type=user_subscription)
+        keyboard: InlineKeyboardMarkup | None
+        if need_keyboard:
+            keyboard = check_subscription_condition()
+        else:
+            keyboard = None
 
         await bot.send_message(chat_id=chat_id, text=message, reply_markup=keyboard)

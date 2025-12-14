@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram import Bot
 from aiogram.enums import ChatMemberStatus
 
@@ -17,3 +19,29 @@ async def is_user_subscribed(user_telegram_id: int | str, channel_username: str,
     except Exception as e:
         print(f"Ошибка при проверке подписки: {e}")
         return False
+
+
+async def check_subscription_with_retry(
+        telegram_id: int | str,
+        channel_username: str,
+        bot,
+        max_attempts: int = 15,
+        check_interval: int = 2
+) -> bool:
+    """
+    Асинхронно проверяет подписку с повторными попытками
+    """
+    for attempt in range(max_attempts):
+        is_subscribed = await is_user_subscribed(
+            telegram_id,
+            channel_username,
+            bot
+        )
+
+        if is_subscribed:
+            return True
+
+        if attempt < max_attempts - 1:  # Не ждем после последней попытки
+            await asyncio.sleep(check_interval)
+
+    return False

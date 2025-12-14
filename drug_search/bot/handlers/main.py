@@ -226,7 +226,7 @@ async def main_action(
                     await message_request.edit_text(MessageText.DRUG_IS_NOT_EXIST)
 
             case ACTIONS_FROM_ASSISTANT.SPAM:
-                await message_request.edit_text("Это сообщение распознано как спам")
+                await message_request.edit_text("Это сообщение распознано как спам.")
 
             case ACTIONS_FROM_ASSISTANT.OTHER:
-                await message_request.edit_text("Пожалуйста, уточните ваш запрос")
+                await message_request.edit_text("Ваш запрос не связан с медициной!")

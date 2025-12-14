@@ -5,15 +5,15 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, LinkPreviewOptions
 
-from drug_search.bot.keyboards import (DrugDescribeCallback, DrugListCallback, drug_list_keyboard,
-                                       drug_keyboard)
-from drug_search.bot.keyboards.callbacks import DrugDescribeResearchesCallback
-from drug_search.bot.keyboards.keyboard_markups import drug_researches_keyboard
+from drug_search.bot.keyboards.callbacks import DrugDescribeResearchesCallback, DrugDescribeCallback, DrugListCallback
+from drug_search.bot.keyboards.keyboard_markups import (
+    drug_researches_keyboard, drug_list_keyboard, drug_keyboard, get_subscription_packages_from_limitable_keyboard
+)
 from drug_search.bot.lexicon.enums import ModeTypes
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.bot.utils.format_message_text import DrugMessageFormatter
-from drug_search.core.lexicon.enums import DrugMenu
+from drug_search.core.lexicon.enums import DrugMenu, SUBSCRIPTION_TYPES
 from drug_search.core.schemas import DrugSchema, UserSchema, AllowedDrugsInfoSchema
 from drug_search.core.services.cache_logic.cache_service import CacheService
 
@@ -82,26 +82,43 @@ async def drug_describe_researches_handler(
     """меню с исследованиями со стрелками"""
     await callback.answer()
 
+    # [ cache ]
+    user: UserSchema = await cache_service.get_user_profile(
+        access_token,
+        str(callback.from_user.id)
+    )
+
     # [ callback data ]
     drug_id: UUID = callback_data.drug_id
     research_number: int = callback_data.research_number
     current_page_number: int = callback_data.current_page_number or 0
 
-    drug: DrugSchema = await cache_service.get_drug(
-        access_token=access_token,
-        drug_id=drug_id
-    )
+    if user.subscription_type in (SUBSCRIPTION_TYPES.DEFAULT, SUBSCRIPTION_TYPES.LITE):
+        """Проверка на подписку для раздела исследований"""
+        await callback.message.edit_text(
+            text=MessageText.RESEARCHES_LIMITATION,
+            reply_markup=get_subscription_packages_from_limitable_keyboard(
+                user_subscription_type=SUBSCRIPTION_TYPES.LITE,
+                drug_id=drug_id,
+            ),
+            LinkPreviewOptions=LinkPreviewOptions(is_disabled=True)
+        )
+    else:
+        drug: DrugSchema = await cache_service.get_drug(
+            access_token=access_token,
+            drug_id=drug_id
+        )
 
-    await callback.message.edit_text(
-        text=DrugMessageFormatter.format_researches(drug, research_number),
-        reply_markup=drug_researches_keyboard(
-            researches=drug.researches,
-            drug_id=drug_id,
-            research_number=research_number,
-            current_page_number=current_page_number
-        ),
-        link_preview_options=LinkPreviewOptions(is_disabled=True)
-    )
+        await callback.message.edit_text(
+            text=DrugMessageFormatter.format_researches(drug, research_number),
+            reply_markup=drug_researches_keyboard(
+                researches=drug.researches,
+                drug_id=drug_id,
+                research_number=research_number,
+                current_page_number=current_page_number
+            ),
+            link_preview_options=LinkPreviewOptions(is_disabled=True)
+        )
 
 
 @router.callback_query(DrugDescribeCallback.filter())
@@ -118,28 +135,41 @@ async def drug_describe_handler(
     """
     await callback.answer()
 
-    # [ callback data ]
-    drug_id: UUID = callback_data.drug_id
-    describe_type: DrugMenu = callback_data.drug_menu
-    page: int = callback_data.page
-
-    drug: DrugSchema = await cache_service.get_drug(
-        access_token=access_token,
-        drug_id=drug_id
-    )
     user: UserSchema = await cache_service.get_user_profile(
         access_token=access_token,
         telegram_id=str(callback.from_user.id)
     )
 
-    await callback.message.edit_text(
-        text=MessageText.formatters.DRUG_BY_TYPE(drug_menu=describe_type, drug=drug),
-        reply_markup=drug_keyboard(
-            drug=drug,
-            page=page,
-            drug_menu=describe_type,
-            user_subscribe_type=user.subscription_type,
-            mode=ModeTypes.DATABASE
-        ),
-        link_preview_options=LinkPreviewOptions(is_disabled=True)
-    )
+    # [ callback data ]
+    drug_id: UUID = callback_data.drug_id
+    describe_type: DrugMenu = callback_data.drug_menu
+    page: int = callback_data.page
+
+    if callback_data.drug_menu == DrugMenu.MECHANISM and user.subscription_type in (
+    SUBSCRIPTION_TYPES.DEFAULT, SUBSCRIPTION_TYPES.LITE):
+        """Проверка на подписку для раздела механизма действия"""
+        await callback.message.edit_text(
+            text=MessageText.RESEARCHES_LIMITATION,
+            reply_markup=get_subscription_packages_from_limitable_keyboard(
+                user_subscription_type=user.subscription_type,
+                drug_id=drug_id,
+            ),
+            LinkPreviewOptions=LinkPreviewOptions(is_disabled=True)
+        )
+    else:
+        drug: DrugSchema = await cache_service.get_drug(
+            access_token=access_token,
+            drug_id=drug_id
+        )
+
+        await callback.message.edit_text(
+            text=MessageText.formatters.DRUG_BY_TYPE(drug_menu=describe_type, drug=drug),
+            reply_markup=drug_keyboard(
+                drug=drug,
+                page=page,
+                drug_menu=describe_type,
+                user_subscribe_type=user.subscription_type,
+                mode=ModeTypes.DATABASE
+            ),
+            link_preview_options=LinkPreviewOptions(is_disabled=True)
+        )

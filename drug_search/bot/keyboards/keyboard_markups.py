@@ -21,6 +21,7 @@ from drug_search.core.lexicon import (ARROW_TYPES, TokenPackage, SubscriptionPac
 from drug_search.core.lexicon.enums import DrugMenu
 from drug_search.core.schemas import DrugBrieflySchema, DrugSchema, UserSchema, DrugResearchSchema
 from drug_search.core.utils.funcs import may_update_drug
+from lexicon.message_text import MessageText
 
 logger = logging.getLogger(__name__)
 
@@ -749,4 +750,67 @@ def referrals_menu_keyboard(
                 )
             ]
         ]
+    )
+
+
+def open_referrals_menu_keyboard() -> InlineKeyboardMarkup:
+    """Открыть меню с рефералами (отправляется после /start)"""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="Открыть реферальную систему",
+                    callback_data=ReferralsMenuCallback().pack()
+                )
+            ]
+        ]
+    )
+
+
+def get_subscription_packages_from_limitable_keyboard(
+        user_subscription_type: SUBSCRIPTION_TYPES,
+        drug_id: uuid.UUID,
+) -> InlineKeyboardMarkup:
+    """клавиатура с пакетами подписок в зависимости от текущей подписки пользователя"""
+    buttons = []
+
+    if user_subscription_type in [SUBSCRIPTION_TYPES.DEFAULT]:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="⚡ Лайт",
+                    callback_data=BuySubscriptionChosenTypeCallback(
+                        subscription_type=SUBSCRIPTION_TYPES.LITE
+                    ).pack()
+                )
+            ]
+        )
+
+    if user_subscription_type in [SUBSCRIPTION_TYPES.DEFAULT, SUBSCRIPTION_TYPES.LITE]:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="💎️ Премиум",
+                    callback_data=BuySubscriptionChosenTypeCallback(
+                        subscription_type=SUBSCRIPTION_TYPES.PREMIUM
+                    ).pack()
+                )
+            ]
+        )
+
+
+    buttons.append(
+        [
+            InlineKeyboardButton(
+                text=ButtonText.LEFT_ARROW,
+                callback_data=DrugDescribeCallback(
+                    drug_menu=DrugMenu.BRIEFLY,
+                    drug_id=drug_id,
+                ).pack()
+            )
+        ]
+    )
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=buttons
     )

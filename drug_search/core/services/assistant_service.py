@@ -263,8 +263,6 @@ class AssistantService:
             prompt = Prompts.ANSWER_TO_QUESTION
             if simple_mode:
                 prompt += Prompts.ANSWER_TO_QUESTION_SIMPLE_PREFIX
-            else:
-                prompt += Prompts.ANSWER_TO_QUESTION_COMPLEX_PREFIX
 
             return await self.assistant_service.get_response(
                 input_query=question,

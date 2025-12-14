@@ -172,6 +172,9 @@ class MessageText:
 
     FINISH_PAYMENT = "Ожидание оплаты..."
 
+    # [ DELAYED MESSAGES ]
+    REFERRALS_INFO = "За приглашения друзьям ты можешь получать токены!"
+
     # [ STATIC ]
     HELLO: str = ("<b>💊 Привет!</b>\n\n"
                   "Я — Твой карманный специалист по фармакологии и медицине.\n\n"
@@ -186,6 +189,10 @@ class MessageText:
     QUERY_IN_PROCESS: str = "Обработка запроса..."
     ASSISTANT_WAITING: str = "Ожидание ответа на вопрос..."
     ASSISTANT_WAITING_DRUGS: str = "Получение списка препаратов..."
+
+    # [ LIMITATIONS ]
+    RESEARCHES_LIMITATION = "⚠️ Для просмотра раздела с исследованиями необходима подписка уровня Премиум!"
+    MECHANISM_LIMITATION = "⚠️ Для просмотра раздела с механизмом действия необходима подписка уровня Лайт и выше!"
 
     # [ LIMITS ]
     ANTISPAM_MESSAGE = MessageTemplates.ANTISPAM_MESSAGE

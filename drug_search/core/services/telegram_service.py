@@ -160,14 +160,59 @@ class TelegramService:
             assistant_response
         )
 
-        logger.info(message_text)
+        message_text = escape_lt_gt_outside_tags_simple(message_text)  # валидация на "<" и ">" при отправке в телеграм
 
-        await self.edit_message(
+        logger.info(message_text)
+        if len(message_text) > 4000:
+            # Находим середину сообщения, но стараемся разбить по границе абзаца
+            split_point = 2000
+
+            # Ищем ближайший закрывающий тег абзаца или конец тега blockquote
+            # для корректного разрыва
+            first_part_end = message_text.rfind('</blockquote>', 0, split_point + 1000)
+            if first_part_end == -1:
+                # Ищем конец какого-либо блока
+                first_part_end = message_text.rfind('\n\n', 0, split_point + 1000)
+
+            if first_part_end != -1 and first_part_end > 1000:
+                # Разбиваем в найденной точке
+                first_part = message_text[:first_part_end].strip()
+                second_part = message_text[first_part_end:].strip()
+            else:
+                # Разбиваем пополам, ищем точку разрыва внутри тегов
+                split_point = len(message_text) // 2
+
+                # Убедимся, что не разрываем теги посередине
+                # Ищем закрывающий тег ближе к середине
+                safe_split = message_text.rfind('</', max(0, split_point - 500),
+                                                min(len(message_text), split_point + 500))
+                if safe_split != -1:
+                    split_point = safe_split + 2  # После закрывающего тега
+
+                first_part = message_text[:split_point].strip()
+                second_part = message_text[split_point:].strip()
+
+            await self.edit_message(
                 user_telegram_id=user_telegram_id,
                 old_message_id=old_message_id,
-                message_text=escape_lt_gt_outside_tags_simple(message_text),  # валидация на "<" и ">" при отправке в телеграм
+                message_text=first_part,
                 reply_markup=None
-        )
+            )
+
+            # Отправляем вторую часть как новое сообщение
+            await self.send_message(
+                user_telegram_id=user_telegram_id,
+                message=second_part,
+                reply_markup=None
+            )
+        else:
+            # Сообщение короткое
+            await self.edit_message(
+                    user_telegram_id=user_telegram_id,
+                    old_message_id=old_message_id,
+                    message_text=message_text,
+                    reply_markup=None
+            )
 
     async def edit_message_with_assistant_drugs_answer(
             self,

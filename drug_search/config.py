@@ -39,8 +39,14 @@ class Config(BaseSettings):
     WEBAPP_PORT: int = int(environ.get("WEBAPP_PORT", "8000"))
     WEBHOOK_URL: str = environ.get("WEBHOOK_URL", "")  # URL like https://domain-name.ru/
 
+    API_KEY: str = environ.get("API_KEY", "")
+
+    # Yookassa
+    PROVIDER_TOKEN: str = environ.get("PROVIDER_TOKEN", "")  # Токен платежки с BotFather
+    CURRENCY: str = "RUB"
+
     # JWT
-    SECRET_KEY: str = "zallopppaaa"
+    SECRET_KEY: str = environ.get("SECRET_KEY", "")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRES_MINUTES: int = 1200
 

@@ -1,9 +1,8 @@
 import uuid
-from datetime import date
 from typing import Optional, Type, TypeVar, Generic
 
 from pydantic import BaseModel
-from sqlalchemy import String, Float, ForeignKey, Text, UniqueConstraint, ARRAY, Index, func, Date, JSON, TypeDecorator
+from sqlalchemy import String, Float, ForeignKey, Text, UniqueConstraint, ARRAY, Index, func, JSON, TypeDecorator
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID  # Важно импортировать UUID для PostgreSQL
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 

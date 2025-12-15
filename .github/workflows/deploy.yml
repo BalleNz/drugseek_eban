@@ -59,6 +59,8 @@ jobs:
             echo "DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}" >> .env
             
             echo "TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}" >> .env
+          
+            echo "PROVIDER_TOKEN=${{ secrets.PROVIDER_TOKEN }}" >> .env
            
             echo "WEBHOOK_URL=${{ secrets.WEBHOOK_URL }}" >> .env
             

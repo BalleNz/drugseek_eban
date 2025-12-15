@@ -6,9 +6,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, LinkPreviewOptions
 
 from drug_search.bot.keyboards.callbacks import DrugDescribeResearchesCallback, DrugDescribeCallback, DrugListCallback
-from drug_search.bot.keyboards.keyboard_markups import (
-    drug_researches_keyboard, drug_list_keyboard, drug_keyboard, get_subscription_packages_from_limitable_keyboard
-)
+from keyboards.other_keyboards import get_subscription_packages_from_limitable_keyboard
+from keyboards.drug_keyboards import drug_researches_keyboard
+from keyboards import drug_list_keyboard, drug_keyboard
 from drug_search.bot.lexicon.enums import ModeTypes
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.bot.lexicon.message_text import MessageText
@@ -149,7 +149,7 @@ async def drug_describe_handler(
     SUBSCRIPTION_TYPES.DEFAULT, SUBSCRIPTION_TYPES.LITE):
         """Проверка на подписку для раздела механизма действия"""
         await callback.message.edit_text(
-            text=MessageText.RESEARCHES_LIMITATION,
+            text=MessageText.MECHANISM_LIMITATION,
             reply_markup=get_subscription_packages_from_limitable_keyboard(
                 user_subscription_type=user.subscription_type,
                 drug_id=drug_id,

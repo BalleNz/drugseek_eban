@@ -170,12 +170,14 @@ class MessageText:
     SUBSCRIPTION_UPGRADE = MessageTemplates.SUBSCRIPTION_UPGRADE
     SUBSCRIPTION_UPGRADE_CONFIRMATION = MessageTemplates.SUBSCRIPTION_UPGRADE_CONFIRMATION
 
-    FINISH_PAYMENT = "Ожидание оплаты..."
+    WAITING_PAYMENT = "Ожидание оплаты..."
 
     # [ DELAYED MESSAGES ]
     REFERRALS_INFO = "ℹ️ За приглашения друзьям ты можешь получать токены!"
 
     SIMPLE_MODE_INFO = "ℹ️ Попробуй отключить простой режим в <b>Профиле</b>!"
+
+    FREE_TOKENS_INFO = "ℹ️ Ты можешь получить бесплатные токены за подписку на каналы создателя!\n— /free_tokens"
 
     # [ STATIC ]
     HELLO: str = ("<b>💊 Привет!</b>\n\n"

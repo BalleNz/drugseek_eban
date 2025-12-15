@@ -11,14 +11,10 @@ __all__ = [
     'ARROW_TYPES',
     'JobStatuses',
     'MailingStatuses',
-    'TokenPackage',
+    'TokensPackage',
     'SubscriptionPackage',
     'SUBSCRIPTION_TYPES',
-    'SMALL_PACKET',
-    'ENTERPRISE_PACKET',
-    'ULTIMATE_PACKET',
-    'PRO_PACKET',
-    'BASIC_PACKET',
+    'SubscriptionKeys',
     # [ Limits ]
     'TOKENS_LIMIT',
     # [ Message limits ]

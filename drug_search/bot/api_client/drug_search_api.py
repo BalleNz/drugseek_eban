@@ -2,12 +2,13 @@ import uuid
 from uuid import UUID
 
 from drug_search.bot.api_client.base_http_client import BaseHttpClient, HTTPMethod
+from drug_search.config import config
 from drug_search.core.lexicon import DANGER_CLASSIFICATION, ARROW_TYPES
 from drug_search.core.schemas import (UserTelegramDataSchema, UserSchema, DrugExistingResponse, QuestionRequest,
                                       DrugSchema, QuestionDrugsAssistantResponse, SelectActionResponse,
                                       QuestionDrugsRequest, AddTokensRequest,
                                       BuyDrugRequest, BuyDrugResponse, UpdateDrugResponse, MailingRequest,
-                                      AllowedDrugsInfoSchema, NewReferralsRequest)
+                                      AllowedDrugsInfoSchema, NewReferralsRequest, PaymentRequest)
 
 
 class DrugSearchAPIClient(BaseHttpClient):
@@ -245,4 +246,17 @@ class DrugSearchAPIClient(BaseHttpClient):
             HTTPMethod.PUT,
             endpoint="/v1/referrals/free_tokens",
             access_token=access_token
+        )
+
+    # [ Payment ]
+    async def payment_process(
+            self,
+            access_token: str,
+            request: PaymentRequest
+    ):
+        return await self._request(
+            HTTPMethod.POST,
+            endpoint="/v1/payment/process",
+            api_key=config.API_KEY,
+            request_body=request
         )

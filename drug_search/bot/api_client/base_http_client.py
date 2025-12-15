@@ -8,6 +8,8 @@ from uuid import UUID
 import aiohttp
 from pydantic import BaseModel
 
+from drug_search.config import config
+
 T = TypeVar('T', bound=BaseModel)
 
 
@@ -41,6 +43,7 @@ class BaseHttpClient:
             response_model: Optional[Type[T]] = None,
             access_token: Optional[str] = None,
             request_body: Optional[Union[dict, BaseModel]] = None,
+            api_key: str | None = None,
             **kwargs
     ) -> Union[T, dict, list, None]:
         await self._ensure_session()
@@ -48,6 +51,9 @@ class BaseHttpClient:
         headers = {}
         if access_token:
             headers["Authorization"] = f"Bearer {access_token}"
+
+        if api_key:
+            headers["X-API-Key"] = config.API_KEY
 
         headers["Content-Type"] = "application/json"
 

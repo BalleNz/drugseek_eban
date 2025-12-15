@@ -5,7 +5,7 @@ from aiogram import BaseMiddleware, Bot
 from aiogram.dispatcher.flags import get_flag
 from aiogram.types import TelegramObject, User, InlineKeyboardMarkup
 
-from drug_search.bot.keyboards.keyboard_markups import check_subscription_condition
+from keyboards.other_keyboards import check_subscription_condition
 from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.bot.utils.funcs import get_telegram_schema_from_data
 from drug_search.core.dependencies.bot.cache_service_dep import get_cache_service

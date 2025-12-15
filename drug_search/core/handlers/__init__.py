@@ -4,6 +4,7 @@ from .drug_handler import drug_router
 from .user_handler import user_router
 from .admin_handler import admin_router
 from .referrals_handler import referrals_router
+from .payment_handler import payment_router
 
 __all__ = [
     "auth_router",
@@ -11,5 +12,6 @@ __all__ = [
     "user_router",
     "assistant_router",
     'admin_router',
-    'referrals_router'
+    'referrals_router',
+    'payment_router'
 ]

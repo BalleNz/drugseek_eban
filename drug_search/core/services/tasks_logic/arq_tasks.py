@@ -5,7 +5,7 @@ import uuid
 from typing import Sequence, Generator
 
 from drug_search.core.dependencies.containers.service_container import get_service_container
-from drug_search.core.lexicon import ADMINS_TG_ID, ARROW_TYPES, SubscriptionPackage, TokenPackage
+from drug_search.core.lexicon import ADMINS_TG_ID, ARROW_TYPES
 from drug_search.core.schemas import DrugSchema, QuestionDrugsAssistantResponse, UserSchema, QuestionAssistantResponse
 from drug_search.core.services.assistant_service import AssistantService
 from drug_search.core.services.cache_logic.redis_service import RedisService
@@ -135,7 +135,8 @@ async def assistant_drugs_question(
             question=question
         )
         if not question_response:
-            question_response: QuestionDrugsAssistantResponse = await assistant_service.actions.answer_to_drugs_question(question)
+            question_response: QuestionDrugsAssistantResponse = await assistant_service.actions.answer_to_drugs_question(
+                question)
 
             await redis_service.set_assistant_drugs_answer(
                 assistant_response=question_response,
@@ -204,26 +205,18 @@ async def yookassa_update_to_admins(
         ctx,  # noqa
         username,
         price: float,  # рубли
-        subscription_package: SubscriptionPackage | None,
-        tokens_package: TokenPackage | None
+        payment_description: str
 ):
     async with get_service_container() as container:
         # [ deps ]
         telegram_service = await container.telegram_service
 
         # [ logic ]
-        if subscription_package:
-            message = (
-                f"Юзер @{username}"
-                f"Купил подписку: {subscription_package.subscription_type}"
-                f"За: {price}"
-            )
-        elif tokens_package:
-            message = (
-                f"Юзер @{username}"
-                f"Купил токены: {tokens_package.amount} штук"
-                f"За: {price}"
-            )
+        message = (
+            f"Юзер @{username}\n"
+            f"Купил подписку: {payment_description}\n"
+            f"За: {price}"
+        )
 
         for admin_tg_id in ADMINS_TG_ID:
             await telegram_service.send_message(admin_tg_id, message)

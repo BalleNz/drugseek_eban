@@ -5,14 +5,16 @@ from typing import Annotated
 from uuid import UUID
 
 import jwt
-from fastapi import HTTPException
+from fastapi import HTTPException, Security
 from fastapi.params import Depends
+from fastapi.security import APIKeyHeader
 from starlette import status
+from starlette.status import HTTP_403_FORBIDDEN
 
 from drug_search.config import config
+from drug_search.core.dependencies.user_service_dep import get_user_service
 from drug_search.core.schemas import UserSchema
 from drug_search.core.services.models_service.user_service import UserService
-from drug_search.core.dependencies.user_service_dep import get_user_service
 
 logger = logging.getLogger(__name__)
 
@@ -77,3 +79,17 @@ async def get_auth_user(
         logger.exception(f"Cannot find user by token: {token}")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Wrong user.")
     return user
+
+
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+async def validate_api_key(
+        api_key: str = Security(api_key_header)
+):
+    if api_key != config.API_KEY:
+        raise HTTPException(
+            status_code=HTTP_403_FORBIDDEN,
+            detail="Invalid API Key"
+        )
+    return api_key

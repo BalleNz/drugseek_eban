@@ -1,10 +1,3 @@
-# [платежные пакеты для запросов]
-SMALL_PACKET: int = 10
-BASIC_PACKET: int = 25
-PRO_PACKET: int = 50
-ENTERPRISE_PACKET: int = 70
-ULTIMATE_PACKET: int = 200
-
 # [ API rules ]
 MIN_DAYS_TO_UPDATE_DRUG: int = 60
 
@@ -42,27 +35,27 @@ BOT_USERNAME = "drugseek_bot"
 
 # [ REFERRALS ]
 REFERRALS_REWARDS = {
-    0: 3,  # key: reward (tokens)
-    1: 7,
-    2: 15,
-    3: 20,
-    4: 30,
-    5: 40,
-    6: 50,
-    7: 60,
-    8: 70,
-    9: 80,
-    10: 90,
-    11: 100,
-    12: 100,
-    13: 110,
-    14: 120,
-    15: 130,
-    16: 140,
-    17: 200,
-    18: 300,
-    19: 400,
-    20: 500,
+    0: 2,  # key: reward (tokens)
+    1: 6,
+    2: 7,
+    3: 10,
+    4: 12,
+    5: 15,
+    6: 20,
+    7: 25,
+    8: 30,
+    9: 35,
+    10: 40,
+    11: 50,
+    12: 60,
+    13: 70,
+    14: 40,
+    15: 50,
+    16: 60,
+    17: 50,
+    18: 50,
+    19: 60,
+    20: 100,
 }
 
 REFERRALS_LEVELS = {
@@ -78,15 +71,15 @@ REFERRALS_LEVELS = {
     9: 90,
     10: 130,
     11: 150,
-    12: 200,
-    13: 250,
-    14: 300,
-    15: 500,
-    16: 1000,
-    17: 2000,
-    18: 5000,
-    19: 10000,
-    20: 100000,
+    12: 170,
+    13: 190,
+    14: 250,
+    15: 300,
+    16: 400,
+    17: 500,
+    18: 600,
+    19: 700,
+    20: 800,
 }
 
 # [ CHANNELS ]
@@ -96,6 +89,7 @@ ZMTLK_CHANNEL_USERNAME = f"zmtlk"
 CHANNELS_USERNAME_FREE_TOKENS = (
     "drugseeks",
     "zmtlk",
+    "mybigmedicine"
 )
 
 FREE_TOKENS_AMOUNT = 7  # за подписки

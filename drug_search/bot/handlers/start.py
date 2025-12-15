@@ -7,7 +7,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
-from drug_search.bot.keyboards.keyboard_markups import menu_keyboard, open_referrals_menu_keyboard
+from drug_search.bot.keyboards.menu_markup import menu_keyboard
+from keyboards.other_keyboards import open_referrals_menu_keyboard
 from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.bot.utils.bot import send_delayed_message
 from drug_search.core.utils.referrals_funcs import decode_referral_token
@@ -51,7 +52,7 @@ async def start_dialog(
         send_delayed_message(
             bot=bot,
             chat_id=message.chat.id,
-            delay_minutes=10,
+            delay_minutes=5,
             text=MessageText.REFERRALS_INFO,
             reply_markup=open_referrals_menu_keyboard()
         )
@@ -62,8 +63,17 @@ async def start_dialog(
         send_delayed_message(
             bot=bot,
             chat_id=message.chat.id,
-            delay_minutes=25,
-            text=MessageText.REFERRALS_INFO,
-            reply_markup=open_referrals_menu_keyboard()
+            delay_minutes=30,
+            text=MessageText.SIMPLE_MODE_INFO
+        )
+    )
+
+    # [ сообщение о бесплатных токенах ]
+    asyncio.create_task(
+        send_delayed_message(
+            bot=bot,
+            chat_id=message.chat.id,
+            delay_minutes=15,
+            text=MessageText.FREE_TOKENS_INFO
         )
     )

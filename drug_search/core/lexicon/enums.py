@@ -1,7 +1,30 @@
 from enum import Enum
 from typing import Optional
 
-from drug_search.core.lexicon import SMALL_PACKET, ENTERPRISE_PACKET, ULTIMATE_PACKET, PRO_PACKET, BASIC_PACKET
+
+class SubscriptionKeys(str, Enum):
+    """Ключи подписок
+
+    sub + duration_count + duration_type + sub_type
+    """
+    TWO_WEEKS_LITE = "sub_two_weeks_lite"
+    TWO_WEEKS_PREMIUM = "sub_two_weeks_premium"
+    ONE_MONTH_LITE = "sub_one_months_lite"
+    THREE_MONTHS_PREMIUM = "sub_three_months_premium"
+    SIX_MONTHS_PREMIUM = "sub_six_months_premium"
+    YEAR_PREMIUM = "sub_one_year_premium"
+
+
+class TokenKeys(str, Enum):
+    """Ключи токенов
+
+    tokens + package_name
+    """
+    SMALL = "tokens_small"
+    BASIC = "tokens_basic"
+    PRO = "tokens_pro"
+    BUSINESS = "tokens_business"
+    MAXIMUM = "tokens_maximum"
 
 
 class SUBSCRIPTION_TYPES(str, Enum):
@@ -48,15 +71,15 @@ class MailingStatuses(str, Enum):
 
 
 # [ Payment ]
-class TokenPackage(Enum):
+class TokensPackage(Enum):
     """Пакеты токенов с указанием количества для покупки"""
 
     # [ key, название_пакета, количество_токенов, цена ]
-    SMALL = ("small", f"{SMALL_PACKET} токенов", SMALL_PACKET, 199.0)
-    BASIC = ("basic", f"{BASIC_PACKET} токенов", BASIC_PACKET, 399.0)
-    PRO = ("pro", f"{PRO_PACKET} токенов", PRO_PACKET, 899.0)
-    ENTERPRISE = ("business", f"{ENTERPRISE_PACKET} токенов", ENTERPRISE_PACKET, 1099.0)
-    ULTIMATE = ("maximum", f"{ULTIMATE_PACKET} токенов", ULTIMATE_PACKET, 1900.0)
+    SMALL = (TokenKeys.SMALL.value, "10 токенов", 10, 199)
+    BASIC = (TokenKeys.BASIC.value, "25 токенов", 25, 499)
+    PRO = (TokenKeys.PRO.value, "60 токенов", 60, 899)
+    BUSINESS = (TokenKeys.BUSINESS.value, "100 токенов", 100, 1299)
+    MAXIMUM = (TokenKeys.MAXIMUM.value, "200 токенов", 200, 1990)
 
     @property
     def key(self):
@@ -64,17 +87,17 @@ class TokenPackage(Enum):
         return self.value[0]
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Возвращает название пакета"""
         return self.value[1]
 
     @property
-    def amount(self):
+    def quantity(self) -> int:
         """Возвращает количество токенов в пакете"""
         return self.value[2]
 
     @property
-    def price(self):
+    def price(self) -> int:
         """Возвращает цену пакета"""
         return self.value[3]
 
@@ -87,8 +110,8 @@ class TokenPackage(Enum):
         raise ValueError(f"Unknown package ID: {package_key}")
 
     @classmethod
-    def get_token_packages(cls) -> tuple["TokenPackage", ...]:
-        return cls.SMALL, cls.BASIC, cls.PRO, cls.ENTERPRISE, cls.ULTIMATE
+    def get_token_packages(cls) -> tuple["TokensPackage", ...]:
+        return cls.SMALL, cls.BASIC, cls.PRO, cls.BUSINESS, cls.MAXIMUM
 
 
 class SubscriptionPackage(Enum):
@@ -104,22 +127,22 @@ class SubscriptionPackage(Enum):
     # [ Ключ, Название пакета (длительность), Тип подписки, длительность, цена ]
 
     # [ 7 дней ]
-    LITE_7_PACKAGE = ("two_weeks_lite", "Неделя", SUBSCRIPTION_TYPES.LITE, "7", 299.0)
+    LITE_7_PACKAGE = (SubscriptionKeys.TWO_WEEKS_LITE.value, "Неделя", SUBSCRIPTION_TYPES.LITE, "7", 299)
 
     # [ 14 дней ]
-    PREMIUM_14_PACKAGE = ("two_weeks_premium", "Две недели", SUBSCRIPTION_TYPES.PREMIUM, "14", 899.0)
+    PREMIUM_14_PACKAGE = (SubscriptionKeys.TWO_WEEKS_PREMIUM.value, "Две недели", SUBSCRIPTION_TYPES.PREMIUM, "14", 899)
 
     # [ 30 дней ]
-    LITE_30_PACKAGE = ("one_months_lite", "Месяц", SUBSCRIPTION_TYPES.LITE, "30", 1090.0)
+    LITE_30_PACKAGE = (SubscriptionKeys.ONE_MONTH_LITE.value, "Месяц", SUBSCRIPTION_TYPES.LITE, "30", 1090)
 
     # [ 90 дней ]
-    PREMIUM_90_PACKAGE = ("three_months_premium", "Три месяца", SUBSCRIPTION_TYPES.PREMIUM, "90", 2199.0)
+    PREMIUM_90_PACKAGE = (SubscriptionKeys.THREE_MONTHS_PREMIUM.value, "Три месяца", SUBSCRIPTION_TYPES.PREMIUM, "90", 2199)
 
     # [ 180 дней ]
-    PREMIUM_180_PACKAGE = ("six_months_premium", "Полгода", SUBSCRIPTION_TYPES.PREMIUM, "180", 3290.0)
+    PREMIUM_180_PACKAGE = (SubscriptionKeys.SIX_MONTHS_PREMIUM.value, "Полгода", SUBSCRIPTION_TYPES.PREMIUM, "180", 3290)
 
     # [ 365 дней ]
-    PREMIUM_365_PACKAGE = ("year_premium", "Год", SUBSCRIPTION_TYPES.PREMIUM, "365", 4990.0)
+    PREMIUM_365_PACKAGE = (SubscriptionKeys.YEAR_PREMIUM.value, "Год", SUBSCRIPTION_TYPES.PREMIUM, "365", 4990)
 
     @property
     def key(self) -> str:
@@ -130,8 +153,13 @@ class SubscriptionPackage(Enum):
         return self.value[1]
 
     @property
-    def subscription_type(self) -> str:
+    def subscription_type(self) -> SUBSCRIPTION_TYPES:
         """Тип подписки"""
+        return self.value[2]
+
+    @property
+    def subscription_type_text(self) -> str:
+        """Тип подписки текстом"""
         match self.value[2]:
             case SUBSCRIPTION_TYPES.PREMIUM:
                 return "Премиум"
@@ -145,7 +173,7 @@ class SubscriptionPackage(Enum):
         """длительность в целых днях"""
         return int(self.value[3])
 
-    def price(self, subscription_days: int = 0) -> float:
+    def price(self, subscription_days: int = 0) -> int:
         base_price = self.value[4]
 
         # Коэффициенты скидки в зависимости от количества дней
@@ -156,9 +184,9 @@ class SubscriptionPackage(Enum):
 
         return round(final_price, 2)
 
-    def _calculate_discount(self, days: int) -> float:
+    def _calculate_discount(self, days: int) -> int:
         """Рассчитывает скидку в зависимости от количества дней"""
-        return 1.0 - (days / 250)
+        return int(1.0 - (days / 250))
 
     @classmethod
     def get_by_key(cls, package_key: str):

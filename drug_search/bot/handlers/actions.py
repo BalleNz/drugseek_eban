@@ -6,13 +6,13 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, LinkPreviewOptions, Message
 
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
-from drug_search.bot.keyboards import WrongDrugFoundedCallback, drug_keyboard
+from drug_search.bot.keyboards import WrongDrugFoundedCallback
+from keyboards import drug_keyboard
 from drug_search.bot.keyboards.callbacks import (
     DrugUpdateRequestCallback, AssistantQuestionContinueCallback, BuyDrugRequestCallback
 )
-from drug_search.bot.keyboards.keyboard_markups import (
-    buy_request_keyboard, get_tokens_packages_to_buy_keyboard, get_subscription_packages_keyboard
-)
+from keyboards.payment_keyboards import get_tokens_packages_to_buy_keyboard, get_subscription_packages_keyboard
+from keyboards.drug_keyboards import buy_request_keyboard
 from drug_search.bot.lexicon import MessageTemplates
 from drug_search.bot.lexicon.enums import ModeTypes
 from drug_search.bot.lexicon.message_text import MessageText

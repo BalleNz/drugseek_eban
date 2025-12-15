@@ -1,20 +1,24 @@
 import datetime
 import logging
 
-from aiogram import Router
+from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message
+from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message, PreCheckoutQuery
 
+from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
+from drug_search.bot.bot_instance import bot
 from drug_search.bot.keyboards.callbacks import BuySubscriptionCallback, BuyTokensCallback, \
     BuySubscriptionChosenTypeCallback
 from drug_search.bot.keyboards.callbacks import BuyTokensConfirmationCallback, BuySubscriptionConfirmationCallback
-from drug_search.bot.keyboards.keyboard_markups import get_tokens_packages_to_buy_keyboard, get_url_to_buy_keyboard, \
-    get_subscription_packages_types_keyboard, get_subscription_packages_keyboard
+from drug_search.bot.keyboards.payment_keyboards import get_tokens_packages_to_buy_keyboard, \
+    get_subscription_packages_types_keyboard, \
+    get_subscription_packages_keyboard
 from drug_search.bot.lexicon.message_text import MessageText
-from drug_search.core.lexicon import TokenPackage, SubscriptionPackage, SUBSCRIPTION_TYPES
-from drug_search.core.schemas import UserSchema
+from drug_search.core.lexicon import TokensPackage, SubscriptionPackage, SUBSCRIPTION_TYPES
+from drug_search.core.schemas import UserSchema, PaymentRequest
 from drug_search.core.services.cache_logic.cache_service import CacheService
+from drug_search.core.utils.payment import send_invoice
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
@@ -66,27 +70,26 @@ async def buy_tokens_conf(
     """Описание пакетов токенов"""
     await callback_query.answer()
 
-    tokens_package = TokenPackage.get_by_key(callback_data.token_package_key)
+    tokens_package = TokensPackage.get_by_key(callback_data.token_package_key)
 
     text = MessageText.TOKENS_CONFIRMATION.format(
         package_name=tokens_package.name,
         package_price=tokens_package.price,
     )
 
-    url = ...
-
-    keyboard = get_url_to_buy_keyboard(
-        url="vk.com"
+    await callback_query.message.edit_text(
+        text
     )
 
-    await callback_query.message.edit_text(
-        text=text,
-        reply_markup=keyboard
+    await send_invoice(
+        callback_query,
+        tokens_package.price,
+        tokens_package.name,
+        tokens_package.key
     )
 
 
 # [ SUBSCRIPTION PACKAGES ]
-
 async def buy_subscription_choose_type(
         query: CallbackQuery | Message,
         state: FSMContext,  # noqa
@@ -207,25 +210,63 @@ async def buy_subscription_confirmation(
 
     subscription_key = callback_data.subscription_package_key
     subscription_package: SubscriptionPackage = SubscriptionPackage.get_by_key(subscription_key)
-    subscription_price: float = subscription_package.price(user.subscription_days_remaining)
+    price: int = subscription_package.price(user.subscription_days_remaining)
 
     subscription_end = (datetime.datetime.now() + datetime.timedelta(days=subscription_package.duration)).strftime(
         "%d.%m.%Y")
 
     text = MessageText.SUBSCRIPTION_BUY_CONFIRMATION.format(
-        subscription_name=subscription_package.subscription_type,
+        subscription_name=subscription_package.subscription_type_text,
         subscription_period=subscription_package.duration,
-        subscription_price=subscription_price,
+        subscription_price=price,
         subscription_end=subscription_end,
     )
 
-    url = ...  # TODO
-
-    keyboard = get_url_to_buy_keyboard(
-        url="vk.com"
+    await callback_query.message.edit_text(
+        text
     )
 
-    await callback_query.message.edit_text(
-        text=text,
-        reply_markup=keyboard
+    await send_invoice(
+        callback_query,
+        price,
+        subscription_package.name,
+        subscription_key
+    )
+
+
+# [ Обработка оплаты ]
+@router.pre_checkout_query()
+async def process_pre_checkout_query(pre_checkout_query: PreCheckoutQuery):
+    """Ожидание оплаты"""
+    await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+
+
+@router.message(F.successful_payment)
+async def process_successful_payment(
+        message: Message,
+        access_token: str,
+        api_client: DrugSearchAPIClient,
+        cache_service: CacheService
+):
+    payment_info = message.successful_payment
+    payload = payment_info.invoice_payload
+
+    logger.info(f"New invoice payload: {payload}")
+
+    product_key, user_id_from_payload = payload.split('-')
+
+    user: UserSchema = await cache_service.get_user_profile(
+        access_token,
+        str(message.from_user.id)
+    )
+
+    request = PaymentRequest(
+        product_key=product_key,
+        user_telegram_id=user_id_from_payload,
+        sub_days=user.subscription_days_remaining
+    )
+
+    await api_client.payment_process(
+        access_token,
+        request
     )

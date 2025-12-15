@@ -1,4 +1,5 @@
 import uuid
+from enum import Enum
 from typing import Optional
 
 from aiogram.filters.callback_data import CallbackData
@@ -68,6 +69,11 @@ class UserDescriptionCallback(CallbackData, prefix="user_description"):
     pass
 
 
+class SimpleModeProfileCallback(CallbackData, prefix="simple_mode"):
+    """Переключение упрощенного режима"""
+    pass
+
+
 class BackToUserProfileCallback(CallbackData, prefix="back_to_profile"):
     pass
 
@@ -90,11 +96,6 @@ class BuySubscriptionConfirmationCallback(CallbackData, prefix="buy_subscription
 
 class BuyTokensCallback(CallbackData, prefix="buy_tokens"):
     """Клик на 'Купить токены' из Профиля"""
-    pass
-
-
-class SimpleModeProfileCallback(CallbackData, prefix="simple_mode"):
-    """Переключение упрощенного режима"""
     pass
 
 

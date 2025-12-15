@@ -86,6 +86,12 @@ class User(IDMixin, TimestampsMixin):
         lazy="selectin"
     )
 
+    payment_logs: Mapped[list["Payment"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin"
+    )
+
     def get_schema(self) -> Union[S, list[None]]:
         return UserSchema(
             id=self.id,

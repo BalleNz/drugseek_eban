@@ -6,8 +6,8 @@ from aiogram.types import Message, LinkPreviewOptions
 
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
 from drug_search.bot.handlers.actions import drug_buy
-from drug_search.bot.keyboards import drug_keyboard
-from drug_search.bot.keyboards.keyboard_markups import get_tokens_packages_to_buy_keyboard
+from keyboards import drug_keyboard
+from keyboards.payment_keyboards import get_tokens_packages_to_buy_keyboard
 from drug_search.bot.lexicon import MessageTemplates
 from drug_search.bot.lexicon.enums import ModeTypes
 from drug_search.bot.lexicon.message_text import MessageText

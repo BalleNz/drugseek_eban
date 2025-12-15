@@ -8,13 +8,13 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from drug_search.core.lexicon import SUBSCRIPTION_TYPES, TOKENS_LIMIT, SubscriptionPackage
+from drug_search.core.lexicon import REFERRALS_REWARDS
+from drug_search.core.lexicon import SUBSCRIPTION_TYPES, TOKENS_LIMIT
 from drug_search.core.schemas import (UserTelegramDataSchema, UserSchema, DrugBrieflySchema,
                                       AllowedDrugsInfoSchema, ReferralSchema)
+from drug_search.core.utils.referrals_funcs import get_ref_level
 from drug_search.infrastructure.database.models.user import AllowedDrugs, User, UserRequestLog, Referral
 from drug_search.infrastructure.database.repository.base_repo import BaseRepository
-from drug_search.core.utils.referrals_funcs import get_ref_level
-from drug_search.core.lexicon import REFERRALS_REWARDS
 
 logger = logging.getLogger(__name__)
 
@@ -208,20 +208,6 @@ class UserRepository(BaseRepository):
                     else_=0
                 ),
                 used_tokens=User.used_tokens + 1
-            )
-        )
-        await self.session.commit()
-
-    async def give_subscription(self, user_id: uuid.UUID, subscription_package: SubscriptionPackage):
-        """
-        Выдает или обновляет подписку
-        """
-        await self.session.execute(
-            update(User)
-            .where(User.id == user_id)
-            .values(
-                subscription_type=subscription_package.subscription_type,
-                subscription_end=datetime.datetime.now() + datetime.timedelta(days=subscription_package.duration),
             )
         )
         await self.session.commit()

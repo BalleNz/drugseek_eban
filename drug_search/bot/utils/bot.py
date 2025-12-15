@@ -12,7 +12,7 @@ async def send_delayed_message(
         chat_id: int,
         delay_minutes: int,
         text: str,
-        reply_markup: InlineKeyboardMarkup | None
+        reply_markup: InlineKeyboardMarkup | None = None
 ):
     """Отправление сообщение с задержкой"""
     try:

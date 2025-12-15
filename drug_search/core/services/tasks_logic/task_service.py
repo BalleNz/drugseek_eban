@@ -6,7 +6,7 @@ from enum import Enum
 from arq import ArqRedis
 from arq.jobs import Job, JobStatus
 
-from drug_search.core.lexicon import ARROW_TYPES, JobStatuses, SubscriptionPackage, TokenPackage
+from drug_search.core.lexicon import ARROW_TYPES, JobStatuses
 from drug_search.core.schemas import UpdateDrugStatuses
 
 logger = logging.getLogger(__name__)
@@ -173,16 +173,14 @@ class TaskService:
             self,
             username: str,
             price: float,
-            subscription_package: SubscriptionPackage | None = None,
-            tokens_package: TokenPackage | None = None,
+            payment_description: str
     ):
         """задача на рассылку админам о срабатывании платежки"""
         job: Job = await self.arq_pool.enqueue_job(
             ARQ_JOBS.YOOKASSA_UPDATE_TO_ADMINS,
             username,
             price,
-            subscription_package,
-            tokens_package
+            payment_description
         )
         logger.info(f"Задача на рассылку админам о покупке в юкассе поставлена в очередь!")
 

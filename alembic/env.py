@@ -23,6 +23,7 @@ from drug_search.infrastructure.database.models.base import *  # noqa
 from drug_search.infrastructure.database.models.drug import *  # noqa
 from drug_search.infrastructure.database.models.user import *  # noqa
 from drug_search.infrastructure.database.models.types import *  # noqa
+from drug_search.infrastructure.database.models.payment import *  # noqa
 from drug_search.infrastructure.database import *  # noqa
 
 target_metadata = IDMixin.metadata

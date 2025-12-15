@@ -4,7 +4,8 @@ from arq.connections import RedisSettings
 
 from drug_search.config import config
 from drug_search.core.services.tasks_logic.arq_tasks import (drug_create, drug_update, assistant_drugs_question,
-                                                             mailing, user_description_update, assistant_question)
+                                                             mailing, user_description_update, assistant_question,
+                                                             yookassa_update_to_admins)
 from drug_search.infrastructure.loggerConfig import configure_logging
 
 
@@ -16,7 +17,8 @@ class WorkerSettings:
         assistant_question,
         assistant_drugs_question,
         mailing,
-        user_description_update
+        user_description_update,
+        yookassa_update_to_admins
     ]
 
     # Настройки Redis

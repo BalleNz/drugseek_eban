@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from drug_search.core.handlers import (user_router, auth_router, drug_router,
-                                       assistant_router, admin_router, referrals_router)
+                                       assistant_router, admin_router, referrals_router, payment_router)
 from drug_search.core.schemas.API_schemas.O2AuthSchema import jwt_openapi
 
 
@@ -18,6 +18,7 @@ def get_app() -> FastAPI:
     app.include_router(assistant_router, prefix="/v1", tags=["Assistant"])
     app.include_router(admin_router, prefix="/v1", tags=["Admin"])
     app.include_router(referrals_router, prefix="/v1", tags=["Referrals"])
+    app.include_router(payment_router, prefix="/v1", tags=["Payment"])
 
     # custom auth schema after including routers
     app.openapi = lambda: jwt_openapi(app)

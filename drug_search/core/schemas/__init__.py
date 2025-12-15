@@ -5,6 +5,7 @@ from drug_search.core.schemas.drug_schemas import *
 from drug_search.core.schemas.telegram_schemas import *
 from drug_search.core.schemas.user_schemas import *
 from drug_search.core.schemas.pubmed_schema import ClearResearchesRequest, PubmedResearchSchema
+from drug_search.core.schemas.payment_schema import *
 
 __all__ = [
     # [ Assistant ]
@@ -65,4 +66,7 @@ __all__ = [
     'DrugPathwaySchema',
     'MechanismSummary',
     'CombinationType',
+    # [ Payment ]
+    'PaymentRequest',
+    'PaymentSchema'
 ]

@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, LinkPreviewOptions, InputMediaVideo, InputFile, InputMediaPhoto
 
 from drug_search.bot.keyboards.callbacks import HelpSectionCallback
-from drug_search.bot.keyboards.keyboard_markups import get_help_keyboard
+from keyboards.other_keyboards import get_help_keyboard
 from drug_search.bot.lexicon.enums import HelpSectionMode
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.bot.lexicon.message_text import MessageText

@@ -173,7 +173,9 @@ class MessageText:
     FINISH_PAYMENT = "Ожидание оплаты..."
 
     # [ DELAYED MESSAGES ]
-    REFERRALS_INFO = "За приглашения друзьям ты можешь получать токены!"
+    REFERRALS_INFO = "ℹ️ За приглашения друзьям ты можешь получать токены!"
+
+    SIMPLE_MODE_INFO = "ℹ️ Попробуй отключить простой режим в <b>Профиле</b>!"
 
     # [ STATIC ]
     HELLO: str = ("<b>💊 Привет!</b>\n\n"

@@ -24,7 +24,7 @@ class User(IDMixin, TimestampsMixin):
     last_name: Mapped[Optional[str]] = mapped_column(String, comment="telegram last name")
 
     # [ settings ]
-    simple_mode: Mapped[Optional[bool]] = mapped_column(Boolean, server_default="false", comment="Упрощенный режим")
+    simple_mode: Mapped[Optional[bool]] = mapped_column(Boolean, server_default="true", comment="Упрощенный режим")
 
     # [ subscription ]
     subscription_type: Mapped[UserSubscriptionTypes] = mapped_column(

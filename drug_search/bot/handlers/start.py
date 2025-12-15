@@ -51,7 +51,18 @@ async def start_dialog(
         send_delayed_message(
             bot=bot,
             chat_id=message.chat.id,
-            delay_minutes=1,
+            delay_minutes=10,
+            text=MessageText.REFERRALS_INFO,
+            reply_markup=open_referrals_menu_keyboard()
+        )
+    )
+
+    # [ сообщение о режиме ]
+    asyncio.create_task(
+        send_delayed_message(
+            bot=bot,
+            chat_id=message.chat.id,
+            delay_minutes=25,
             text=MessageText.REFERRALS_INFO,
             reply_markup=open_referrals_menu_keyboard()
         )

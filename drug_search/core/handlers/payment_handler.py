@@ -3,16 +3,16 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from dependencies.telegram_service_dep import get_telegram_service
 from drug_search.core.dependencies.bot.cache_service_dep import get_cache_service
 from drug_search.core.dependencies.payment_service_dep import get_payment_service
 from drug_search.core.dependencies.task_service_dep import get_task_service
+from drug_search.core.dependencies.telegram_service_dep import get_telegram_service
 from drug_search.core.schemas import PaymentRequest, PaymentSchema
 from drug_search.core.services.cache_logic.cache_service import CacheService
 from drug_search.core.services.models_service.payment_service import PaymentService
 from drug_search.core.services.tasks_logic.task_service import TaskService
+from drug_search.core.services.telegram_service import TelegramService
 from drug_search.core.utils.auth import validate_api_key
-from services.telegram_service import TelegramService
 
 logger = logging.getLogger(__name__)
 payment_router = APIRouter(prefix="/payment")

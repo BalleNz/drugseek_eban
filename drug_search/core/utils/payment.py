@@ -30,13 +30,13 @@ async def send_invoice(
     title: str = ""
     match package_key.split("_")[0]:
         case "sub":
-            title = "Покупка подписки: "
+            title = "Оплата подписки"
         case "tokens":
-            title = "Покупка токенов: "
+            title = "Оплата пакета токенов"
 
     await callback_query.message.answer_invoice(
-        title=title + payment_description,
-        description=f'Оплата пакета токенов: {payment_description}',
+        title=title,
+        description=f'{payment_description}',
         payload=f"{package_key}-{callback_query.from_user.id}",  # payload
         provider_token=config.PROVIDER_TOKEN,  # Токен из BotFather
         currency=config.CURRENCY,

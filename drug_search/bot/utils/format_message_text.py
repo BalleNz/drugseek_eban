@@ -228,7 +228,8 @@ class DrugMessageFormatter:
             research_text: str = ""
             if research.header_name:
                 research_text += f"<b>{research.header}:</b>\n"
-                research_text += f"<b>—</b> <a href='{research.url}'>{research.header_name}.</a>\n\n"
+                research_header = research.header_name if research.header_name[-1] in "!?" else research.header_name + "."
+                research_text += f"<b>—</b> <a href='{research.url}'>{research_header}</a>\n\n"
             else:
                 research_text += f"<b><a href='{research.url}'>{research.header}</a></b>\n\n"
 

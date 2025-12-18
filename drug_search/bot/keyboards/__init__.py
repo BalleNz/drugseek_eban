@@ -6,4 +6,6 @@ __all__ = [
     "DrugDescribeCallback",
     "DrugListCallback",
     'WrongDrugFoundedCallback',
+    'drug_list_keyboard',
+    'drug_keyboard'
 ]

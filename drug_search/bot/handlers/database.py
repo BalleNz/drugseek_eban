@@ -5,10 +5,10 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, LinkPreviewOptions
 
+from drug_search.bot.keyboards import drug_list_keyboard, drug_keyboard
 from drug_search.bot.keyboards.callbacks import DrugDescribeResearchesCallback, DrugDescribeCallback, DrugListCallback
-from keyboards.other_keyboards import get_subscription_packages_from_limitable_keyboard
-from keyboards.drug_keyboards import drug_researches_keyboard
-from keyboards import drug_list_keyboard, drug_keyboard
+from drug_search.bot.keyboards.drug_keyboards import drug_researches_keyboard
+from drug_search.bot.keyboards.other_keyboards import get_subscription_packages_from_limitable_keyboard
 from drug_search.bot.lexicon.enums import ModeTypes
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.bot.lexicon.message_text import MessageText
@@ -21,7 +21,7 @@ router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
 
 
-@router.message(F.text == ButtonText.HISTORY)
+@router.message(F.text == ButtonText.DRUG_DATABASE)
 async def drug_menu_handler(
         message: Message,
         cache_service: CacheService,

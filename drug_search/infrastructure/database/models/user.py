@@ -9,6 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from drug_search.core.lexicon import SUBSCRIPTION_TYPES, TOKENS_LIMIT
 from drug_search.core.schemas import UserSchema, UserRequestLogSchema, AllowedDrugSchema, ReferralSchema
 from drug_search.infrastructure.database.models.base import IDMixin, TimestampsMixin
+from drug_search.infrastructure.database.models.payment import Payment
 from drug_search.infrastructure.database.models.types import UserSubscriptionTypes
 
 M = TypeVar("M", bound='IDMixin')
@@ -50,7 +51,8 @@ class User(IDMixin, TimestampsMixin):
         comment="дополнительные токены (не сбрасываются)"
     )
 
-    used_tokens: Mapped[int] = mapped_column(Integer, server_default="0", default=0, comment="Количество использованных запросов в общем")
+    used_tokens: Mapped[int] = mapped_column(Integer, server_default="0", default=0,
+                                             comment="Количество использованных запросов в общем")
 
     tokens_last_refresh: Mapped[datetime] = mapped_column(
         DateTime,
@@ -61,7 +63,8 @@ class User(IDMixin, TimestampsMixin):
 
     # [ Bonuses ]
     got_free_tokens: Mapped[bool] = mapped_column(Boolean, server_default="false", comment="получены бесплатные токены")
-    got_free_tokens_for_subscription: Mapped[bool] = mapped_column(Boolean, server_default="false", comment="получены токены за подписки на каналы")
+    got_free_tokens_for_subscription: Mapped[bool] = mapped_column(Boolean, server_default="false",
+                                                                   comment="получены токены за подписки на каналы")
 
     # [ REFERRALS ]
     referred_by_telegram_id: Mapped[Optional[str]] = mapped_column(

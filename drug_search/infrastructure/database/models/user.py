@@ -87,6 +87,7 @@ class User(IDMixin, TimestampsMixin):
     )
 
     payment_logs: Mapped[list["Payment"]] = relationship(
+        "Payment",
         back_populates="user",
         cascade="all, delete-orphan",
         lazy="selectin"

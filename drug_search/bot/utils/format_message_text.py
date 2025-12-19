@@ -234,8 +234,16 @@ class DrugMessageFormatter:
                 research_text += f"<b><a href='{research.url}'>{research.header}</a></b>\n\n"
 
             research_text += f"<b>Дата:</b> {research.publication_date}\n"
-            reading_level: str = "Лёгкий" if float(research.interest) > 0.8 else "Сложный"
-            research_text += f"<b>Тип чтения:</b> {reading_level}\n\n"
+
+            reading_level: str
+            if research.interest > 0.9:
+                reading_level = "Лёгкая"
+            elif research.interest > 0.85:
+                reading_level = "Средняя"
+            else:
+                reading_level = "Тяжело"
+
+            research_text += f"<b>Сложность чтения:</b> {reading_level}\n\n"
 
             research_text += f"{research.description}\n\n"
             research_text += f"<b>Вывод</b>: {research.summary}\n"

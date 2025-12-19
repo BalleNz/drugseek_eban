@@ -209,7 +209,7 @@ class TOKENS_LIMIT(int, Enum):
     """
     Дневные | Недельные лимиты (в зависимости от типа подписки) токенов
     """
-    TOKENS_AFTER_REGISTRATION = 5
+    TOKENS_AFTER_REGISTRATION = 1
     DEFAULT_TOKENS_LIMIT = 0
 
     LITE_TOKENS_LIMIT = 50  # в неделю

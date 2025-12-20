@@ -32,7 +32,6 @@ class UserSchema(BaseModel):
     tokens_last_refresh: datetime = Field(..., description="последний дневной сброс токенов")
 
     got_free_tokens: bool = Field(..., description="получены бесплатные токены")
-    got_free_tokens_for_subscription: bool = Field(..., description="получены токены за подписки")
 
     referred_by_telegram_id: str | None = Field(..., description="кто пригласил")
     referrals_count: int = Field(..., description="количество рефералов")

@@ -63,8 +63,6 @@ class User(IDMixin, TimestampsMixin):
 
     # [ Bonuses ]
     got_free_tokens: Mapped[bool] = mapped_column(Boolean, server_default="false", comment="получены бесплатные токены")
-    got_free_tokens_for_subscription: Mapped[bool] = mapped_column(Boolean, server_default="false",
-                                                                   comment="получены токены за подписки на каналы")
 
     # [ REFERRALS ]
     referred_by_telegram_id: Mapped[Optional[str]] = mapped_column(
@@ -116,7 +114,6 @@ class User(IDMixin, TimestampsMixin):
             tokens_last_refresh=self.tokens_last_refresh,
 
             got_free_tokens=self.got_free_tokens,
-            got_free_tokens_for_subscription=self.got_free_tokens_for_subscription,
             referrals_count=self.referrals_count,
             referred_by_telegram_id=self.referred_by_telegram_id,
 

@@ -4,11 +4,13 @@ import uuid
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, KeyboardButtonRequestChat
 
 from drug_search.bot.keyboards import DrugDescribeCallback
-from drug_search.bot.keyboards.callbacks import HelpSectionCallback, GetTokensForSubscriptionCallback, ReferralsMenuCallback, \
+from drug_search.bot.keyboards.callbacks import HelpSectionCallback, GetTokensForSubscriptionCallback, \
+    ReferralsMenuCallback, \
     BuySubscriptionCallback, BuySubscriptionChosenTypeCallback
-from drug_search.core.lexicon import ZMTLK_CHANNEL_USERNAME, SUBSCRIPTION_TYPES, DrugMenu
 from drug_search.bot.lexicon.enums import HelpSectionMode
 from drug_search.bot.lexicon.keyboard_words import ButtonText
+from drug_search.core.lexicon import ZMTLK_CHANNEL_USERNAME, SUBSCRIPTION_TYPES, DrugMenu
+from keyboards.callbacks import InfoSectionCallback
 
 
 def get_help_keyboard(
@@ -18,14 +20,8 @@ def get_help_keyboard(
 
     menu_buttons = {
         HelpSectionMode.MAIN: [
-            (ButtonText.HELP_QUERIES, HelpSectionMode.QUERIES),
             (ButtonText.HELP_TOKENS, HelpSectionMode.TOKENS),
             (ButtonText.HELP_SUBSCRIPTION, HelpSectionMode.SUBSCRIPTION),
-        ],
-        HelpSectionMode.QUERIES: [
-            (ButtonText.HELP_QUERIES_DRUG_SEARCH, HelpSectionMode.QUERIES_DRUG_SEARCH),
-            (ButtonText.HELP_QUERIES_QUESTIONS, HelpSectionMode.QUERIES_QUESTIONS),
-            (ButtonText.HELP_QUERIES_PHARMA, HelpSectionMode.QUERIES_PHARMA_QUESTIONS),
         ],
         HelpSectionMode.TOKENS: [
             (ButtonText.HELP_TOKENS_FREE, HelpSectionMode.TOKENS_FREE)
@@ -34,12 +30,8 @@ def get_help_keyboard(
 
     # возврат Назад
     back_navigation = {
-        HelpSectionMode.QUERIES: HelpSectionMode.MAIN,
         HelpSectionMode.TOKENS: HelpSectionMode.MAIN,
         HelpSectionMode.SUBSCRIPTION: HelpSectionMode.MAIN,
-        HelpSectionMode.QUERIES_QUESTIONS: HelpSectionMode.QUERIES,
-        HelpSectionMode.QUERIES_PHARMA_QUESTIONS: HelpSectionMode.QUERIES,
-        HelpSectionMode.QUERIES_DRUG_SEARCH: HelpSectionMode.QUERIES,
         HelpSectionMode.TOKENS_FREE: HelpSectionMode.TOKENS
     }
 
@@ -79,6 +71,25 @@ def get_help_keyboard(
                     ).pack()
                 )
             ]
+        )
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=buttons
+    )
+
+
+def get_modes_information_keyboard() -> InlineKeyboardMarkup:
+    buttons: list[list[InlineKeyboardButton]] = []
+    for mode_text in (ButtonText.MODES_INFO_DRUG_SEARCH,
+                      ButtonText.MODES_INFO_PHARMA,
+                      ButtonText.MODES_INFO_QUESTIONS):
+        buttons.append(
+            [InlineKeyboardButton(
+                text=mode_text,
+                callback_data=InfoSectionCallback(
+                    mode=mode_text
+                ).pack()
+            )]
         )
 
     return InlineKeyboardMarkup(

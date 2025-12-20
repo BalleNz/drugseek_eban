@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from datetime import datetime, timedelta, timezone
 
 from aiogram import Router, Bot
 from aiogram.filters import CommandStart
@@ -8,9 +9,10 @@ from aiogram.types import Message
 
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
 from drug_search.bot.keyboards.menu_markup import menu_keyboard
-from keyboards.other_keyboards import open_referrals_menu_keyboard
+from drug_search.bot.keyboards.other_keyboards import open_referrals_menu_keyboard
 from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.bot.utils.bot import send_delayed_message
+from drug_search.core.schemas import UserSchema
 from drug_search.core.utils.referrals_funcs import decode_referral_token
 
 router = Router(name=__name__)
@@ -29,6 +31,10 @@ async def start_dialog(
 
     user_id = str(message.from_user.id)
     command_parts = message.text.split()
+
+    user: UserSchema = await api_client.get_current_user(
+        access_token
+    )
 
     # [ referrals check ]
     if len(command_parts) > 1 and command_parts[1].startswith('ref_'):
@@ -50,6 +56,10 @@ async def start_dialog(
 
     await message.answer(text=MessageText.HELLO, reply_markup=menu_keyboard)
     logger.info(f"User {user_id} has started dialog.")
+
+    if datetime.now(timezone.utc) - user.created_at > timedelta(minutes=1):
+        logger.info(f"Рассылка пропущена, юзер {user.telegram_id} уже зарегистрирован")
+        return
 
     # [ сообщение о рефералках ]
     asyncio.create_task(

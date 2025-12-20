@@ -8,7 +8,8 @@ from aiogram.types import Message, CallbackQuery, LinkPreviewOptions
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
 from drug_search.bot.bot_instance import bot
 from drug_search.bot.keyboards.callbacks import ReferralsMenuCallback, GetTokensForSubscriptionCallback
-from keyboards.other_keyboards import get_free_tokens_menu_keyboard, get_tokens_for_subscription_channel_list, \
+from drug_search.bot.keyboards.other_keyboards import get_free_tokens_menu_keyboard, \
+    get_tokens_for_subscription_channel_list, \
     referrals_menu_keyboard
 from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.core.lexicon import REFERRALS_REWARDS, BOT_USERNAME, REFERRALS_LEVELS, CHANNELS_USERNAME_FREE_TOKENS

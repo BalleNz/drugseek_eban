@@ -1,5 +1,4 @@
 import uuid
-from enum import Enum
 from typing import Optional
 
 from aiogram.filters.callback_data import CallbackData
@@ -116,3 +115,8 @@ class ReferralsMenuCallback(CallbackData, prefix="referrals_menu"):
 # [ HELP ]
 class HelpSectionCallback(CallbackData, prefix="help"):
     mode: HelpSectionMode
+
+
+# [ MODES INFO ]
+class InfoSectionCallback(CallbackData, prefix="modes_info"):
+    mode: str  # ButtonText

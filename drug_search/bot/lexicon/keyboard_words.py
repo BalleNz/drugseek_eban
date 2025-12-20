@@ -1,14 +1,14 @@
 class ButtonText:
     # [ REPLY ]
+    MODES_INFO = "💡 Режимы"
     PROFILE = "👤 Профиль"
-    HISTORY = "📚 История"
+    DRUG_DATABASE = "💊 База препаратов"
     HELP = "🔎 Помощь"
 
     # [ INLINE ]
     BUY_DRUG = "Купить"
     FULL_LIST = "Полный список"
 
-    DRUG_DATABASE = "💊 База препаратов"
     QUESTIONS = "❓ История вопросов"  # TODO: клавиатура
 
     # [ profile ]
@@ -38,13 +38,13 @@ class ButtonText:
     LEFT_ARROW: str = "<——"
     RIGHT_ARROW: str = "——>"
 
+    # [ Modes Info ]
+    MODES_INFO_DRUG_SEARCH = "База препаратов"
+    MODES_INFO_PHARMA = "Рекомендации препаратов"
+    MODES_INFO_QUESTIONS = "Вопросы ассистенту"
+
     # [ HELP ]
-    HELP_QUERIES = "Режимы"
     HELP_TOKENS = "Токены"
     HELP_SUBSCRIPTION = "Подписки"
-
-    HELP_QUERIES_DRUG_SEARCH = "База препаратов"
-    HELP_QUERIES_PHARMA = "Рекомендации препаратов"
-    HELP_QUERIES_QUESTIONS = "Вопросы ассистенту"
 
     HELP_TOKENS_FREE = "Как получать токены?"

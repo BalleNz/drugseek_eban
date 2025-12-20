@@ -1,5 +1,7 @@
 from enum import Enum
 
+from lexicon.keyboard_words import ButtonText
+
 
 class ModeTypes(str, Enum):
     SEARCH = "search"
@@ -10,12 +12,6 @@ class ModeTypes(str, Enum):
 class HelpSectionMode(str, Enum):
     # [ MAIN ]
     MAIN = "main"
-
-    # [ QUERIES ]
-    QUERIES = "queries"
-    QUERIES_QUESTIONS = "queries_questions"
-    QUERIES_PHARMA_QUESTIONS = "queries_pharma_questions"
-    QUERIES_DRUG_SEARCH = "queries_drug_search"
 
     # [ TOKENS ]
     TOKENS = "tokens"

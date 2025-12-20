@@ -15,6 +15,7 @@ from drug_search.bot.handlers.profile import router as profile_router
 from drug_search.bot.handlers.referrals import router as referrals_router
 from drug_search.bot.handlers.start import router as start_router
 from drug_search.bot.handlers.payment import router as yookassa_router
+from drug_search.bot.handlers.modes_information import router as modes_info
 from drug_search.bot.middlewares.depends_injectors import DependencyInjectionMiddleware
 from drug_search.bot.middlewares.limits import MessageLimitsMiddleware
 from drug_search.bot.middlewares.check_subscription import CheckSubscriptionMiddleware
@@ -32,6 +33,7 @@ def setup_auth(dp: Dispatcher):
     for router in [
         start_router,
         help_router,
+        modes_info,
         yookassa_router,
         admin_router,
         database_router,

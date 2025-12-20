@@ -6,8 +6,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup
 
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
-from drug_search.bot.keyboards.callbacks import UserDescriptionCallback, BackToUserProfileCallback, SimpleModeProfileCallback
-from keyboards.user_keyboards import user_profile_keyboard, back_to_user_profile
+from drug_search.bot.keyboards.callbacks import UserDescriptionCallback, BackToUserProfileCallback, \
+    SimpleModeProfileCallback
+from drug_search.bot.keyboards.user_keyboards import user_profile_keyboard, back_to_user_profile
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.core.schemas import UserSchema

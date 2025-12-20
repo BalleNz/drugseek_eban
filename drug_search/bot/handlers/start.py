@@ -38,11 +38,15 @@ async def start_dialog(
         if referrer_telegram_id and referrer_telegram_id != user_id:
             logger.info(f"REFERRAL: User {user_id} came from {referrer_telegram_id} (token: {token})")
 
-            await api_client.new_referral(
-                access_token=access_token,
-                referrer_telegram_id=referrer_telegram_id,
-                referral_telegram_id=user_id
-            )
+            try:
+                await api_client.new_referral(
+                    access_token=access_token,
+                    referrer_telegram_id=referrer_telegram_id,
+                    referral_telegram_id=user_id
+                )
+            except Exception as ex:
+                logger.error(ex)
+                pass
 
     await message.answer(text=MessageText.HELLO, reply_markup=menu_keyboard)
     logger.info(f"User {user_id} has started dialog.")

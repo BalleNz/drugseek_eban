@@ -145,31 +145,19 @@ async def drug_describe_handler(
     describe_type: DrugMenu = callback_data.drug_menu
     page: int = callback_data.page
 
-    if callback_data.drug_menu == DrugMenu.MECHANISM and user.subscription_type in (
-    SUBSCRIPTION_TYPES.DEFAULT, SUBSCRIPTION_TYPES.LITE):
-        """Проверка на подписку для раздела механизма действия"""
-        await callback.message.edit_text(
-            text=MessageText.MECHANISM_LIMITATION,
-            reply_markup=get_subscription_packages_from_limitable_keyboard(
-                user_subscription_type=user.subscription_type,
-                drug_id=drug_id,
-            ),
-            LinkPreviewOptions=LinkPreviewOptions(is_disabled=True)
-        )
-    else:
-        drug: DrugSchema = await cache_service.get_drug(
-            access_token=access_token,
-            drug_id=drug_id
-        )
+    drug: DrugSchema = await cache_service.get_drug(
+        access_token=access_token,
+        drug_id=drug_id
+    )
 
-        await callback.message.edit_text(
-            text=MessageText.formatters.DRUG_BY_TYPE(drug_menu=describe_type, drug=drug),
-            reply_markup=drug_keyboard(
-                drug=drug,
-                page=page,
-                drug_menu=describe_type,
-                user_subscribe_type=user.subscription_type,
-                mode=ModeTypes.DATABASE
-            ),
-            link_preview_options=LinkPreviewOptions(is_disabled=True)
-        )
+    await callback.message.edit_text(
+        text=MessageText.formatters.DRUG_BY_TYPE(drug_menu=describe_type, drug=drug),
+        reply_markup=drug_keyboard(
+            drug=drug,
+            page=page,
+            drug_menu=describe_type,
+            user_subscribe_type=user.subscription_type,
+            mode=ModeTypes.DATABASE
+        ),
+        link_preview_options=LinkPreviewOptions(is_disabled=True)
+    )

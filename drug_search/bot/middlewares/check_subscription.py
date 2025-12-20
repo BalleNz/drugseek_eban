@@ -75,7 +75,10 @@ class CheckSubscriptionMiddleware(BaseMiddleware):
             )
 
             if is_subscribed:
-                message = "Теперь ты можешь пользоваться ботом!"
+                message = (
+                    "✅️ Теперь ты можешь пользоваться ботом.\n\n"
+                    "— Введи новый запрос!"
+                )
                 await self.send_message(
                     bot,
                     chat_id,

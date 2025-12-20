@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
@@ -30,7 +30,7 @@ async def new_referral(
     referrer_user: UserSchema = await user_service.repo.get_user_from_telegram_id(referrer_telegram_id)
     referral_user: UserSchema = await user_service.repo.get_user_from_telegram_id(referral_telegram_id)
 
-    if datetime.now() - referral_user.created_at < timedelta(minutes=1) and not referral_user.referred_by_telegram_id:
+    if datetime.now(timezone.utc) - referral_user.created_at < timedelta(minutes=1) and not referral_user.referred_by_telegram_id:
         await user_service.repo.create_referral(
             referrer_user=referrer_user,
             referral_user=referral_user

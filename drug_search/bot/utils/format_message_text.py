@@ -236,12 +236,12 @@ class DrugMessageFormatter:
             research_text += f"<b>Дата:</b> {research.publication_date}\n"
 
             reading_level: str
-            if research.interest > 0.9:
-                reading_level = "Лёгкая"
-            elif research.interest > 0.85:
+            if research.interest < 70:
+                reading_level = "Тяжело"
+            elif research.interest < 80:
                 reading_level = "Средняя"
             else:
-                reading_level = "Тяжело"
+                reading_level = "Лёгкая"
 
             research_text += f"<b>Сложность чтения:</b> {reading_level}\n\n"
 

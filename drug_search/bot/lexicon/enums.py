@@ -1,7 +1,5 @@
 from enum import Enum
 
-from lexicon.keyboard_words import ButtonText
-
 
 class ModeTypes(str, Enum):
     SEARCH = "search"

@@ -31,7 +31,9 @@ async def modes_info_listing(
     state: FSMContext  # noqa
 ):
     mode: str = callback_data.mode
-    keyboard = get_modes_information_keyboard()
+    keyboard = get_modes_information_keyboard(
+        mode=mode
+    )
 
     message_text: str = ""
     file_path: str = ""

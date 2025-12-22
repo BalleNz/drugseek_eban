@@ -78,7 +78,9 @@ def get_help_keyboard(
     )
 
 
-def get_modes_information_keyboard() -> InlineKeyboardMarkup:
+def get_modes_information_keyboard(
+        mode: str | None = ""
+) -> InlineKeyboardMarkup:
     buttons: list[list[InlineKeyboardButton]] = []
     for mode_text in (
             ButtonText.MODES_INFO_DRUG_SEARCH,
@@ -87,7 +89,7 @@ def get_modes_information_keyboard() -> InlineKeyboardMarkup:
     ):
         buttons.append(
             [InlineKeyboardButton(
-                text=mode_text,
+                text=mode_text if mode_text != mode else f"| {mode_text} |",
                 callback_data=InfoSectionCallback(
                     mode=mode_text
                 ).pack()

@@ -374,9 +374,9 @@ class UserProfileMessageFormatter:
             additional_tokens_text = f"дополнительные: <u>{user.additional_tokens}</u>\n\n"
 
         if user.simple_mode:
-            simple_mode_text = "<b>Ассистент:</b> ответы будут проще."
+            simple_mode_text = "<b>Ассистент:</b> ответы пишутся простым языком."
         else:
-            simple_mode_text = "<b>Ассистент:</b> ответы сложные, подробно объясняются."
+            simple_mode_text = "<b>Ассистент:</b> ответы сложные, для умных."
 
         return MessageTemplates.USER_PROFILE.format(
             profile_name=profile_name + "\n" if not user.subscription_end else profile_name,

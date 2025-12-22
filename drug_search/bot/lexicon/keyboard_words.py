@@ -39,7 +39,7 @@ class ButtonText:
     RIGHT_ARROW: str = "——>"
 
     # [ Modes Info ]
-    MODES_INFO_DRUG_SEARCH = "База препаратов"
+    MODES_INFO_DRUG_SEARCH = "🔍 Искать по базе препаратов"
     MODES_INFO_PHARMA = "Рекомендации препаратов"
     MODES_INFO_QUESTIONS = "Вопросы ассистенту"
 

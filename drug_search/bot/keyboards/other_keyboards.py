@@ -80,9 +80,11 @@ def get_help_keyboard(
 
 def get_modes_information_keyboard() -> InlineKeyboardMarkup:
     buttons: list[list[InlineKeyboardButton]] = []
-    for mode_text in (ButtonText.MODES_INFO_DRUG_SEARCH,
-                      ButtonText.MODES_INFO_PHARMA,
-                      ButtonText.MODES_INFO_QUESTIONS):
+    for mode_text in (
+            ButtonText.MODES_INFO_DRUG_SEARCH,
+            ButtonText.MODES_INFO_QUESTIONS,
+            ButtonText.MODES_INFO_PHARMA
+    ):
         buttons.append(
             [InlineKeyboardButton(
                 text=mode_text,

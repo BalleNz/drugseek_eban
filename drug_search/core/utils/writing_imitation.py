@@ -21,7 +21,7 @@ async def bot_typing_imitation(chat_id: int, bot: Bot):
                 await bot.send_chat_action(
                     chat_id=chat_id,
                     action="typing",
-                    request_timeout=2
+                    request_timeout=1
                 )
                 await asyncio.sleep(2)
             except asyncio.CancelledError:

@@ -5,6 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, LinkPreviewOptions
 
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
+from drug_search.bot.bot_instance import bot
 from drug_search.bot.handlers.actions import drug_buy
 from drug_search.bot.keyboards import drug_keyboard
 from drug_search.bot.keyboards.payment_keyboards import get_tokens_packages_to_buy_keyboard
@@ -19,6 +20,7 @@ from drug_search.core.lexicon import (
 )
 from drug_search.core.lexicon.enums import DrugMenu
 from drug_search.core.schemas import SelectActionResponse, DrugExistingResponse, UserSchema
+from drug_search.core.utils.writing_imitation import bot_typing_imitation
 
 router = Router(name=__name__)
 logger = logging.getLogger(name=__name__)
@@ -99,12 +101,15 @@ async def main_action(
 
         message_request: Message = await message.answer(text=MessageText.QUERY_IN_PROCESS)
 
-        action_response: SelectActionResponse = await api_client.assistant_get_action(
-            access_token, message.text
-        )
+        # [ имитация печати ]
+        async with bot_typing_imitation(message.from_user.id, bot=bot):
+            action_response: SelectActionResponse = await api_client.assistant_get_action(
+                access_token, message.text
+            )
 
         logger.info(
-            f"Действие юзера {user.telegram_id}: {action_response.action} {action_response.drug_menu if action_response.drug_menu else ""}")
+            f"Действие юзера {user.telegram_id}: {action_response.action} {action_response.drug_menu if action_response.drug_menu else ""}"
+        )
 
         match action_response.action:
             case ACTIONS_FROM_ASSISTANT.QUESTION_DRUGS:
@@ -193,6 +198,13 @@ async def main_action(
                     await message_request.edit_text(MessageText.ERROR_DRUG)
 
             case ACTIONS_FROM_ASSISTANT.DRUG_SEARCH:
+                # [ imitation ]
+                await bot.send_chat_action(
+                    chat_id=message.from_user.id,
+                    action="typing",
+                    request_timeout=5
+                )
+
                 # [ поиск препарата ]
                 drug_existing_response: DrugExistingResponse | None = await api_client.search_drug(
                     message.text,

@@ -4,6 +4,7 @@ import time
 import uuid
 from typing import Sequence, Generator
 
+from drug_search.bot.bot_instance import bot
 from drug_search.core.dependencies.containers.service_container import get_service_container
 from drug_search.core.lexicon import ADMINS_TG_ID, ARROW_TYPES
 from drug_search.core.schemas import DrugSchema, QuestionDrugsAssistantResponse, UserSchema, QuestionAssistantResponse
@@ -12,6 +13,7 @@ from drug_search.core.services.cache_logic.redis_service import RedisService
 from drug_search.core.services.models_service.drug_service import DrugService
 from drug_search.core.services.models_service.user_service import UserService
 from drug_search.core.services.telegram_service import TelegramService
+from drug_search.core.utils.writing_imitation import bot_typing_imitation
 from drug_search.infrastructure.database.repository.user_repo import UserRepository
 
 logger = logging.getLogger(__name__)
@@ -31,11 +33,12 @@ async def drug_create(
         user_service: UserService = await container.get_user_service()
         redis_service: RedisService = await container.redis_service
 
-        drug: DrugSchema = await drug_service.update_or_create_drug(
-            drug_name,
-            user_telegram_id=user_telegram_id
-        )
-        logger.info(f"Successfully created drug '{drug_name}' with ID: {drug.id}")
+        async with bot_typing_imitation(user_telegram_id, bot=bot):
+            drug: DrugSchema = await drug_service.update_or_create_drug(
+                drug_name,
+                user_telegram_id=user_telegram_id
+            )
+            logger.info(f"Successfully created drug '{drug_name}' with ID: {drug.id}")
 
         await telegram_service.send_drug_created_notification(
             user_telegram_id=user_telegram_id,
@@ -63,11 +66,12 @@ async def drug_update(
 
         drug: DrugSchema = await drug_service.repo.get(drug_id)
 
-        drug = await drug_service.update_or_create_drug(
-            drug_name=drug.name,
-            user_telegram_id=user_telegram_id,
-            drug_id=drug_id
-        )
+        async with bot_typing_imitation(user_telegram_id, bot=bot):
+            drug = await drug_service.update_or_create_drug(
+                drug_name=drug.name,
+                user_telegram_id=user_telegram_id,
+                drug_id=drug_id
+            )
 
         # [ invalidate cache ]
         await redis_service.invalidate_drug(drug_id)
@@ -96,10 +100,11 @@ async def assistant_question(
         assistant_service: AssistantService = await container.assistant_service
         telegram_service: TelegramService = await container.telegram_service
 
-        question_response: QuestionAssistantResponse = await assistant_service.actions.answer_to_question(
-            question,
-            simple_mode
-        )
+        async with bot_typing_imitation(user_telegram_id, bot=bot):
+            question_response: QuestionAssistantResponse = await assistant_service.actions.answer_to_question(
+                question,
+                simple_mode
+            )
 
         try:
             await telegram_service.edit_message_with_assistant_answer(
@@ -135,8 +140,9 @@ async def assistant_drugs_question(
             question=question
         )
         if not question_response:
-            question_response: QuestionDrugsAssistantResponse = await assistant_service.actions.answer_to_drugs_question(
-                question)
+            async with bot_typing_imitation(user_telegram_id, bot=bot):
+                question_response: QuestionDrugsAssistantResponse = await assistant_service.actions.answer_to_drugs_question(
+                    question)
 
             await redis_service.set_assistant_drugs_answer(
                 assistant_response=question_response,

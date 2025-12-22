@@ -212,6 +212,7 @@ class UserRepository(BaseRepository):
         )
         await self.session.commit()
 
+    # [ LOGS ]
     async def add_user_log_request(self, user_id: uuid.UUID, user_query: str) -> None:
         """
         Запись логов юзера (поиск препов / обращение в нейронку)
@@ -226,6 +227,25 @@ class UserRepository(BaseRepository):
         )
         await self.session.commit()
 
+    async def get_user_logs(self, user_id: uuid.UUID) -> Sequence[str]:
+        """Возвращает все записи логов юзера"""
+        logger.info(f"получение логов юзера {user_id}")
+
+        stmt = (
+            select(UserRequestLog.user_query)
+            .where(UserRequestLog.user_id == user_id)
+            .order_by(UserRequestLog.used_at.desc())  # самые свежие сначала
+            .limit(100)
+        )
+
+        result = await self.session.execute(stmt)
+        logs = result.scalars().all()
+
+        logger.info(f"найдено {len(logs)} записей логов для юзера {user_id}")
+        return logs
+
+
+    # [ PROFILE SETTINGS ]
     async def simple_mode_toggle(self, user_id: uuid.UUID) -> None:
         """Переключение упрощенного режима"""
         await self.session.execute(

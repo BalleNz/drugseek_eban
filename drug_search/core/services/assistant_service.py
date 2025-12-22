@@ -176,11 +176,11 @@ class AssistantService:
             pydantic_model=DrugResearchesAssistantResponse,
         )
 
-    async def get_user_description(self, user_name: str, user_drugs_name: str) -> AssistantResponseUserDescription:
+    async def get_user_description(self, user_name: str, user_logs: str) -> AssistantResponseUserDescription:
         """
         Получить описание пользователя
         """
-        user_query = user_name + ' ' + user_drugs_name
+        user_query = user_name + '\nЗапросы юзера: ' + user_logs
         return await self.get_response(input_query=user_query, prompt=Prompts.GET_USER_DESCRIPTION,
                                        pydantic_model=AssistantResponseUserDescription)
 

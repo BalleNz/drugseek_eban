@@ -115,7 +115,8 @@ async def buy_drug(
     await user_service.reduce_tokens(user.id, tokens_amount=NEW_DRUG_COST)
 
     # [ если количество препаратов кратно 5 ]
-    if len(user.allowed_drugs) + 1 % 5 == 0:
+    # if len(user.allowed_drugs) + 1 % 5 == 0:
+    if True:
         """Обновляем описание юзера"""
         await task_service.enqueue_user_description_update(user_id=user.id, user_telegram_id=user.telegram_id)
 

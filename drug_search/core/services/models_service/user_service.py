@@ -1,4 +1,5 @@
 import uuid
+from collections.abc import Sequence
 from uuid import UUID
 
 from drug_search.core.schemas import UserSchema, AllowedDrugsInfoSchema, AssistantResponseUserDescription
@@ -22,8 +23,8 @@ class UserService:
     async def update_user_description(self, user_id: UUID) -> None:
         """Обновляет информацию описания юзера."""
         user: UserSchema = await self.repo.get(user_id)
-        user_drugs = await self.repo.get_allowed_drugs_info(user_id=user.id)
-        user_drugs_name: str = ', '.join(drug.drug_name_ru for drug in user_drugs.allowed_drugs)
+
+        user_logs: Sequence[str] = await self.repo.get_user_logs(user_id)
 
         if user.last_name:
             user_name: str = user.first_name + user.last_name
@@ -32,7 +33,7 @@ class UserService:
 
         user_description: AssistantResponseUserDescription = await self.assistant.get_user_description(
             user_name=user_name,
-            user_drugs_name=user_drugs_name
+            user_logs=" ".join(user_logs)
         )
         await self.repo.update_user_description(description=user_description.user_description, user_id=user.id)
 

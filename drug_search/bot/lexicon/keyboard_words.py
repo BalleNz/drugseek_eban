@@ -40,8 +40,8 @@ class ButtonText:
 
     # [ Modes Info ]
     MODES_INFO_DRUG_SEARCH = "🔍 Искать по базе препаратов"
-    MODES_INFO_PHARMA = "Рекомендации препаратов"
-    MODES_INFO_QUESTIONS = "Вопросы ассистенту"
+    MODES_INFO_PHARMA = "💡 Рекомендовать препараты"
+    MODES_INFO_QUESTIONS = "❔ Ответить на вопрос"
 
     # [ HELP ]
     HELP_TOKENS = "Токены"

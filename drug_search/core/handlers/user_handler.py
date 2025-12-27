@@ -94,7 +94,7 @@ async def buy_drug(
     """Покупка препарата.
     Если не было в базе, то создается и добавляется.
     """
-    if not user.allowed_tokens and user.additional_tokens:
+    if user.allowed_tokens + user.additional_tokens < NEW_DRUG_COST:
         logger.info(f"У юзера нет токенов для покупки препарата, ID: {user.id}")
         return BuyDrugResponse(
             status=BuyDrugStatuses.NOT_ENOUGH_TOKENS

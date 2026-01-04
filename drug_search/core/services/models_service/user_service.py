@@ -56,9 +56,6 @@ class UserService:
         """Отнимает запросы у юзера"""
         await self.repo.decrease_tokens(user_id, tokens_amount)
 
-    async def add_request_log(self, user_id: uuid.UUID, query: str):
-        ...
-
     async def get_allowed_drugs_info(self, user_id: uuid.UUID) -> AllowedDrugsInfoSchema:
         """Возвращает количество препаратов в базе, количество разрешенных и краткую информацию о каждом разрешенном."""
         return await self.repo.get_allowed_drugs_info(user_id=user_id)

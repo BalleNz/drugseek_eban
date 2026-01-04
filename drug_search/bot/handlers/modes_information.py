@@ -5,7 +5,7 @@ from aiogram.types import Message, CallbackQuery, InputMediaPhoto
 from drug_search.bot.keyboards.callbacks import InfoSectionCallback
 from drug_search.bot.keyboards.other_keyboards import get_modes_information_keyboard
 from drug_search.bot.lexicon.keyboard_words import ButtonText
-from drug_search.bot.utils.materials.get_file import get_file_by_name
+from drug_search.bot.lexicon.materials.get_file import get_file_by_name
 from drug_search.bot.lexicon.message_text import MessageText
 
 router = Router(name=__name__)

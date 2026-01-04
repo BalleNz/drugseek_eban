@@ -177,11 +177,7 @@ class UserRepository(BaseRepository):
             update(User)
             .where(User.id == user_id)
             .values(
-                additional_tokens=User.additional_tokens + tokens_amount,
-
-                # в случае, если мы тратим запросы, а не добавляем
-                # всегда один прибавляется вне зависимости от потраченных
-                used_tokens=User.used_tokens + (1 if tokens_amount > 0 else 0)
+                additional_tokens=User.additional_tokens + tokens_amount
             )
         )
         await self.session.commit()

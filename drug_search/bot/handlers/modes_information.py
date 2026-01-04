@@ -48,7 +48,7 @@ async def modes_info_listing(
 
         case ButtonText.MODES_INFO_DRUG_SEARCH:
             message_text = MessageText.QUERIES_DRUG_SEARCH
-            file_path = get_file_by_name("drug_search_faq.png")
+            file_path = get_file_by_name("drug_search_faq.jpeg")
 
     await callback_query.message.edit_media(
         media=InputMediaPhoto(

@@ -36,19 +36,19 @@ BOT_USERNAME = "drugseek_bot"
 # [ REFERRALS ]
 REFERRALS_REWARDS = {
     0: 2,  # key: reward (tokens)
-    1: 6,
-    2: 7,
-    3: 10,
-    4: 12,
-    5: 15,
-    6: 20,
-    7: 25,
-    8: 30,
-    9: 35,
-    10: 40,
-    11: 50,
-    12: 60,
-    13: 70,
+    1: 4,
+    2: 5,
+    3: 5,
+    4: 5,
+    5: 5,
+    6: 7,
+    7: 15,
+    8: 15,
+    9: 15,
+    10: 22,
+    11: 22,
+    12: 33,
+    13: 33,
     14: 40,
     15: 50,
     16: 60,
@@ -59,8 +59,8 @@ REFERRALS_REWARDS = {
 }
 
 REFERRALS_LEVELS = {
-    0: 1,  # level: referrals need
-    1: 2,
+    0: 2,  # level: referrals need
+    1: 4,
     2: 5,
     3: 10,
     4: 15,
@@ -92,4 +92,4 @@ CHANNELS_USERNAME_FREE_TOKENS = (
     "mybigmedicine"
 )
 
-FREE_TOKENS_AMOUNT = 7  # за подписки
+FREE_TOKENS_AMOUNT = 4  # за подписки

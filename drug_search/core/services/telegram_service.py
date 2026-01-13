@@ -225,12 +225,15 @@ class TelegramService:
         """Редактирует сообщение ответ на вопрос с препаратами"""
         message_text: str = TelegramMessageTemplates.format_assistant_answer_drugs(question_response, arrow)
 
+        drugs_count: int = len(question_response.drugs)
+
         await self.edit_message(
             user_telegram_id=user_telegram_id,
             old_message_id=old_message_id,
             message_text=message_text,
             reply_markup=question_continue_keyboard(
                 question=question,
-                arrow=arrow
+                arrow=arrow,
+                is_two_pages=drugs_count > 3
             )
         )

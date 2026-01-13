@@ -5,15 +5,18 @@ from drug_search.core.schemas import QuestionDrugsAssistantResponse, QuestionAss
 
 class TelegramMessageTemplates:
     """Форматирование сообщений для отправки в Telegram"""
+
     @staticmethod
     def format_assistant_answer_drugs(
             assistant_response: QuestionDrugsAssistantResponse,
             arrow: ARROW_TYPES
     ):
         """Ответ со списком препаратов"""
+        drugs_count = len(assistant_response.drugs)
+
         drugs_section: str = ""
         start_index: int = 1 if arrow == ARROW_TYPES.FORWARD else ASSISTANT_ANSWER_DRUG_COUNT_PER_PAGE + 1
-        end_index: int = 3 if arrow == ARROW_TYPES.FORWARD else 6
+        end_index: int = 3 if arrow == ARROW_TYPES.FORWARD else drugs_count
 
         for i, drug in enumerate(assistant_response.drugs[start_index-1:end_index], start=start_index):
             drugs_section += (

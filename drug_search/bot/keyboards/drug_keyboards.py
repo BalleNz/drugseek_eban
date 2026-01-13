@@ -335,18 +335,21 @@ def buy_request_keyboard(
 
 def question_continue_keyboard(
         question: str,
-        arrow: ARROW_TYPES
-) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text=ButtonText.RIGHT_ARROW if arrow == arrow.FORWARD else ButtonText.LEFT_ARROW,
-                    callback_data=AssistantQuestionContinueCallback(
-                        question=question,
-                        arrow=arrow
-                    ).pack()
-                )
+        arrow: ARROW_TYPES,
+        is_two_pages: bool | None
+) -> InlineKeyboardMarkup | None:
+    if is_two_pages:
+        return InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text=ButtonText.RIGHT_ARROW if arrow == arrow.FORWARD else ButtonText.LEFT_ARROW,
+                        callback_data=AssistantQuestionContinueCallback(
+                            question=question,
+                            arrow=arrow
+                        ).pack()
+                    )
+                ]
             ]
-        ]
-    )
+        )
+    return None

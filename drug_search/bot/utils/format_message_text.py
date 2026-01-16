@@ -241,7 +241,7 @@ class DrugMessageFormatter:
             elif research.interest < 80:
                 reading_level = "Нормально"
             else:
-                reading_level = "Лёгко"
+                reading_level = "Легко"
 
             research_text += f"<b>Сложность чтения:</b> {reading_level}\n\n"
 

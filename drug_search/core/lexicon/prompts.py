@@ -834,6 +834,7 @@ class Prompts:
         — Retinol
         — Niacinamide
         — Bakuchiol
+        — Ghk-Cu
                 
         Морщины на лице (мази / сыворотки):
         — Acetyl Hexapeptide-8

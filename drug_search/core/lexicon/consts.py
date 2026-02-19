@@ -28,19 +28,19 @@ ANTISPAM_LITE = {
 # [ LIMITS ]
 MAX_MESSAGE_LENGTH_DEFAULT = 100  # символов
 MAX_MESSAGE_LENGTH_LITE = 150
-MAX_MESSAGE_LENGTH_PREMIUM = 500
+MAX_MESSAGE_LENGTH_PREMIUM = 600
 
 # [ BOT ]
 BOT_USERNAME = "drugseek_bot"
 
 # [ REFERRALS ]
 REFERRALS_REWARDS = {
-    0: 2,  # key: reward (tokens)
-    1: 4,
-    2: 5,
-    3: 5,
-    4: 5,
-    5: 5,
+    0: 1,  # key: reward (tokens)
+    1: 2,
+    2: 3,
+    3: 3,
+    4: 3,
+    5: 4,
     6: 7,
     7: 15,
     8: 15,
@@ -88,8 +88,7 @@ ZMTLK_CHANNEL_USERNAME = f"zmtlk"
 # [ BONUSES ]
 CHANNELS_USERNAME_FREE_TOKENS = (
     "drugseeks",
-    "zmtlk",
-    "mybigmedicine"
+    "zmtlk"
 )
 
-FREE_TOKENS_AMOUNT = 4  # за подписки
+FREE_TOKENS_AMOUNT = 3  # за подписки

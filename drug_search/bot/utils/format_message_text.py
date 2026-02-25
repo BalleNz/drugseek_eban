@@ -109,6 +109,8 @@ class DrugMessageFormatter:
     @staticmethod
     def format_dosages(drug: DrugSchema) -> str:
         """Форматирование информации о дозировках"""
+        if drug.danger_classification == DANGER_CLASSIFICATION.DANGER:
+            return "Для этого препарата нельзя смотреть дозировки."
 
         def create_sources_section(sources: list[dict]) -> str:
             """Создает секцию с источниками в виде пронумерованных ссылок"""
@@ -144,8 +146,6 @@ class DrugMessageFormatter:
                 "<b>⚠️ ДАННЫЕ ПРЕДОСТАВЛЯЮТСЯ В ОЗНАКОМИТЕЛЬНЫХ ЦЕЛЯХ</b>\n\n"
                 "<i>данные дозировок взяты с <a href='https://www.rlsnet.ru/'>РЛС</a></i>"
             )
-        if drug.danger_classification == DANGER_CLASSIFICATION.DANGER:
-            return "Для этого препарата нельзя смотреть дозировки."
 
         return MessageTemplates.DRUG_INFO_DOSAGES.format(
             drug_name_ru=drug.name_ru.upper(),

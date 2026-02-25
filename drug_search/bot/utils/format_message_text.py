@@ -19,7 +19,7 @@ class DrugMessageFormatter:
     def format_drug_briefly(drug: DrugSchema) -> str:
         """Форматирование краткой информации о препарате"""
         disclaimer = ""
-        if drug.danger_classification == DANGER_CLASSIFICATION.PREMIUM_NEED:
+        if drug.danger_classification in [DANGER_CLASSIFICATION.PREMIUM_NEED, DANGER_CLASSIFICATION.DANGER]:
             disclaimer = (
                 "<b>⚠️ ДАННЫЕ ПРЕДОСТАВЛЯЮТСЯ В ОЗНАКОМИТЕЛЬНЫХ ЦЕЛЯХ</b>\n"
             )
@@ -97,6 +97,9 @@ class DrugMessageFormatter:
 
                 bad_combinations += f"<b>└─</b> {combination_text}"
 
+        if drug.danger_classification == DANGER_CLASSIFICATION.DANGER:
+            return "Для этого препарата нельзя смотреть комбинации."
+
         return MessageTemplates.DRUG_INFO_COMBINATIONS.format(
             drug_name_ru=drug.name_ru.upper(),
             good_combinations=good_combinations or "Нет данных",
@@ -141,6 +144,8 @@ class DrugMessageFormatter:
                 "<b>⚠️ ДАННЫЕ ПРЕДОСТАВЛЯЮТСЯ В ОЗНАКОМИТЕЛЬНЫХ ЦЕЛЯХ</b>\n\n"
                 "<i>данные дозировок взяты с <a href='https://www.rlsnet.ru/'>РЛС</a></i>"
             )
+        if drug.danger_classification == DANGER_CLASSIFICATION.DANGER:
+            return "Для этого препарата нельзя смотреть дозировки."
 
         return MessageTemplates.DRUG_INFO_DOSAGES.format(
             drug_name_ru=drug.name_ru.upper(),
@@ -159,6 +164,9 @@ class DrugMessageFormatter:
             analogs_section += f"<b>└─ </b>{analog.difference}\n\n"
 
         analogs_description: str = drug.analogs_description + "\n\n" if drug.analogs_description else ""
+
+        if drug.danger_classification == DANGER_CLASSIFICATION.DANGER:
+            return "Для этого препарата нельзя смотреть аналоги."
 
         return MessageTemplates.DRUGS_ANALOGS.format(
             drug_name_ru=drug.name_ru.upper(),

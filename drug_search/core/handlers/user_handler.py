@@ -106,7 +106,8 @@ async def buy_drug(
             status=BuyDrugStatuses.NEED_PREMIUM
         )
 
-    if request.danger_classification == DANGER_CLASSIFICATION.DANGER:
+    if (request.danger_classification == DANGER_CLASSIFICATION.DANGER
+            and user.subscription_type != SUBSCRIPTION_TYPES.PREMIUM):
         logger.info(f"Юзер искал запрещенный препарат: {request.drug_name}")
         return BuyDrugResponse(
             status=BuyDrugStatuses.DANGER

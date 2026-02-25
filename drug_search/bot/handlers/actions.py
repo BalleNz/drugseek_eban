@@ -148,6 +148,7 @@ async def drug_buy(
                 text=MessageText.NOT_ENOUGH_CREATE_TOKENS,
                 reply_markup=keyboard
             )
+            return
         case BuyDrugStatuses.NEED_PREMIUM:
             """предлагает купить подписку"""
             keyboard = get_subscription_packages_keyboard(
@@ -158,10 +159,12 @@ async def drug_buy(
                 text=MessageText.NEED_SUBSCRIPTION,
                 reply_markup=keyboard
             )
+            return
         case BuyDrugStatuses.DANGER:
             await send_message(
                 text=MessageText.DRUG_IS_BANNED
             )
+            return
 
     # [ если препарат уже был в базе ]
     if drug_id:

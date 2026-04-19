@@ -75,11 +75,10 @@ class TokensPackage(Enum):
     """Пакеты токенов с указанием количества для покупки"""
 
     # [ key, название_пакета, количество_токенов, цена ]
-    SMALL = (TokenKeys.SMALL.value, "10 токенов", 10, 159)
-    BASIC = (TokenKeys.BASIC.value, "25 токенов", 25, 399)
-    PRO = (TokenKeys.PRO.value, "60 токенов", 60, 699)
-    BUSINESS = (TokenKeys.BUSINESS.value, "100 токенов", 100, 1099)
-    MAXIMUM = (TokenKeys.MAXIMUM.value, "200 токенов", 200, 1390)
+    BASIC = (TokenKeys.BASIC.value, "25 токенов", 25, 200)
+    PRO = (TokenKeys.PRO.value, "60 токенов", 60, 400)
+    BUSINESS = (TokenKeys.BUSINESS.value, "100 токенов", 100, 500)
+    MAXIMUM = (TokenKeys.MAXIMUM.value, "200 токенов", 200, 900)
 
     @property
     def key(self):
@@ -127,22 +126,22 @@ class SubscriptionPackage(Enum):
     # [ Ключ, Название пакета (длительность), Тип подписки, длительность, цена ]
 
     # [ 7 дней ]
-    LITE_7_PACKAGE = (SubscriptionKeys.TWO_WEEKS_LITE.value, "Неделя", SUBSCRIPTION_TYPES.LITE, "7", 299)
+    LITE_7_PACKAGE = (SubscriptionKeys.TWO_WEEKS_LITE.value, "Неделя", SUBSCRIPTION_TYPES.LITE, "7", 150)
 
     # [ 14 дней ]
-    PREMIUM_14_PACKAGE = (SubscriptionKeys.TWO_WEEKS_PREMIUM.value, "Две недели", SUBSCRIPTION_TYPES.PREMIUM, "14", 599)
+    PREMIUM_14_PACKAGE = (SubscriptionKeys.TWO_WEEKS_PREMIUM.value, "Две недели", SUBSCRIPTION_TYPES.PREMIUM, "14", 250)
 
     # [ 30 дней ]
-    LITE_30_PACKAGE = (SubscriptionKeys.ONE_MONTH_LITE.value, "Месяц", SUBSCRIPTION_TYPES.LITE, "30", 1090)
+    LITE_30_PACKAGE = (SubscriptionKeys.ONE_MONTH_LITE.value, "Месяц", SUBSCRIPTION_TYPES.LITE, "30", 500)
 
     # [ 90 дней ]
-    PREMIUM_90_PACKAGE = (SubscriptionKeys.THREE_MONTHS_PREMIUM.value, "Три месяца", SUBSCRIPTION_TYPES.PREMIUM, "90", 1699)
+    PREMIUM_90_PACKAGE = (SubscriptionKeys.THREE_MONTHS_PREMIUM.value, "Три месяца", SUBSCRIPTION_TYPES.PREMIUM, "90", 1400)
 
     # [ 180 дней ]
-    PREMIUM_180_PACKAGE = (SubscriptionKeys.SIX_MONTHS_PREMIUM.value, "Полгода", SUBSCRIPTION_TYPES.PREMIUM, "180", 2290)
+    PREMIUM_180_PACKAGE = (SubscriptionKeys.SIX_MONTHS_PREMIUM.value, "Полгода", SUBSCRIPTION_TYPES.PREMIUM, "180", 2000)
 
     # [ 365 дней ]
-    PREMIUM_365_PACKAGE = (SubscriptionKeys.YEAR_PREMIUM.value, "Год", SUBSCRIPTION_TYPES.PREMIUM, "365", 2990)
+    PREMIUM_365_PACKAGE = (SubscriptionKeys.YEAR_PREMIUM.value, "Год", SUBSCRIPTION_TYPES.PREMIUM, "365", 2400)
 
     @property
     def key(self) -> str:

@@ -13,8 +13,11 @@ from drug_search.core.schemas import (
     DrugCombinationsAssistantResponse, DrugSchema, DrugBrieflyAssistantResponse,
     DrugPathwaysAssistantResponse, DrugDosagesAssistantResponse,
     DrugAnalogsAssistantResponse, DrugMetabolismAssistantResponse,
-    DrugResearchesAssistantResponse
+    DrugResearchesAssistantResponse,
 )
+from drug_search.core.schemas.quiz_schemas import QuizDrugSchema
+from drug_search.core.utils.drug_category import category_filter_sql
+from drug_search.core.lexicon import DRUG_CATEGORY
 from drug_search.infrastructure.database.engine import get_async_session
 from drug_search.infrastructure.database.models.drug import (Drug, DrugSynonym, DrugCombination, DrugPathway,
                                                              DrugAnalog, DrugDosage, DrugResearch)
@@ -394,6 +397,108 @@ class DrugRepository(BaseRepository):
             )
             await self.session.commit()
             logger.info(f"Исследования для {drug_id} удалены.")
+
+
+    async def get_random_drug(self) -> DrugSchema | None:
+        stmt = (
+            select(Drug)
+            .where(Drug.description.isnot(None))
+            .order_by(func.random())
+            .limit(1)
+            .options(
+                selectinload(Drug.analogs),
+                selectinload(Drug.dosages),
+                selectinload(Drug.pathways),
+                selectinload(Drug.synonyms),
+                selectinload(Drug.combinations),
+                selectinload(Drug.prices),
+                selectinload(Drug.researches),
+            )
+        )
+        result = await self.session.execute(stmt)
+        drug: Drug | None = result.scalar_one_or_none()
+        return drug.get_schema() if drug else None
+
+    async def get_drug_ids_by_category(self, category: DRUG_CATEGORY | None) -> list[uuid.UUID]:
+        where_clause = category_filter_sql(category)
+        stmt = text(f"""
+            SELECT d.id
+            FROM drugs d
+            WHERE {where_clause}
+        """)
+        result = await self.session.execute(stmt)
+        return [row[0] for row in result.fetchall()]
+
+    async def get_drugs_for_quiz(
+            self,
+            allowed_drug_ids: list[uuid.UUID],
+            limit: int = 20,
+    ) -> list[QuizDrugSchema]:
+        if allowed_drug_ids:
+            ids_sql = ", ".join(f"'{drug_id}'" for drug_id in allowed_drug_ids)
+            stmt = text(f"""
+                SELECT d.id, d.name, d.name_ru, d.description, d.classification,
+                       d.primary_action, d.fact
+                FROM drugs d
+                WHERE d.id IN ({ids_sql})
+                  AND (
+                    d.description IS NOT NULL
+                    OR d.classification IS NOT NULL
+                    OR d.primary_action IS NOT NULL
+                    OR d.fact IS NOT NULL
+                  )
+                ORDER BY RANDOM()
+                LIMIT {limit}
+            """)
+        else:
+            stmt = text(f"""
+                SELECT d.id, d.name, d.name_ru, d.description, d.classification,
+                       d.primary_action, d.fact
+                FROM drugs d
+                WHERE d.danger_classification = 'SAFE'
+                  AND (
+                    d.description IS NOT NULL
+                    OR d.classification IS NOT NULL
+                    OR d.primary_action IS NOT NULL
+                    OR d.fact IS NOT NULL
+                  )
+                ORDER BY RANDOM()
+                LIMIT {limit}
+            """)
+
+        result = await self.session.execute(stmt)
+        drugs: list[QuizDrugSchema] = []
+        for row in result.fetchall():
+            drugs.append(
+                QuizDrugSchema(
+                    drug_id=row.id,
+                    drug_name=row.name,
+                    drug_name_ru=row.name_ru,
+                    description=row.description,
+                    classification=row.classification,
+                    primary_action=row.primary_action,
+                    fact=row.fact,
+                )
+            )
+        return drugs
+
+
+    async def search_pathways(self, query: str, limit: int = 20) -> list[dict]:
+        pattern = f"%{query.lower()}%"
+        stmt = text("""
+            SELECT d.id AS drug_id, d.name AS drug_name, d.name_ru AS drug_name_ru,
+                   dp.receptor, dp.pathway, dp.activation_type, dp.affinity_description
+            FROM drug_pathways dp
+            JOIN drugs d ON d.id = dp.drug_id
+            WHERE LOWER(dp.receptor) LIKE :pattern
+               OR LOWER(dp.pathway) LIKE :pattern
+               OR LOWER(dp.effect) LIKE :pattern
+               OR LOWER(dp.note) LIKE :pattern
+            ORDER BY d.name
+            LIMIT :limit
+        """)
+        result = await self.session.execute(stmt, {"pattern": pattern, "limit": limit})
+        return [dict(row._mapping) for row in result.fetchall()]
 
 
 async def get_drug_repository(

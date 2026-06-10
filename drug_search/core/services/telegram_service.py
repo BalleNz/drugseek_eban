@@ -63,6 +63,10 @@ class TelegramService:
                     response_text = await response.text()
                     raise ValueError(f"Ошибка отправки сообщения в Telegram: {response.status} - {response_text}")
 
+    async def send_to_channel(self, channel_username: str, message: str):
+        """Публикует сообщение в Telegram-канал"""
+        await self.send_message(f"@{channel_username}", message)
+
     async def edit_message(
             self,
             old_message_id: str,

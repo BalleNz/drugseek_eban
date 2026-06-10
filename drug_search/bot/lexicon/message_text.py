@@ -80,11 +80,12 @@ class MessageText:
 
     # [ INFO MODES ]
     QUERIES = (
-        "🗳 <b>В боте есть <b>3 режима</b> запросов (выбираются автоматически):</b>\n\n"
+        "🗳 <b>В боте есть <b>4 режима</b> запросов (выбираются автоматически или через меню):</b>\n\n"
         "<blockquote>"
         "— Поиск препаратов: поиск препарата по названию со всеми разделами\n\n"
         "— Вопросы: ответы на любые вопросы фармакологического ассистента\n\n"
         "— Рекомендовать препараты: рекомендации препаратов по симптомам или желаниям\n\n"
+        "— Получение знаний: викторина — угадай препарат по характеристике из базы\n\n"
         "</blockquote>"
     )
     QUERIES_QUESTIONS = (
@@ -172,6 +173,13 @@ class MessageText:
     SUBSCRIPTION_UPGRADE = MessageTemplates.SUBSCRIPTION_UPGRADE
     SUBSCRIPTION_UPGRADE_CONFIRMATION = MessageTemplates.SUBSCRIPTION_UPGRADE_CONFIRMATION
 
+    DRUG_PACKS_BUY = MessageTemplates.DRUG_PACKS_BUY
+    DRUG_PACK_CONFIRMATION = MessageTemplates.DRUG_PACK_CONFIRMATION
+
+    QUIZ_INTRO = MessageTemplates.QUIZ_INTRO
+    QUIZ_CORRECT = MessageTemplates.QUIZ_CORRECT
+    QUIZ_WRONG = MessageTemplates.QUIZ_WRONG
+
     WAITING_PAYMENT = "Ожидание оплаты..."
 
     # [ DELAYED MESSAGES ]
@@ -182,10 +190,13 @@ class MessageText:
     FREE_TOKENS_INFO = "ℹ️ Ты можешь получить бесплатные токены за подписку на каналы создателя!\n— /free_tokens"
 
     # [ STATIC ]
-    HELLO: str = ("<b>💊 Привет!</b>\n\n"
-                  "Я — Твой карманный специалист по фармакологии и медицине.\n\n"
-                  "О каком препарате хочешь узнать?\n"
-                  "Или у тебя есть какой-нибудь вопрос?")
+    HELLO: str = MessageTemplates.HELLO_WOW
+
+    PDF_READY = MessageTemplates.PDF_READY
+    PDF_GENERATION_ERROR = MessageTemplates.PDF_GENERATION_ERROR
+    QUIZ_STREAK_BONUS = MessageTemplates.QUIZ_STREAK_BONUS
+    QUIZ_MILESTONE = MessageTemplates.QUIZ_MILESTONE
+    GAMIFICATION_PROFILE = MessageTemplates.GAMIFICATION_PROFILE
 
     # [ Mailing ]
     ONLY_FOR_ADMINS = "Эта команда доступна только для администрации."

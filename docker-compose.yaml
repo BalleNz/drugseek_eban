@@ -29,9 +29,16 @@ services:
     command: python3 asgi.py
     environment:
       DEBUG: 'False'  # с докера дебага нет
+      INTERNAL_API_URL: http://fastapi:8000
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
     volumes:
       - ./alembic:/drug_search/alembic
       - ./alembic.ini:/drug_search/alembic.ini
@@ -59,9 +66,14 @@ services:
       - DEBUG=false  # с докера дебага нет
       - PYTHONUNBUFFERED=1  # Это важно для логирования в Docker
       - LOG_LEVEL=INFO
+      - INTERNAL_API_URL=http://fastapi:8000
     depends_on:
-      - redis
-      - db
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      fastapi:
+        condition: service_healthy
     command: arq drug_search.infrastructure.arq_config.WorkerSettings
     restart: unless-stopped
   bot:
@@ -71,8 +83,12 @@ services:
       - .env
     environment:
       - DEBUG=false  # с докера дебага нет
+      - INTERNAL_API_URL=http://fastapi:8000
     depends_on:
-      - fastapi
+      fastapi:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     command: python3 drug_search/bot/bot_app.py
     restart: unless-stopped
 

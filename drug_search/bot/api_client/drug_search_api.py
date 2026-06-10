@@ -2,13 +2,13 @@ import uuid
 from uuid import UUID
 
 from drug_search.bot.api_client.base_http_client import BaseHttpClient, HTTPMethod
-from drug_search.config import config
 from drug_search.core.lexicon import DANGER_CLASSIFICATION, ARROW_TYPES
 from drug_search.core.schemas import (UserTelegramDataSchema, UserSchema, DrugExistingResponse, QuestionRequest,
                                       DrugSchema, QuestionDrugsAssistantResponse, SelectActionResponse,
                                       QuestionDrugsRequest, AddTokensRequest,
                                       BuyDrugRequest, BuyDrugResponse, UpdateDrugResponse, MailingRequest,
                                       AllowedDrugsInfoSchema, NewReferralsRequest, PaymentRequest)
+from drug_search.core.schemas.quiz_schemas import QuizAnswerRequest, QuizAnswerResponse, QuizQuestionResponse
 
 
 class DrugSearchAPIClient(BaseHttpClient):
@@ -257,6 +257,27 @@ class DrugSearchAPIClient(BaseHttpClient):
         return await self._request(
             HTTPMethod.POST,
             endpoint="/v1/payment/process",
-            api_key=config.API_KEY,
             request_body=request
+        )
+
+    # [ Quiz ]
+    async def get_quiz_question(self, access_token: str) -> QuizQuestionResponse:
+        return await self._request(
+            HTTPMethod.GET,
+            endpoint="/v1/quiz/question",
+            access_token=access_token,
+            response_model=QuizQuestionResponse,
+        )
+
+    async def check_quiz_answer(
+            self,
+            access_token: str,
+            request: QuizAnswerRequest,
+    ) -> QuizAnswerResponse:
+        return await self._request(
+            HTTPMethod.POST,
+            endpoint="/v1/quiz/answer",
+            access_token=access_token,
+            request_body=request,
+            response_model=QuizAnswerResponse,
         )

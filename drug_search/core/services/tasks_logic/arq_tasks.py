@@ -243,3 +243,35 @@ async def user_description_update(
         await redis_service.invalidate_user_data(user_tg_id)
 
         await telegram_service.send_user_description_updated(user_telegram_id=user_tg_id)
+
+
+async def weekly_drug_marketing(ctx):  # noqa
+    """Еженедельный маркетинговый пост с препаратом недели"""
+    from drug_search.bot.lexicon.message_templates import MessageTemplates
+    from drug_search.core.lexicon import BOT_USERNAME, MARKETING_CHANNEL_USERNAME, WEEKLY_DRUG_FOOTER
+
+    async with get_service_container() as container:
+        drug_service: DrugService = await container.get_drug_service()
+        telegram_service: TelegramService = await container.telegram_service
+
+        drug: DrugSchema | None = await drug_service.repo.get_random_drug()
+        if not drug:
+            logger.warning("Weekly marketing: no drugs in database")
+            return
+
+        description = drug.description or "Подробности — в боте."
+        if len(description) > 500:
+            description = description[:497] + "..."
+
+        classification = drug.classification or "Фармакология"
+        footer = WEEKLY_DRUG_FOOTER.format(bot_username=BOT_USERNAME)
+
+        message = MessageTemplates.WEEKLY_DRUG_POST.format(
+            drug_name=drug.name_ru or drug.name,
+            classification=classification,
+            description=description,
+            footer=footer,
+        )
+
+        await telegram_service.send_to_channel(MARKETING_CHANNEL_USERNAME, message)
+        logger.info(f"Weekly drug marketing post sent: {drug.name}")

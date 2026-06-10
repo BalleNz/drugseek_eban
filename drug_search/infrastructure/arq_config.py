@@ -1,11 +1,12 @@
 import logging
 
 from arq.connections import RedisSettings
+from arq.cron import cron
 
 from drug_search.config import config
 from drug_search.core.services.tasks_logic.arq_tasks import (
     drug_create, drug_update, assistant_drugs_question, mailing, user_description_update,
-    assistant_question, yookassa_update_to_admins
+    assistant_question, yookassa_update_to_admins, weekly_drug_marketing
 )
 from drug_search.infrastructure.loggerConfig import configure_logging
 
@@ -19,7 +20,12 @@ class WorkerSettings:
         assistant_drugs_question,
         mailing,
         user_description_update,
-        yookassa_update_to_admins
+        yookassa_update_to_admins,
+        weekly_drug_marketing,
+    ]
+
+    cron_jobs = [
+        cron(weekly_drug_marketing, weekday=0, hour=10, minute=0, run_at_startup=False),
     ]
 
     # Настройки Redis

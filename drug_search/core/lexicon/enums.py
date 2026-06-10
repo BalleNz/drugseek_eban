@@ -20,11 +20,25 @@ class TokenKeys(str, Enum):
 
     tokens + package_name
     """
-    SMALL = "tokens_small"
     BASIC = "tokens_basic"
     PRO = "tokens_pro"
     BUSINESS = "tokens_business"
     MAXIMUM = "tokens_maximum"
+
+
+class DrugPackKeys(str, Enum):
+    """Ключи паков препаратов по категориям"""
+    PHARMA = "pack_pharma"
+    STEROID = "pack_steroid"
+    PROHIBITED = "pack_prohibited"
+    COMPLEX = "pack_complex"
+
+
+class DRUG_CATEGORY(str, Enum):
+    """Категории препаратов для паков и викторины"""
+    PHARMA = "PHARMA"
+    STEROID = "STEROID"
+    PROHIBITED = "PROHIBITED"
 
 
 class SUBSCRIPTION_TYPES(str, Enum):
@@ -110,7 +124,72 @@ class TokensPackage(Enum):
 
     @classmethod
     def get_token_packages(cls) -> tuple["TokensPackage", ...]:
-        return cls.SMALL, cls.BASIC, cls.PRO, cls.BUSINESS, cls.MAXIMUM
+        return cls.BASIC, cls.PRO, cls.BUSINESS, cls.MAXIMUM
+
+
+class DrugPackPackage(Enum):
+    """Паки препаратов по категориям — разблокируют все препараты категории в базе"""
+
+    # [ key, название, категория (None = все категории), цена ]
+    PHARMA = (
+        DrugPackKeys.PHARMA.value,
+        "Фармацевтический",
+        "Для студентов и изучения классической фармакологии",
+        DRUG_CATEGORY.PHARMA,
+        299,
+    )
+    STEROID = (
+        DrugPackKeys.STEROID.value,
+        "Стероидный",
+        "Для изучения стероидов — подойдёт начинающим качкам",
+        DRUG_CATEGORY.STEROID,
+        399,
+    )
+    PROHIBITED = (
+        DrugPackKeys.PROHIBITED.value,
+        "Запрещённый",
+        "Наркотики и запрещённые в РФ вещества",
+        DRUG_CATEGORY.PROHIBITED,
+        599,
+    )
+    COMPLEX = (
+        DrugPackKeys.COMPLEX.value,
+        "Комплексный",
+        "Все категории сразу — полный доступ к базе",
+        None,
+        999,
+    )
+
+    @property
+    def key(self) -> str:
+        return self.value[0]
+
+    @property
+    def name(self) -> str:
+        return self.value[1]
+
+    @property
+    def description(self) -> str:
+        return self.value[2]
+
+    @property
+    def category(self) -> DRUG_CATEGORY | None:
+        return self.value[3]
+
+    @property
+    def price(self) -> int:
+        return self.value[4]
+
+    @classmethod
+    def get_by_key(cls, package_key: str) -> "DrugPackPackage":
+        for package in cls:
+            if package.key == package_key:
+                return package
+        raise ValueError(f"Unknown drug pack ID: {package_key}")
+
+    @classmethod
+    def get_all_packs(cls) -> tuple["DrugPackPackage", ...]:
+        return tuple(cls)
 
 
 class SubscriptionPackage(Enum):

@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from drug_search.bot.keyboards.callbacks import BuySubscriptionCallback, UserDescriptionCallback, BuyTokensCallback, \
-    SimpleModeProfileCallback, BackToUserProfileCallback
+    SimpleModeProfileCallback, BackToUserProfileCallback, BuyDrugPackCallback
 from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.core.lexicon import SUBSCRIPTION_TYPES
 from drug_search.core.schemas import UserSchema
@@ -43,6 +43,13 @@ def user_profile_keyboard(
         InlineKeyboardButton(
             text=ButtonText.BUY_TOKENS,
             callback_data=BuyTokensCallback().pack()
+        )
+    ])
+
+    buttons.append([
+        InlineKeyboardButton(
+            text=ButtonText.BUY_DRUG_PACKS,
+            callback_data=BuyDrugPackCallback().pack()
         )
     ])
 

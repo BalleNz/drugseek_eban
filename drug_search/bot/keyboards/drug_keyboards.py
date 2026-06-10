@@ -1,14 +1,16 @@
 import uuid
 
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
-from drug_search.bot.keyboards import DrugDescribeCallback, DrugListCallback, WrongDrugFoundedCallback
+from drug_search.config import config
 from drug_search.bot.keyboards.callbacks import DrugDescribeResearchesCallback, DrugUpdateRequestCallback, \
     BuyDrugRequestCallback, \
-    AssistantQuestionContinueCallback
+    AssistantQuestionContinueCallback, ExportPdfCallback, DrugDescribeCallback, DrugListCallback, \
+    WrongDrugFoundedCallback
 from drug_search.bot.keyboards.menu_markup import logger
 from drug_search.bot.lexicon.enums import ModeTypes
 from drug_search.bot.lexicon.keyboard_words import ButtonText
+from drug_search.bot.utils.share import build_drug_share_text, build_telegram_share_url
 from drug_search.core.lexicon import DrugMenu, ARROW_TYPES, SUBSCRIPTION_TYPES
 from drug_search.core.schemas import DrugBrieflySchema, DrugResearchSchema, DrugSchema
 from drug_search.core.utils.funcs import may_update_drug
@@ -298,6 +300,27 @@ def drug_keyboard(
                 )
             ]
         )
+
+    share_text = build_drug_share_text(drug.name_ru or drug.name, drug.name)
+    webapp_url = f"{config.public_base_url}/webapp/?drug_id={drug.id}"
+
+    keyboard.inline_keyboard.append([
+        InlineKeyboardButton(
+            text=ButtonText.PATHWAY_LAB,
+            web_app=WebAppInfo(url=webapp_url),
+        ),
+    ])
+    keyboard.inline_keyboard.append([
+        InlineKeyboardButton(
+            text=ButtonText.EXPORT_PDF,
+            callback_data=ExportPdfCallback(drug_id=drug.id).pack(),
+        ),
+        InlineKeyboardButton(
+            text=ButtonText.SHARE_DRUG,
+            url=build_telegram_share_url(share_text),
+        ),
+    ])
+
     return keyboard
 
 

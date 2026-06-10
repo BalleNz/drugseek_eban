@@ -5,6 +5,8 @@ from .user_handler import user_router
 from .admin_handler import admin_router
 from .referrals_handler import referrals_router
 from .payment_handler import payment_router
+from .quiz_handler import quiz_router
+from .pathway_handler import pathway_router
 
 __all__ = [
     "auth_router",
@@ -13,5 +15,7 @@ __all__ = [
     "assistant_router",
     'admin_router',
     'referrals_router',
-    'payment_router'
+    'payment_router',
+    'quiz_router',
+    'pathway_router',
 ]

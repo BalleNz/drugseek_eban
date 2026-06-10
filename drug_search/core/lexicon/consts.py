@@ -32,6 +32,12 @@ MAX_MESSAGE_LENGTH_PREMIUM = 2000
 
 # [ BOT ]
 BOT_USERNAME = "drugseek_bot"
+MARKETING_CHANNEL_USERNAME = "drugseeks"
+
+WEEKLY_DRUG_FOOTER = (
+    "\n\n—\n"
+    "А разобрать любой препарат вы можете в моём боте @{bot_username}"
+)
 
 # [ REFERRALS ]
 REFERRALS_REWARDS = {

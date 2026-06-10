@@ -303,7 +303,7 @@ class UserProfileMessageFormatter:
     """Форматирование пользовательских сообщений"""
 
     @staticmethod
-    def format_user_profile(user: UserSchema) -> str:
+    def format_user_profile(user: UserSchema, gamification_section: str = "") -> str:
         """Форматирование профиля пользователя"""
         profile_name: str = ""
         profile_icon: str = ""
@@ -395,7 +395,8 @@ class UserProfileMessageFormatter:
             additional_tokens_text=additional_tokens_text if additional_tokens_text else "",
             additional_tokens_quote="<blockquote>Когда кончатся токены, начнут расходоваться дополнительные.</blockquote>\n\n" if additional_tokens_text else "",
             subscription_end_at=get_subscription_end_at_text(user.subscription_end) if user.subscription_end else "",
-            simple_mode_text=simple_mode_text
+            simple_mode_text=simple_mode_text,
+            gamification_section=gamification_section,
         )
 
     @staticmethod

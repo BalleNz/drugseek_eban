@@ -9,13 +9,13 @@ from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message, PreCheck
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
 from drug_search.bot.bot_instance import bot
 from drug_search.bot.keyboards.callbacks import BuySubscriptionCallback, BuyTokensCallback, \
-    BuySubscriptionChosenTypeCallback
+    BuySubscriptionChosenTypeCallback, BuyDrugPackCallback, BuyDrugPackConfirmationCallback
 from drug_search.bot.keyboards.callbacks import BuyTokensConfirmationCallback, BuySubscriptionConfirmationCallback
 from drug_search.bot.keyboards.payment_keyboards import get_tokens_packages_to_buy_keyboard, \
     get_subscription_packages_types_keyboard, \
-    get_subscription_packages_keyboard
+    get_subscription_packages_keyboard, get_drug_packs_keyboard
 from drug_search.bot.lexicon.message_text import MessageText
-from drug_search.core.lexicon import TokensPackage, SubscriptionPackage, SUBSCRIPTION_TYPES
+from drug_search.core.lexicon import TokensPackage, SubscriptionPackage, SUBSCRIPTION_TYPES, DrugPackPackage
 from drug_search.core.schemas import UserSchema, PaymentRequest
 from drug_search.core.services.cache_logic.cache_service import CacheService
 from drug_search.core.utils.payment import send_invoice
@@ -231,6 +231,52 @@ async def buy_subscription_confirmation(
         price,
         subscription_package.name,
         subscription_key
+    )
+
+
+# [ DRUG PACKS ]
+async def buy_drug_packs(query: CallbackQuery | Message):
+    text = MessageText.DRUG_PACKS_BUY
+    keyboard = get_drug_packs_keyboard()
+
+    if type(query) is CallbackQuery:
+        await query.message.edit_text(text=text, reply_markup=keyboard)
+    else:
+        await query.answer(text=text, reply_markup=keyboard)
+
+
+@router.callback_query(BuyDrugPackCallback.filter())
+async def buy_drug_packs_from_callback(callback_query: CallbackQuery, state: FSMContext):  # noqa
+    await callback_query.answer()
+    await buy_drug_packs(callback_query)
+
+
+@router.message(Command("packs"))
+async def buy_drug_packs_from_command(message: Message, state: FSMContext):  # noqa
+    await buy_drug_packs(message)
+
+
+@router.callback_query(BuyDrugPackConfirmationCallback.filter())
+async def buy_drug_pack_confirmation(
+        callback_query: CallbackQuery,
+        callback_data: BuyDrugPackConfirmationCallback,
+        state: FSMContext,  # noqa
+):
+    await callback_query.answer()
+
+    pack = DrugPackPackage.get_by_key(callback_data.pack_key)
+    text = MessageText.DRUG_PACK_CONFIRMATION.format(
+        pack_name=pack.name,
+        pack_description=pack.description,
+        pack_price=pack.price,
+    )
+
+    await callback_query.message.edit_text(text)
+    await send_invoice(
+        callback_query,
+        pack.price,
+        pack.name,
+        pack.key,
     )
 
 

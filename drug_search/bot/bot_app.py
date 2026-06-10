@@ -16,6 +16,9 @@ from drug_search.bot.handlers.referrals import router as referrals_router
 from drug_search.bot.handlers.start import router as start_router
 from drug_search.bot.handlers.payment import router as yookassa_router
 from drug_search.bot.handlers.modes_information import router as modes_info
+from drug_search.bot.handlers.quiz import router as quiz_router
+from drug_search.bot.handlers.quick_start import router as quick_start_router
+from drug_search.bot.handlers.pdf_export import router as pdf_export_router
 from drug_search.bot.middlewares.depends_injectors import DependencyInjectionMiddleware
 from drug_search.bot.middlewares.limits import MessageLimitsMiddleware
 from drug_search.bot.middlewares.check_subscription import CheckSubscriptionMiddleware
@@ -32,9 +35,12 @@ def setup_auth(dp: Dispatcher):
     # Регистрация хендлеров (порядок важен)
     for router in [
         start_router,
+        quick_start_router,
         help_router,
         modes_info,
         yookassa_router,
+        quiz_router,
+        pdf_export_router,
         admin_router,
         database_router,
         profile_router,

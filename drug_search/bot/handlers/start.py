@@ -5,11 +5,12 @@ from datetime import datetime, timedelta, timezone
 from aiogram import Router, Bot
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
+from aiogram.types import Message, ReplyKeyboardRemove
 
 from drug_search.bot.api_client.drug_search_api import DrugSearchAPIClient
-from drug_search.bot.keyboards.menu_markup import menu_keyboard
+from drug_search.bot.keyboards.menu_markup import get_menu_keyboard
 from drug_search.bot.keyboards.other_keyboards import open_referrals_menu_keyboard
+from drug_search.bot.keyboards.start_keyboards import start_wow_keyboard
 from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.bot.utils.bot import send_delayed_message
 from drug_search.core.schemas import UserSchema
@@ -54,7 +55,20 @@ async def start_dialog(
                 logger.error(ex)
                 pass
 
-    await message.answer(text=MessageText.HELLO, reply_markup=menu_keyboard)
+    remove_msg = await message.answer(
+        text="\u200b",
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    await bot.delete_message(chat_id=message.chat.id, message_id=remove_msg.message_id)
+
+    await message.answer(
+        text=f"{MessageText.HELLO}\n\n⚡ <b>Быстрый старт</b> — выбери, с чего начать:",
+        reply_markup=get_menu_keyboard(),
+    )
+    await message.answer(
+        text="👇",
+        reply_markup=start_wow_keyboard(),
+    )
     logger.info(f"User {user_id} has started dialog.")
 
     if datetime.now(timezone.utc) - user.created_at > timedelta(minutes=1):

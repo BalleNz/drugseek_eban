@@ -64,6 +64,7 @@ class MessageTemplates:
         "<b>Токены:</b> {allowed_tokens}  {refresh_section}\n"
         "<i>{additional_tokens_text}</i>"
         "{additional_tokens_quote}"
+        "{gamification_section}"
         "{simple_mode_text}"
     )
 
@@ -166,6 +167,70 @@ class MessageTemplates:
         "— {subscription_name} ({subscription_period})\n\n"
         "<b>Цена:</b>\n"
         "— {subscription_price} рублей"
+    )
+
+    DRUG_PACKS_BUY = (
+        "📦 <b>Паки препаратов</b>\n\n"
+        "Разблокируют все препараты выбранной категории в базе бота.\n\n"
+        "<b>Доступные паки:</b>"
+    )
+
+    DRUG_PACK_CONFIRMATION = (
+        "📦 <b>Покупка пака</b>\n\n"
+        "<b>{pack_name}</b>\n"
+        "<i>{pack_description}</i>\n\n"
+        "Цена: {pack_price} рублей"
+    )
+
+    QUIZ_INTRO = (
+        "🧠 <b>Режим «Получение знаний»</b>\n\n"
+        "Тебе показывают характеристику препарата — угадай вещество из 4 вариантов.\n"
+        "Собери серию правильных ответов и хвастайся в Stories 🔥\n\n"
+        f"Стоимость вопроса: {QUESTION_COST} токен."
+    )
+
+    QUIZ_MILESTONE = (
+        "\n\n🎉 <b>Milestone x{streak}!</b> Ты на уровне {level_badge}"
+    )
+
+    QUIZ_CORRECT = "✅ Верно! Отличная работа."
+    QUIZ_WRONG = "❌ Неверно.\n\n{explanation}"
+
+    QUIZ_STREAK_BONUS = (
+        "\n\n🔥 Серия: <b>{streak}</b> · Рекорд: <b>{best_streak}</b>\n"
+        "{level_badge}"
+    )
+
+    GAMIFICATION_PROFILE = (
+        "<blockquote>"
+        "🧠 <b>Pharma IQ:</b> {level_badge}\n"
+        "Серия викторины: {streak} · Рекорд: {best_streak}"
+        "</blockquote>\n\n"
+    )
+
+    PDF_READY = (
+        "📄 <b>Pharma Card готова!</b>\n\n"
+        "Бело-синяя карточка с полным разбором «{drug_name}».\n"
+        "Отправь другу — пусть тоже прокачает Pharma IQ 💉"
+    )
+    PDF_GENERATION_ERROR = "Не удалось создать PDF. Попробуйте позже."
+
+    WEEKLY_DRUG_POST = (
+        "💊 <b>Препарат недели: {drug_name}</b>\n\n"
+        "<i>{classification}</i>\n\n"
+        "{description}\n"
+        "{footer}"
+    )
+
+    HELLO_WOW = (
+        "💉 <b>DrugSearch</b> — твоя pharma-лаборатория в Telegram\n\n"
+        "<blockquote>"
+        "🔍 <b>Мгновенный разбор</b> любого препарата\n"
+        "🧠 <b>Викторина</b> — угадай вещество по описанию\n"
+        "📄 <b>Pharma Card PDF</b> — красивая карточка для шеринга\n"
+        "🤖 <b>AI-ассистент</b> — ответит на любой pharma-вопрос"
+        "</blockquote>\n\n"
+        "Напиши название препарата или нажми кнопку ниже 👇"
     )
 
     # [ REFERRALS ]

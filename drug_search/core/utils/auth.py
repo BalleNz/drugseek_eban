@@ -1,3 +1,7 @@
+import hashlib
+import hmac
+from urllib.parse import parse_qsl
+
 import logging
 from datetime import datetime
 from datetime import timedelta, UTC
@@ -5,7 +9,7 @@ from typing import Annotated
 from uuid import UUID
 
 import jwt
-from fastapi import HTTPException, Security
+from fastapi import HTTPException, Security, Request
 from fastapi.params import Depends
 from fastapi.security import APIKeyHeader
 from starlette import status
@@ -82,14 +86,40 @@ async def get_auth_user(
 
 
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+telegram_init_data_header = APIKeyHeader(name="X-Telegram-Init-Data", auto_error=False)
+
+PUBLIC_PATH_PREFIXES = ("/health", "/webapp")
+
+
+def _is_public_path(path: str) -> bool:
+    return path == "/health" or path.startswith("/webapp")
+
+
+def verify_telegram_webapp_init_data(init_data: str) -> bool:
+    if not init_data or not config.TELEGRAM_BOT_TOKEN:
+        return False
+    parsed = dict(parse_qsl(init_data, keep_blank_values=True))
+    received_hash = parsed.pop("hash", None)
+    if not received_hash:
+        return False
+    data_check_string = "\n".join(f"{key}={value}" for key, value in sorted(parsed.items()))
+    secret_key = hmac.new(b"WebAppData", config.TELEGRAM_BOT_TOKEN.encode(), hashlib.sha256).digest()
+    calculated_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(calculated_hash, received_hash)
 
 
 async def validate_api_key(
-        api_key: str = Security(api_key_header)
+        request: Request,
+        api_key: str = Security(api_key_header),
+        telegram_init_data: str = Security(telegram_init_data_header),
 ):
-    if api_key != config.API_KEY:
-        raise HTTPException(
-            status_code=HTTP_403_FORBIDDEN,
-            detail="Invalid API Key"
-        )
-    return api_key
+    if _is_public_path(request.url.path):
+        return None
+    if api_key == config.API_KEY:
+        return api_key
+    if telegram_init_data and verify_telegram_webapp_init_data(telegram_init_data):
+        return "telegram_webapp"
+    raise HTTPException(
+        status_code=HTTP_403_FORBIDDEN,
+        detail="Invalid API Key"
+    )

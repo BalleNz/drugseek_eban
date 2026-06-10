@@ -15,6 +15,9 @@ __all__ = [
     'SubscriptionPackage',
     'SUBSCRIPTION_TYPES',
     'SubscriptionKeys',
+    'DrugPackKeys',
+    'DrugPackPackage',
+    'DRUG_CATEGORY',
     # [ Limits ]
     'TOKENS_LIMIT',
     # [ Message limits ]
@@ -33,6 +36,8 @@ __all__ = [
     'QUESTION_COST',
     'REFERRALS_REWARDS',
     'BOT_USERNAME',
+    'MARKETING_CHANNEL_USERNAME',
+    'WEEKLY_DRUG_FOOTER',
     'REFERRALS_LEVELS',
     'FREE_TOKENS_AMOUNT'
 ]

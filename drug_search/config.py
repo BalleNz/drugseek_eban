@@ -37,7 +37,8 @@ class Config(BaseSettings):
     # FastAPI
     WEBAPP_HOST: str = environ.get("WEBAPP_HOST", "0.0.0.0")
     WEBAPP_PORT: int = int(environ.get("WEBAPP_PORT", "8000"))
-    WEBHOOK_URL: str = environ.get("WEBHOOK_URL", "")  # URL like https://domain-name.ru/
+    WEBHOOK_URL: str = environ.get("WEBHOOK_URL", "")  # Public URL like https://domain-name.ru/
+    INTERNAL_API_URL: str = environ.get("INTERNAL_API_URL", "")  # Docker: http://fastapi:8000
 
     API_KEY: str = environ.get("API_KEY", "")
 
@@ -78,6 +79,18 @@ class Config(BaseSettings):
     @property
     def OAUTH2_SCHEME(self):
         return self._oauth2_scheme
+
+    @property
+    def api_base_url(self) -> str:
+        """URL for bot/worker → API calls inside Docker or locally."""
+        if self.INTERNAL_API_URL:
+            return self.INTERNAL_API_URL.rstrip("/")
+        return self.WEBHOOK_URL.rstrip("/")
+
+    @property
+    def public_base_url(self) -> str:
+        """Public HTTPS URL for WebApp links and external callbacks."""
+        return self.WEBHOOK_URL.rstrip("/")
 
 
 config: Config = Config()

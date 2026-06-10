@@ -103,6 +103,31 @@ class BuyTokensConfirmationCallback(CallbackData, prefix="buy_tokens_conf"):
     token_package_key: str
 
 
+class ExportPdfCallback(CallbackData, prefix="export_pdf"):
+    drug_id: uuid.UUID
+
+
+class QuickStartCallback(CallbackData, prefix="quick_start"):
+    action: str
+
+
+class BuyDrugPackCallback(CallbackData, prefix="buy_drug_pack"):
+    pass
+
+
+class BuyDrugPackConfirmationCallback(CallbackData, prefix="buy_drug_pack_conf"):
+    pack_key: str
+
+
+class QuizAnswerCallback(CallbackData, prefix="quiz_answer"):
+    quiz_id: str
+    drug_id: uuid.UUID
+
+
+class QuizNextCallback(CallbackData, prefix="quiz_next"):
+    pass
+
+
 # [ REFERRALS ]
 class GetTokensForSubscriptionCallback(CallbackData, prefix="get_tokens_for_subscription"):
     pass

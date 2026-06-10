@@ -13,6 +13,8 @@ from drug_search.bot.lexicon.keyboard_words import ButtonText
 from drug_search.bot.lexicon.message_text import MessageText
 from drug_search.core.schemas import UserSchema
 from drug_search.core.services.cache_logic.cache_service import CacheService
+from drug_search.bot.utils.gamification import format_level_badge
+from drug_search.core.services.gamification_service import GamificationService
 
 logger = logging.getLogger(__name__)
 router = Router(name=__name__)
@@ -54,7 +56,18 @@ async def _show_user_profile(
         telegram_id=telegram_id,
     )
 
-    text = MessageText.formatters.USER_PROFILE(user=profile_info)
+    gamification = GamificationService(cache_service.redis_service)
+    stats = await gamification.get_quiz_stats(telegram_id)
+    gamification_section = MessageText.GAMIFICATION_PROFILE.format(
+        level_badge=format_level_badge(stats.best_streak),
+        streak=stats.streak,
+        best_streak=stats.best_streak,
+    )
+
+    text = MessageText.formatters.USER_PROFILE(
+        user=profile_info,
+        gamification_section=gamification_section,
+    )
 
     keyboard: InlineKeyboardMarkup = user_profile_keyboard(profile_info)
 

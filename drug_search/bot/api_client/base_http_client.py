@@ -48,12 +48,9 @@ class BaseHttpClient:
     ) -> Union[T, dict, list, None]:
         await self._ensure_session()
 
-        headers = {}
+        headers = {"X-API-Key": config.API_KEY}
         if access_token:
             headers["Authorization"] = f"Bearer {access_token}"
-
-        if api_key:
-            headers["X-API-Key"] = config.API_KEY
 
         headers["Content-Type"] = "application/json"
 

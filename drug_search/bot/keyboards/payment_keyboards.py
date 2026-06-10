@@ -1,8 +1,10 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from drug_search.bot.keyboards.callbacks import BuyTokensConfirmationCallback, BuySubscriptionChosenTypeCallback, \
-    BackToUserProfileCallback, BuySubscriptionConfirmationCallback, BuySubscriptionCallback
-from drug_search.core.lexicon import TokensPackage, SUBSCRIPTION_TYPES, SubscriptionPackage, SubscriptionKeys
+    BackToUserProfileCallback, BuySubscriptionConfirmationCallback, BuySubscriptionCallback, \
+    BuyDrugPackConfirmationCallback
+from drug_search.core.lexicon import TokensPackage, SUBSCRIPTION_TYPES, SubscriptionPackage, SubscriptionKeys, \
+    DrugPackPackage
 
 
 def get_tokens_packages_to_buy_keyboard() -> InlineKeyboardMarkup:
@@ -118,3 +120,32 @@ def get_subscription_packages_keyboard(
     return InlineKeyboardMarkup(
         inline_keyboard=buttons
     )
+
+
+def get_drug_packs_keyboard() -> InlineKeyboardMarkup:
+    buttons: list[list[InlineKeyboardButton]] = []
+
+    emoji_map = {
+        "pack_pharma": "💊 ",
+        "pack_steroid": "💪 ",
+        "pack_prohibited": "🚫 ",
+        "pack_complex": "🔥 ",
+    }
+
+    for pack in DrugPackPackage.get_all_packs():
+        emoji = emoji_map.get(pack.key, "")
+        buttons.append([
+            InlineKeyboardButton(
+                text=f"{emoji}{pack.name} ({pack.price} ₽)",
+                callback_data=BuyDrugPackConfirmationCallback(pack_key=pack.key).pack(),
+            )
+        ])
+
+    buttons.append([
+        InlineKeyboardButton(
+            text="Назад",
+            callback_data=BackToUserProfileCallback().pack(),
+        )
+    ])
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)

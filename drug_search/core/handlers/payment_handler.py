@@ -12,8 +12,6 @@ from drug_search.core.services.cache_logic.cache_service import CacheService
 from drug_search.core.services.models_service.payment_service import PaymentService
 from drug_search.core.services.tasks_logic.task_service import TaskService
 from drug_search.core.services.telegram_service import TelegramService
-from drug_search.core.utils.auth import validate_api_key
-
 logger = logging.getLogger(__name__)
 payment_router = APIRouter(prefix="/payment")
 
@@ -22,7 +20,6 @@ payment_router = APIRouter(prefix="/payment")
     "/process",
     description="Обработка успешного платежа",
     include_in_schema=False,
-    dependencies=[Depends(validate_api_key)]
 )
 async def payment_process(
         payment: PaymentRequest,
@@ -50,6 +47,8 @@ async def payment_process(
             message_text = "Подписка успешно активирована!"
         case "tokens":
             message_text = "Токены успешно начислены!"
+        case "pack":
+            message_text = "Пак препаратов успешно активирован! Все препараты категории добавлены в вашу базу."
     await telegram_service.send_message(
         payment.user_telegram_id,
         message=message_text

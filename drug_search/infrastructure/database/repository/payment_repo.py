@@ -6,7 +6,7 @@ from fastapi import Depends
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from drug_search.core.lexicon import SUBSCRIPTION_TYPES
+from drug_search.core.lexicon import SUBSCRIPTION_TYPES, DRUG_CATEGORY
 from drug_search.core.schemas import PaymentSchema
 from drug_search.infrastructure.database.engine import get_async_session
 from drug_search.infrastructure.database.models.payment import Payment
@@ -124,6 +124,67 @@ class PaymentRepository(BaseRepository):
                 payment_name=payment_name,
                 price=price,
             )
+        )
+
+    async def give_drug_pack(
+            self,
+            category: DRUG_CATEGORY | None,
+            user_telegram_id: str,
+            package_key: str,
+            payment_name: str,
+            price: int,
+            drug_ids: list[uuid.UUID],
+    ) -> PaymentSchema | None:
+        user_stmt = text("""
+            SELECT id FROM users WHERE telegram_id = :user_telegram_id
+        """)
+        user_result = await self.session.execute(
+            user_stmt,
+            {"user_telegram_id": user_telegram_id},
+        )
+        user_row = user_result.fetchone()
+        if not user_row:
+            logger.warning(f"User with telegram_id {user_telegram_id} not found")
+            return None
+
+        user_id = user_row[0]
+
+        if drug_ids:
+            ids_array = ", ".join(f"'{drug_id}'::uuid" for drug_id in drug_ids)
+            insert_stmt = text(f"""
+                INSERT INTO allowed_drugs (id, user_id, drug_id)
+                SELECT gen_random_uuid(), :user_id, drug_id
+                FROM unnest(ARRAY[{ids_array}]) AS drug_id
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM allowed_drugs ad
+                    WHERE ad.user_id = :user_id AND ad.drug_id = drug_id
+                )
+            """)
+            await self.session.execute(insert_stmt, {"user_id": user_id})
+
+        if category == DRUG_CATEGORY.PROHIBITED or category is None:
+            premium_stmt = text("""
+                UPDATE users
+                SET subscription_type = :sub_type,
+                    subscription_end = GREATEST(COALESCE(subscription_end, NOW()), NOW()) + INTERVAL '30 days',
+                    updated_at = NOW()
+                WHERE telegram_id = :user_telegram_id
+            """)
+            await self.session.execute(
+                premium_stmt,
+                {
+                    "sub_type": SUBSCRIPTION_TYPES.PREMIUM.value,
+                    "user_telegram_id": user_telegram_id,
+                },
+            )
+
+        await self.session.commit()
+
+        return await self.create_payment_log(
+            package_key=package_key,
+            payment_name=payment_name,
+            price=price,
+            user_id=user_id,
         )
 
 

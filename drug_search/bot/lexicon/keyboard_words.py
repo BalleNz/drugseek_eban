@@ -42,6 +42,12 @@ class ButtonText:
     MODES_INFO_DRUG_SEARCH = "🔍 Поиск препаратов"
     MODES_INFO_PHARMA = "💡 Рекомендовать препараты"
     MODES_INFO_QUESTIONS = "❔ Ответить на вопрос"
+    MODES_INFO_QUIZ = "🧠 Получение знаний"
+
+    EXPORT_PDF = "📄 Pharma Card PDF"
+    SHARE_DRUG = "📤 Поделиться"
+    PATHWAY_LAB = "🗺 Pathway Lab"
+    BUY_DRUG_PACKS = "📦 Паки препаратов"
 
     # [ HELP ]
     HELP_TOKENS = "Токены"
